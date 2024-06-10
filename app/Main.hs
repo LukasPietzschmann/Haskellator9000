@@ -1,7 +1,13 @@
 module Main where
 
-import Math.SiConverter qualified
+import System.IO (hFlush, stdout)
 
 main :: IO ()
 main = do
-  putStrLn "Hello, Haskell!"
+  putStr "> "
+  hFlush stdout
+  input <- getLine
+  -- TODO: Call calculation wrapper here
+  putStrLn input
+  main
+  return ()
