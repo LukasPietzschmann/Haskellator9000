@@ -1,0 +1,16 @@
+image: haskell:9.4.8
+
+stages:
+  - build
+  - test
+
+build:
+  stage: build
+  script:
+    - cabal build
+  # TODO: make the build artifacts available
+
+test:
+  stage: test
+  script:
+    - cabal test
