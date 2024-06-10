@@ -1,16 +1,31 @@
 image: haskell:9.4.8
 
+workflow:
+  name: 'Build and test $CI_COMMIT_SHORT_SHA'
+
+cache:
+  paths:
+    - $CI_PROJECT_DIR/dist-newstyle/cache
+
 stages:
   - build
   - test
+  - deploy
 
 build:
   stage: build
   script:
     - cabal build
-  # TODO: make the build artifacts available
 
 test:
   stage: test
   script:
     - cabal test
+
+deploy:
+  stage: deploy
+  script:
+    - cabal install --install-method=copy --installdir=$CI_PROJECT_DIR/bin --overwrite-policy=always
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/bin/
