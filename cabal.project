@@ -1,0 +1,5 @@
+packages: si-calculator.cabal
+
+program-options
+  -- Create documentation for modules in the 'other-modules' stanza as well
+  haddock-options: --show-all
