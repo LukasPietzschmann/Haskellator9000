@@ -7,6 +7,18 @@ module Math.SiConverter.Parser (
 import Math.SiConverter.Lexer (Token(..), Tokens)
 import Math.SiConverter.Expr
 
+-- | Parse a token stream to an expression tree
+--
+-- Examples:
+-- 
+-- >>> parse [Number 1.0,Operator "+",Number 2.0]
+-- ("1.0Placeholder" + "2.0Placeholder")
+--
+-- >>> parse [OpenParen,Number 3.0,Operator "/",Number 2.0,Operator "+",OpenParen,Number 1.5,Operator "*",Number 2.0,CloseParen,CloseParen,Operator "+",Number 4.95]
+-- ("(\"3.0Placeholder\" / \"(\\\"2.0Placeholder\\\" + \\\"(\\\\\\\"1.5Placeholder\\\\\\\" * \\\\\\\"2.0Placeholder\\\\\\\")\\\")\")" + "4.95Placeholder")
+-- 
+-- >>> parse [Number 9001.0,Operator "*",Number 29.12]
+-- ("9001.0Placeholder" * "29.12Placeholder")
 parse :: Tokens -> Expr
 parse ts = case parseTerm ts of
   (e, []) -> e
@@ -28,6 +40,7 @@ parseFactor ts = case parsePrimary ts of
     (e2, ts'') -> (BinOp e1 Minus e2, ts'')
   p -> p
 
+-- TODO Add identifier support
 parsePrimary :: Tokens -> (Expr, Tokens)
 parsePrimary (Number n:ts) = (Value n Placeholder, ts)
 parsePrimary (Identifier _:_) = error "We don't yet need idenfifiers"

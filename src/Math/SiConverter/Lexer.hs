@@ -10,6 +10,18 @@ data Token = Number Double | Operator String | OpenParen | CloseParen | Identifi
 
 type Tokens = [Token]
 
+-- | Tokenize an input string
+--
+-- Examples:
+--
+-- >>> scan "1+2"
+-- [Number 1.0,Operator "+",Number 2.0]
+--
+-- >>> scan "(3/2+(1.5*2)) + 4.95"
+-- [OpenParen,Number 3.0,Operator "/",Number 2.0,Operator "+",OpenParen,Number 1.5,Operator "*",Number 2.0,CloseParen,CloseParen,Operator "+",Number 4.95]
+--
+-- >>> scan "9001*29.12"
+-- [Number 9001.0,Operator "*",Number 29.12]
 scan :: String -> Tokens
 scan []       = []
 scan ('(':xs) = OpenParen : scan xs
