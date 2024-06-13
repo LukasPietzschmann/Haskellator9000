@@ -65,6 +65,7 @@ library
     exposed-modules:  Math.SiConverter
 
     other-modules:
+        Math.SiConverter.Lexer
         Math.SiConverter.Expr
 
     -- Modules included in this library but not exported.
