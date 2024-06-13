@@ -1,3 +1,6 @@
+# TODO Optional: Add HLint and Stan execution
+# TODO Optional: Export Haddock documentation as build artefact (GitLab pages seem to be disabled)
+
 image: haskell:9.4.8
 
 workflow:
@@ -17,7 +20,18 @@ build:
   script:
     - cabal build
 
-test:
+documentation:
+  stage: build
+  script:
+    - cabal haddock
+
+doctest:
+  stage: test
+  script:
+    - cabal install doctest
+    - ~/.cabal/bin/doctest src/
+
+unit-test:
   stage: test
   script:
     - cabal test
