@@ -17,7 +17,7 @@ stages:
 build:
   stage: build
   script:
-    - stack build --install-ghc
+    - stack build --install-ghc --test --no-run-tests
   cache:
     paths:
       - .stack-work/
