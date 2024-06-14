@@ -18,30 +18,28 @@ stages:
 build:
   stage: build
   script:
-    - cabal update
-    - cabal build
+    - stack build
 
 documentation:
   stage: build
   script:
-    - cabal haddock
+    - stack haddock
 
 doctest:
   stage: test
   script:
-    - cabal install doctest
-    - cabal repl --with-ghc=doctest
+    - stack install doctest
+    - $(stack path --local-bin)/doctest src/
 
 unit-test:
   stage: test
   script:
-    - tree $HOME
-    - cabal test
+    - stack test
 
 deploy:
   stage: deploy
   script:
-    - cabal install --install-method=copy --installdir=$CI_PROJECT_DIR/bin --overwrite-policy=always
+    - stack path --local-install-root 
   artifacts:
     paths:
       - $CI_PROJECT_DIR/bin/
