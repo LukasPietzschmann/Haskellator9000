@@ -26,8 +26,8 @@ instance Show Expr where
   show = foldExpr showValue showBinOp showUnaryOp
     where
       showValue v u = show v ++ show u
-      showBinOp e1 o e2 = "(" ++ show e1 ++ " " ++ show o ++ " " ++ show e2 ++ ")"
-      showUnaryOp o e = "(" ++ show o ++ show e ++ ")"
+      showBinOp e1 o e2 = "(" ++ e1 ++ " " ++ show o ++ " " ++ e2 ++ ")"
+      showUnaryOp o e = "(" ++ show o ++ e ++ ")"
 
 -- example :: Expr
 -- example = BinOp (BinOp (Value 1 Placeholder) Plus (BinOp (Value 2 Placeholder) Mult (Value 3 Placeholder))) Minus (UnaryOp UnaryMinus (Value 4 Placeholder))
