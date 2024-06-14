@@ -41,6 +41,7 @@ deploy:
   stage: deploy
   script:
     - cabal install --install-method=copy --installdir=$CI_PROJECT_DIR/bin --overwrite-policy=always
+    - tree $HOME
   artifacts:
     paths:
       - $CI_PROJECT_DIR/bin/
