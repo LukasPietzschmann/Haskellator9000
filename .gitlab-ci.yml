@@ -28,8 +28,9 @@ documentation:
 doctest:
   stage: test
   script:
+    - cabal update
     - cabal install doctest
-    - ~/.cabal/bin/doctest src/
+    - cabal repl --with-ghc=doctest
 
 unit-test:
   stage: test
