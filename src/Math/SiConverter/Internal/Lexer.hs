@@ -38,7 +38,7 @@ scan (x:xs)   = if | elem x [' ', '\t', '\r', '\n'] -> scan xs
 
 scanNumber :: String -> Tokens
 scanNumber xs = Number (read num) : scan rest
-    where (num, rest) = span (\x -> isDigit x || x == '.') xs
+    where (num, rest) = span (\x -> isDigit x || x == '.' || x == 'e' || x == '-') xs
 
 scanIdentifier :: String -> Tokens
 scanIdentifier xs = Identifier i : scan rest
