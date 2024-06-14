@@ -1,7 +1,7 @@
 -- | Calculator module for evaluating mathematical expressions using SI units
-module Math.SiConverter where
+module Math.SiConverter(calculate) where
 
-import Math.SiConverter.Evaluator
+import Math.SiConverter.Internal.Evaluator
 import Math.SiConverter.Internal.Lexer
 import Math.SiConverter.Internal.Parser
 

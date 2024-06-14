@@ -26,7 +26,7 @@ source-repository head
 library
   exposed-modules:
       Math.SiConverter
-      Math.SiConverter.Evaluator
+      Math.SiConverter.Internal.Evaluator
       Math.SiConverter.Internal.Expr
       Math.SiConverter.Internal.Lexer
       Math.SiConverter.Internal.Parser
