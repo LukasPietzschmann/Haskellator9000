@@ -35,13 +35,13 @@ doctest:
 unit-test:
   stage: test
   script:
+    - tree $HOME
     - cabal test
 
 deploy:
   stage: deploy
   script:
     - cabal install --install-method=copy --installdir=$CI_PROJECT_DIR/bin --overwrite-policy=always
-    - tree $HOME
   artifacts:
     paths:
       - $CI_PROJECT_DIR/bin/
