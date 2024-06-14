@@ -133,4 +133,6 @@ test-suite si-calculator-test
     -- Test dependencies.
     build-depends:
         base ^>=4.17.2.1,
+        tasty >= 1.5,
+        tasty-hunit >= 0.10.1,
         si-calculator
