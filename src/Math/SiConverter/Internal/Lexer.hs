@@ -6,7 +6,7 @@ import Data.Char (isDigit)
 import GHC.Unicode (isAlpha)
 
 data Token = Number Double | Operator String | OpenParen | CloseParen | Identifier String
-    deriving Show
+    deriving (Show, Eq)
 
 type Tokens = [Token]
 
