@@ -1,9 +1,9 @@
 module Math.SiConverter.Expr where
 
-data Unit = Placeholder
+data Unit = Multiplier
 
 instance Show Unit where
-  show Placeholder = ""
+  show Multiplier = ""
 
 data Op = Plus | Minus | Mult | Div | Pow | UnaryMinus
 
@@ -32,4 +32,4 @@ instance Show Expr where
       showUnaryOp o e = "(" ++ show o ++ e ++ ")"
 
 -- example :: Expr
--- example = BinOp (BinOp (Value 1 Placeholder) Plus (BinOp (Value 2 Placeholder) Mult (Value 3 Placeholder))) Minus (UnaryOp UnaryMinus (Value 4 Placeholder))
+-- example = BinOp (BinOp (Value 1 Multiplier) Plus (BinOp (Value 2 Multiplier) Mult (Value 3 Multiplier))) Minus (UnaryOp UnaryMinus (Value 4 Multiplier))

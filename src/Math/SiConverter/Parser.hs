@@ -10,15 +10,15 @@ import Math.SiConverter.Expr
 -- | Parse a token stream to an expression tree
 --
 -- Examples:
--- 
+--
 -- >>> parse [Number 1.0,Operator "+",Number 2.0]
--- ("1.0Placeholder" + "2.0Placeholder")
+-- (1.0 + 2.0)
 --
 -- >>> parse [OpenParen,Number 3.0,Operator "/",Number 2.0,Operator "+",OpenParen,Number 1.5,Operator "*",Number 2.0,CloseParen,CloseParen,Operator "+",Number 4.95]
--- ("(\"3.0Placeholder\" / \"(\\\"2.0Placeholder\\\" + \\\"(\\\\\\\"1.5Placeholder\\\\\\\" * \\\\\\\"2.0Placeholder\\\\\\\")\\\")\")" + "4.95Placeholder")
--- 
+-- ((3.0 / (2.0 + (1.5 * 2.0))) + 4.95)
+--
 -- >>> parse [Number 9001.0,Operator "*",Number 29.12]
--- ("9001.0Placeholder" * "29.12Placeholder")
+-- (9001.0 * 29.12)
 parse :: Tokens -> Expr
 parse ts = case parseTerm ts of
   (e, []) -> e
@@ -42,7 +42,7 @@ parseFactor ts = case parsePrimary ts of
 
 -- TODO Add identifier support
 parsePrimary :: Tokens -> (Expr, Tokens)
-parsePrimary (Number n:ts) = (Value n Placeholder, ts)
+parsePrimary (Number n:ts) = (Value n Multiplier, ts)
 parsePrimary (Identifier _:_) = error "We don't yet need idenfifiers"
 parsePrimary (OpenParen:ts) = case parseTerm ts of
   (e, CloseParen:ts') -> (e, ts')
