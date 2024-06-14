@@ -118,6 +118,7 @@ factor :: Parser Op
 factor = do
     op <- operator
     case op of
+      "^" -> return Pow
       "*" -> return Mult
       "/" -> return Div
       x   -> fail $ "Invalid binary operator " ++ x
