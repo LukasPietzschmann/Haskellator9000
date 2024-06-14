@@ -13,6 +13,7 @@ cache:
   paths:
     - .stack-work/
     - .stack-root/
+  policy: pull
 
 stages:
   - build
@@ -23,6 +24,12 @@ build:
   stage: build
   script:
     - stack build --install-ghc
+  cache:
+    paths:
+      - .stack-work/
+      - .stack-root/
+    policy: push
+
 
 documentation:
   stage: build
