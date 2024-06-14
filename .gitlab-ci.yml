@@ -17,7 +17,6 @@ stages:
 build:
   stage: build
   script:
-    - stack install doctest
     - stack build --install-ghc
   cache:
     paths:
@@ -40,6 +39,7 @@ documentation:
 doctest:
   stage: test
   script:
+    - stack install doctest
     - $(stack path --local-bin)/doctest src/
   cache:
     paths:
