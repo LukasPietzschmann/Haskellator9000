@@ -1,7 +1,9 @@
 module Math.SiConverter.Expr where
 
 data Unit = Placeholder
-    deriving Show
+
+instance Show Unit where
+  show Placeholder = ""
 
 data Op = Plus | Minus | Mult | Div | Pow | UnaryMinus
 
