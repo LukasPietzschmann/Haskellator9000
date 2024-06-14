@@ -67,6 +67,7 @@ library
     other-modules:
         Math.SiConverter.Lexer
         Math.SiConverter.Parser
+        Math.SiConverter.Evaluator
         Math.SiConverter.Expr
 
     -- Modules included in this library but not exported.
