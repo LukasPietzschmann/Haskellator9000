@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiWayIf #-}
 
-module Math.SiConverter.Lexer (Token(..), Tokens, scan) where
+module Math.SiConverter.Internal.Lexer (Token(..), Tokens, scan) where
 
 import Data.Char (isDigit)
 import GHC.Unicode (isAlpha)

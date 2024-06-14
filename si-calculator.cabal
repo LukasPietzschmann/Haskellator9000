@@ -62,13 +62,12 @@ library
     import:           warnings
 
     -- Modules exported by the library.
-    exposed-modules:  Math.SiConverter
-
-    other-modules:
-        Math.SiConverter.Lexer
-        Math.SiConverter.Parser
+    exposed-modules:
+        Math.SiConverter
         Math.SiConverter.Evaluator
-        Math.SiConverter.Expr
+        Math.SiConverter.Internal.Lexer
+        Math.SiConverter.Internal.Parser
+        Math.SiConverter.Internal.Expr
 
     -- Modules included in this library but not exported.
     -- other-modules:

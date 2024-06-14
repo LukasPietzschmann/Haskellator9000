@@ -1,11 +1,11 @@
 -- | Recursive decent parser
-module Math.SiConverter.Parser (
+module Math.SiConverter.Internal.Parser (
   parse,
   -- TODO Remove this temporary export when expression evaluation is supported
   Expr) where
 
-import Math.SiConverter.Lexer (Token(..), Tokens)
-import Math.SiConverter.Expr
+import Math.SiConverter.Internal.Lexer (Token(..), Tokens)
+import Math.SiConverter.Internal.Expr
 
 -- | Parse a token stream to an expression tree
 --

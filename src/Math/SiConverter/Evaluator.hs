@@ -1,6 +1,6 @@
 module Math.SiConverter.Evaluator where
 
-import Math.SiConverter.Expr (foldExpr,Op(..),Expr)
+import Math.SiConverter.Internal.Expr (foldExpr,Op(..),Expr)
 
 evaluate::Expr->Double
 evaluate = foldExpr (\v _ -> v) 

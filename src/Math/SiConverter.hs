@@ -2,8 +2,8 @@
 module Math.SiConverter where
 
 import Math.SiConverter.Evaluator
-import Math.SiConverter.Lexer
-import Math.SiConverter.Parser
+import Math.SiConverter.Internal.Lexer
+import Math.SiConverter.Internal.Parser
 
 -- | Evaluate a result from a given expression
 calculate ::

@@ -1,4 +1,4 @@
-module Math.SiConverter.Expr where
+module Math.SiConverter.Internal.Expr where
 
 data Unit = Multiplier
 
@@ -23,6 +23,9 @@ foldExpr fv fb fu = doIt
     doIt (Value v u) = fv v u
     doIt (BinOp e1 o e2) = fb (doIt e1) o (doIt e2)
     doIt (UnaryOp o e) = fu o $ doIt e
+
+instance Eq Expr where
+  e1 == e2 = show e1 == show e2
 
 instance Show Expr where
   show = foldExpr showValue showBinOp showUnaryOp
