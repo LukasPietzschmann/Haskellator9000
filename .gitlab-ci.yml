@@ -9,12 +9,6 @@ workflow:
 variables:
   STACK_ROOT: "${CI_PROJECT_DIR}/.stack-root"
 
-cache:
-  paths:
-    - .stack-work/
-    - .stack-root/
-  policy: pull
-
 stages:
   - build
   - test
@@ -35,17 +29,33 @@ documentation:
   stage: build
   script:
     - stack haddock
+  cache:
+    paths:
+      - .stack-work/
+      - .stack-root/
+    policy: pull
+
 
 doctest:
   stage: test
   script:
     - stack install doctest
     - $(stack path --local-bin)/doctest src/
+  cache:
+    paths:
+      - .stack-work/
+      - .stack-root/
+    policy: pull
 
 unit-test:
   stage: test
   script:
     - stack test
+  cache:
+    paths:
+      - .stack-work/
+      - .stack-root/
+    policy: pull
 
 deploy:
   stage: deploy
@@ -54,3 +64,8 @@ deploy:
   artifacts:
     paths:
       - $CI_PROJECT_DIR/bin/
+  cache:
+    paths:
+      - .stack-work/
+      - .stack-root/
+    policy: pull
