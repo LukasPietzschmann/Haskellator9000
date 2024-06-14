@@ -1,4 +1,4 @@
-module Math.SiConverter.Internal.Expr where
+module Math.SiConverter.Internal.Expr(Expr(..),Op(..),Unit(..),foldExpr) where
 
 data Unit = Multiplier
 
