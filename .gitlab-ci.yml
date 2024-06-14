@@ -18,6 +18,7 @@ stages:
 build:
   stage: build
   script:
+    - cabal update
     - cabal build
 
 documentation:
@@ -28,7 +29,6 @@ documentation:
 doctest:
   stage: test
   script:
-    - cabal update
     - cabal install doctest
     - cabal repl --with-ghc=doctest
 
