@@ -22,7 +22,7 @@ build:
     paths:
       - .stack-work/
       - .stack-root/
-    policy: push
+    policy: pull-push
 
 
 documentation:
