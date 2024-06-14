@@ -59,3 +59,4 @@ tests:
     - si-calculator
     - tasty
     - tasty-hunit
+    - tasty-quickcheck

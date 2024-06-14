@@ -6,6 +6,7 @@ instance Show Unit where
   show Multiplier = ""
 
 data Op = Plus | Minus | Mult | Div | Pow | UnaryMinus
+    deriving (Enum, Bounded)
 
 instance Show Op where
   show Plus = "+"
