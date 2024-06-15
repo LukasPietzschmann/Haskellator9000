@@ -16,6 +16,7 @@ evaluateBinOp = eval
     eval v1 Minus v2 = v1 - v2
     eval v1 Mult v2 = v1 * v2
     eval v1 Div v2 = v1 / v2
+    eval v1 Pow v2 = v1 ** v2
     eval _ op _ = error $ "Unknown binary operand " ++ show op
 
 evaluateUnaryOp :: Op -> Double -> Double
