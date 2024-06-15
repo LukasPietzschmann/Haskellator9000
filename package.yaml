@@ -1,10 +1,9 @@
 name:                si-calculator
 version:             0.1.0.0
-github:              "githubuser/si-calculator"
 license:             BSD-3-Clause
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2024 Author name here"
+author:              "Lukas Pietzschmann, Thomas Schöller"
+maintainer:          "Lukas Pietzschmann, Thomas Schöller"
+copyright:           "2024 Lukas Pietzschmann, Thomas Schöller"
 
 extra-source-files:
 - README.md
