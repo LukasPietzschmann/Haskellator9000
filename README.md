@@ -2,7 +2,8 @@
 
 ## Usage
 
-TODO
+Check out the [documentation](https://haskellator.pietzschmann.org) for more
+information.
 
 ## Development
 
