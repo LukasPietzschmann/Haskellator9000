@@ -46,6 +46,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - si-calculator
+    - haskeline
 
 tests:
   si-calculator-test:
