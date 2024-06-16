@@ -35,6 +35,8 @@ import Math.SiConverter.Internal.Lexer (Token(..), Tokens)
            -- | <primary>
 -- <primary> ::= <number>
             -- | "(" <expr> ")"
+-- <number> ::= <value> <unit>
+-- <unit> ::= "m" | "s" | "kg" | ε
 
 newtype Parser a = Parser { runParser :: Tokens -> Either String (a, Tokens) }
 
@@ -86,6 +88,10 @@ isNumber :: Token -> Bool
 isNumber (Number _) = True
 isNumber _          = False
 
+isIdentifier :: Token -> Bool
+isIdentifier (Identifier _) = True
+isIdentifier _              = False
+
 token :: Token -> Parser Token
 token t = satisfy (==t)
 
@@ -98,6 +104,21 @@ number :: Parser Double
 number = do
   Number n <- satisfy isNumber
   return n
+
+identifier :: Parser String
+identifier = do
+    Identifier i <- satisfy isIdentifier
+    return i
+
+unit :: Parser Unit
+unit = do {
+    u <- identifier;
+    case u of
+        "m" -> return Meter
+        "s" -> return Second
+        "kg" -> return Kilo
+        x -> fail $ "Invalid unit " ++ x
+    } <|> return Multiplier
 
 unary :: Parser Op
 unary = do
@@ -147,4 +168,7 @@ parseFactor = do {
   } <|> parsePrimary
 
 parsePrimary :: Parser Expr
-parsePrimary = (flip Value Multiplier <$> number) <|> (token OpenParen *> parseExpr <* token CloseParen)
+parsePrimary = parseNumber <|> (token OpenParen *> parseExpr <* token CloseParen)
+
+parseNumber :: Parser Expr
+parseNumber = Value <$> number <*> unit

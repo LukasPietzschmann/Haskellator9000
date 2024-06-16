@@ -1,9 +1,12 @@
 module Math.SiConverter.Internal.Expr(Expr(..),Op(..),Unit(..),foldExpr) where
 
-data Unit = Multiplier
+data Unit = Multiplier | Second | Meter | Kilo
 
 instance Show Unit where
   show Multiplier = ""
+  show Second = "s"
+  show Meter = "m"
+  show Kilo = "kg"
 
 data Op = Plus | Minus | Mult | Div | Pow | UnaryMinus
     deriving (Enum, Bounded)
