@@ -167,4 +167,4 @@ parsePrimary :: Parser Expr
 parsePrimary = parseNumber <|> (token OpenParen *> parseExpr <* token CloseParen)
 
 parseNumber :: Parser Expr
-parseNumber = liftM2 Value number unit
+parseNumber = liftM2 Val number unit

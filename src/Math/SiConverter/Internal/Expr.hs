@@ -2,10 +2,10 @@
 --
 -- Examples:
 --
--- >>> show $ BinOp (Value 1.0 Meter) Plus (BinOp (Value 2 Multiplier) Mult (Value 3.0 Meter))
+-- >>> show $ BinOp (Val 1.0 Meter) Plus (BinOp (Val 2 Multiplier) Mult (Val 3.0 Meter))
 -- 1.0m + 2.0 * 3.0m
 --
--- >>> show $ BinOp (BinOp (Value 1.0 Meter) Plus (Value 2.0 Meter)) Mult (Value 3.0 Multiplier)
+-- >>> show $ BinOp (BinOp (Val 1.0 Meter) Plus (Val 2.0 Meter)) Mult (Val 3.0 Multiplier)
 -- (1.0m + 2.0m) * 3.0
 
 module Math.SiConverter.Internal.Expr(Expr(..),Op(..),Unit(..),foldExpr) where
@@ -29,7 +29,7 @@ instance Show Op where
   show Pow = "^"
   show UnaryMinus = "-"
 
-data Expr = Value Double Unit | BinOp Expr Op Expr | UnaryOp Op Expr
+data Expr = Val Double Unit | BinOp Expr Op Expr | UnaryOp Op Expr
 
 -- | Folds an expression tree
 foldExpr :: (Double -> Unit -> a) -- ^ function that folds a value
@@ -39,7 +39,7 @@ foldExpr :: (Double -> Unit -> a) -- ^ function that folds a value
          -> a                     -- ^ the resulting value
 foldExpr fv fb fu = doIt
   where
-    doIt (Value v u) = fv v u
+    doIt (Val v u) = fv v u
     doIt (BinOp e1 o e2) = fb (doIt e1) o (doIt e2)
     doIt (UnaryOp o e) = fu o $ doIt e
 
@@ -54,4 +54,4 @@ instance Show Expr where
       showUnaryOp o e = "(" ++ show o ++ e ++ ")"
 
 -- example :: Expr
--- example = BinOp (BinOp (Value 1 Multiplier) Plus (BinOp (Value 2 Multiplier) Mult (Value 3 Multiplier))) Minus (UnaryOp UnaryMinus (Value 4 Multiplier))
+-- example = BinOp (BinOp (Val 1 Multiplier) Plus (BinOp (Val 2 Multiplier) Mult (Val 3 Multiplier))) Minus (UnaryOp UnaryMinus (Val 4 Multiplier))
