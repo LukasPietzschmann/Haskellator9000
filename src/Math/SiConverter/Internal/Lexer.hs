@@ -27,21 +27,28 @@ data Token = Number Double -- ^ A number (integers are also represented as float
 -- | A simple alias for the 'Token' stream
 type Tokens = [Token]
 
+-- | Tokenizes an input stream to a list of 'Token's
+scanGracefully :: String               -- ^ The input stream
+               -> Either String Tokens -- ^ Error message or the list of tokens
+scanGracefully []       = Right []
+scanGracefully ('(':xs) = Right $ OpenParen : scan xs
+scanGracefully (')':xs) = Right $ CloseParen : scan xs
+scanGracefully ('+':xs) = Right $ Operator "+" : scan xs
+scanGracefully ('-':xs) = Right $ Operator "-" : scan xs
+scanGracefully ('*':xs) = Right $ Operator "*" : scan xs
+scanGracefully ('/':xs) = Right $ Operator "/" : scan xs
+scanGracefully ('^':xs) = Right $ Operator "^" : scan xs
+scanGracefully (x:xs)   = if | elem x [' ', '\t', '\r', '\n'] -> scanGracefully xs
+                             | isDigit x -> Right $ scanNumber (x:xs)
+                             | isAlpha x -> Right $ scanIdentifier (x:xs)
+                             | otherwise -> Left $ "Unexpected character: " ++ [x]
+
 -- | Tokenizes an input stream to a list of 'Token's and throws if the input is invalid
 scan :: String -- ^ The input stream
      -> Tokens -- ^ The list of tokens
-scan []       = []
-scan ('(':xs) = OpenParen : scan xs
-scan (')':xs) = CloseParen : scan xs
-scan ('+':xs) = Operator "+" : scan xs
-scan ('-':xs) = Operator "-" : scan xs
-scan ('*':xs) = Operator "*" : scan xs
-scan ('/':xs) = Operator "/" : scan xs
-scan ('^':xs) = Operator "^" : scan xs
-scan (x:xs)   = if | elem x [' ', '\t', '\r', '\n'] -> scan xs
-                   | isDigit x -> scanNumber (x:xs)
-                   | isAlpha x -> scanIdentifier (x:xs)
-                   | otherwise -> error $ "Unexpected character: " ++ [x]
+scan input = case scanGracefully input of
+    Right ts -> ts
+    Left err -> error err
 
 scanNumber :: String -> Tokens
 scanNumber xs = Number (read num) : scan rest
