@@ -16,7 +16,7 @@ instance Arbitrary Op where
 instance Arbitrary Expr where
   arbitrary = let randomNumber = flip Value Multiplier <$> (arbitrary `suchThat` (>=0)) in frequency [
       (10, randomNumber),
-      (1, liftM3 BinOp arbitrary arbitrary arbitrary),
+      (6, liftM3 BinOp arbitrary arbitrary arbitrary),
       (3, UnaryOp Minus <$> randomNumber)
     ]
 

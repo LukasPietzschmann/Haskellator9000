@@ -4,6 +4,7 @@
 module Math.SiConverter.Internal.Parser (parseGracefully, parse) where
 
 import Control.Applicative ((<|>))
+import Control.Monad (liftM2)
 import GHC.Base (Alternative (empty))
 import Math.SiConverter.Internal.Expr
 import Math.SiConverter.Internal.Lexer (Token(..), Tokens)
@@ -68,9 +69,9 @@ instance Alternative Parser where
 
 parseGracefully :: Tokens -> Either String Expr
 parseGracefully tokens = case runParser parseExpr tokens of
-  Right (result, []) -> Right result
-  Right (_, _) -> Left "Parser was not abe to parse the full input"
-  Left err -> Left err
+    Right (result, []) -> Right result
+    Right (_, _)       -> Left "Parser was not abe to parse the full input"
+    Left err           -> Left err
 
 parse :: Tokens -> Expr
 parse = either error id . parseGracefully
@@ -114,10 +115,10 @@ unit :: Parser Unit
 unit = do {
     u <- identifier;
     case u of
-        "m" -> return Meter
-        "s" -> return Second
+        "m"  -> return Meter
+        "s"  -> return Second
         "kg" -> return Kilo
-        x -> fail $ "Invalid unit " ++ x
+        x    -> fail $ "Invalid unit " ++ x
     } <|> return Multiplier
 
 unary :: Parser Op
@@ -147,28 +148,20 @@ factor = do
 parseExpr :: Parser Expr
 parseExpr = parseTerm >>= expr'
     where expr' parsedLhs = do {
-        op <- term;
-        right <- parseTerm;
-        expr' (BinOp parsedLhs op right)
+         liftM2 (BinOp parsedLhs) term parseTerm >>= expr'
     } <|> return parsedLhs
 
 parseTerm :: Parser Expr
 parseTerm = parseFactor >>= term'
     where term' parsedLhs = do {
-        op <- factor;
-        right <- parseFactor;
-        term' (BinOp parsedLhs op right)
+        liftM2 (BinOp parsedLhs) factor parseFactor >>= term'
     } <|> return parsedLhs
 
 parseFactor :: Parser Expr
-parseFactor = do {
-    op <- unary;
-    expr <- parsePrimary;
-    return (UnaryOp op expr)
-  } <|> parsePrimary
+parseFactor = liftM2 UnaryOp unary parsePrimary <|> parsePrimary
 
 parsePrimary :: Parser Expr
 parsePrimary = parseNumber <|> (token OpenParen *> parseExpr <* token CloseParen)
 
 parseNumber :: Parser Expr
-parseNumber = Value <$> number <*> unit
+parseNumber = liftM2 Value number unit
