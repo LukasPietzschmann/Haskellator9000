@@ -1,4 +1,5 @@
--- | Calculator module for evaluating mathematical expressions using SI units
+-- | Calculator module for evaluating mathematical expressions containing SI units
+
 module Math.SiConverter(calculate) where
 
 import Math.SiConverter.Internal.Evaluator
@@ -6,9 +7,6 @@ import Math.SiConverter.Internal.Lexer
 import Math.SiConverter.Internal.Parser
 
 -- | Evaluate a result from a given expression
-calculate ::
-  -- Mathematical expression
-  String ->
-  -- Result
-  Double
+calculate :: String -- ^ The expression to evaluate
+          -> Double -- ^ The numerical result of the expression
 calculate = evaluate . parse . scan

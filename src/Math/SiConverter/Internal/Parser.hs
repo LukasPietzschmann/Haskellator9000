@@ -1,14 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
 
-module Math.SiConverter.Internal.Parser (parseGracefully, parse) where
-
-import Control.Applicative ((<|>))
-import Control.Monad (liftM2)
-import GHC.Base (Alternative (empty))
-import Math.SiConverter.Internal.Expr
-import Math.SiConverter.Internal.Lexer (Token(..), Tokens)
-
 -- | Parse a token stream to an expression tree
 --
 -- Examples:
@@ -22,22 +14,29 @@ import Math.SiConverter.Internal.Lexer (Token(..), Tokens)
 -- >>> parse [Number 9001.0,Operator "*",Number 29.12]
 -- (9001.0 * 29.12)
 --
--- Grammar:
+-- We parse the following grammar:
 --
--- <expr> ::= <term> <expr'>
--- <expr'> ::= "+" <term> <expr'>
-          -- | "-" <term> <expr'>
-          -- | ε
--- <term> ::= <factor> <term'>
--- <term'> ::= "*" <factor> <term'>
-          -- | "/" <factor> <term'>
-          -- | ε
--- <factor> ::= "-" <primary>
-           -- | <primary>
--- <primary> ::= <number>
-            -- | "(" <expr> ")"
--- <number> ::= <value> <unit>
--- <unit> ::= "m" | "s" | "kg" | ε
+-- > <expr> ::= <term> <expr'>
+-- > <expr'> ::= "+" <term> <expr'>
+-- >           | "-" <term> <expr'>
+-- >           | ε
+-- > <term> ::= <factor> <term'>
+-- > <term'> ::= "*" <factor> <term'>
+-- >           | "/" <factor> <term'>
+-- >           | ε
+-- > <factor> ::= "-" <primary>
+-- >            | <primary>
+-- > <primary> ::= <number>
+-- >             | "(" <expr> ")"
+-- > <number> ::= <value> <unit>
+-- > <unit> ::= "m" | "s" | "kg" | ε
+module Math.SiConverter.Internal.Parser (parseGracefully, parse) where
+
+import Control.Applicative ((<|>))
+import Control.Monad (liftM2)
+import GHC.Base (Alternative (empty))
+import Math.SiConverter.Internal.Expr
+import Math.SiConverter.Internal.Lexer (Token(..), Tokens)
 
 newtype Parser a = Parser { runParser :: Tokens -> Either String (a, Tokens) }
 
@@ -67,13 +66,17 @@ instance Alternative Parser where
         Left _ -> p2 input
         res    -> res
 
-parseGracefully :: Tokens -> Either String Expr
+-- | Parse a token stream to an expression tree
+parseGracefully :: Tokens             -- ^ Token stream
+                -> Either String Expr -- ^ Error message or parsed expression
 parseGracefully tokens = case runParser parseExpr tokens of
     Right (result, []) -> Right result
     Right (_, _)       -> Left "Parser was not abe to parse the full input"
     Left err           -> Left err
 
-parse :: Tokens -> Expr
+-- | Parse a token stream to an expression tree and throws if the input is invalid
+parse :: Tokens -- ^ Token stream
+      -> Expr   -- ^ Parsed expression
 parse = either error id . parseGracefully
 
 satisfy :: (Token -> Bool) -> Parser Token

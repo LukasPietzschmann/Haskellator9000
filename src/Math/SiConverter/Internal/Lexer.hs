@@ -1,16 +1,6 @@
 {-# LANGUAGE MultiWayIf #-}
 
-module Math.SiConverter.Internal.Lexer (Token(..), Tokens, scan) where
-
-import Data.Char (isDigit)
-import GHC.Unicode (isAlpha)
-
-data Token = Number Double | Operator String | OpenParen | CloseParen | Identifier String
-    deriving (Show, Eq)
-
-type Tokens = [Token]
-
--- | Tokenize an input string
+-- | Tokenizes an input stream to a list of 'Token's
 --
 -- Examples:
 --
@@ -22,7 +12,24 @@ type Tokens = [Token]
 --
 -- >>> scan "9001*29.12"
 -- [Number 9001.0,Operator "*",Number 29.12]
-scan :: String -> Tokens
+module Math.SiConverter.Internal.Lexer (Token(..), Tokens, scan) where
+
+import Data.Char (isDigit)
+import GHC.Unicode (isAlpha)
+
+data Token = Number Double -- ^ A number (integers are also represented as floats)
+    | Operator String      -- ^ An operator
+    | OpenParen            -- ^ Open parenthesis "("
+    | CloseParen           -- ^ Close parenthesis ")"
+    | Identifier String    -- ^ Identifier (e.g. variable and function name) or unit
+    deriving (Show, Eq)
+
+-- | A simple alias for the 'Token' stream
+type Tokens = [Token]
+
+-- | Tokenizes an input stream to a list of 'Token's and throws if the input is invalid
+scan :: String -- ^ The input stream
+     -> Tokens -- ^ The list of tokens
 scan []       = []
 scan ('(':xs) = OpenParen : scan xs
 scan (')':xs) = CloseParen : scan xs

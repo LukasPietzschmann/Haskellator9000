@@ -1,3 +1,10 @@
+-- | Models an expression tree
+--
+-- Examples:
+--
+-- >>> 1m + 2 * 3m
+-- BinOp (Value 1.0 Meter) Plus (BinOp (Value 2 Multiplier) Mul (Value 3.0 Meter))
+
 module Math.SiConverter.Internal.Expr(Expr(..),Op(..),Unit(..),foldExpr) where
 
 data Unit = Multiplier | Second | Meter | Kilo
@@ -21,7 +28,12 @@ instance Show Op where
 
 data Expr = Value Double Unit | BinOp Expr Op Expr | UnaryOp Op Expr
 
-foldExpr :: (Double -> Unit -> a) -> (a -> Op -> a -> a) -> (Op -> a -> a) -> Expr -> a
+-- | Folds an expression tree
+foldExpr :: (Double -> Unit -> a) -- ^ function that folds a value
+         -> (a -> Op -> a -> a)   -- ^ function that folds a binary expression
+         -> (Op -> a -> a)        -- ^ function that folds a unary expression
+         -> Expr                  -- ^ the 'Expr' to fold over
+         -> a                     -- ^ the resulting value
 foldExpr fv fb fu = doIt
   where
     doIt (Value v u) = fv v u
