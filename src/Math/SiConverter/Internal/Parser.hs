@@ -96,27 +96,27 @@ isIdentifier :: Token -> Bool
 isIdentifier (Identifier _) = True
 isIdentifier _              = False
 
-token :: Token -> Parser Token
-token t = satisfy (==t)
+requireToken :: Token -> Parser Token
+requireToken t = satisfy (==t)
 
-operator :: Parser String
-operator = do
+parseOperator :: Parser String
+parseOperator = do
     Operator op <- satisfy isOperator
     return op
 
-number :: Parser Double
-number = do
+parseNumber :: Parser Double
+parseNumber = do
   Number n <- satisfy isNumber
   return n
 
-identifier :: Parser String
-identifier = do
+parseIdentifier :: Parser String
+parseIdentifier = do
     Identifier i <- satisfy isIdentifier
     return i
 
-unit :: Parser Unit
-unit = do {
-    u <- identifier;
+parseUnit :: Parser Unit
+parseUnit = do {
+    u <- parseIdentifier;
     case u of
         "m"  -> return Meter
         "s"  -> return Second
@@ -124,24 +124,24 @@ unit = do {
         x    -> fail $ "Invalid unit " ++ x
     } <|> return Multiplier
 
-unary :: Parser Op
-unary = do
-    op <- operator
+parseUnary :: Parser Op
+parseUnary = do
+    op <- parseOperator
     case op of
         "-" -> return UnaryMinus
         x   -> fail $ "Invalid unary operator " ++ x
 
-term :: Parser Op
-term = do
-    op <- operator
+parseTermOp :: Parser Op
+parseTermOp = do
+    op <- parseOperator
     case op of
       "+" -> return Plus
       "-" -> return Minus
       x   -> fail $ "Invalid binary operator " ++ x
 
-factor :: Parser Op
-factor = do
-    op <- operator
+parseFactorOp :: Parser Op
+parseFactorOp = do
+    op <- parseOperator
     case op of
       "^" -> return Pow
       "*" -> return Mult
@@ -151,20 +151,20 @@ factor = do
 parseExpr :: Parser Expr
 parseExpr = parseTerm >>= expr'
     where expr' parsedLhs = do {
-         liftM2 (BinOp parsedLhs) term parseTerm >>= expr'
+         liftM2 (BinOp parsedLhs) parseTermOp parseTerm >>= expr'
     } <|> return parsedLhs
 
 parseTerm :: Parser Expr
 parseTerm = parseFactor >>= term'
     where term' parsedLhs = do {
-        liftM2 (BinOp parsedLhs) factor parseFactor >>= term'
+        liftM2 (BinOp parsedLhs) parseFactorOp parseFactor >>= term'
     } <|> return parsedLhs
 
 parseFactor :: Parser Expr
-parseFactor = liftM2 UnaryOp unary parsePrimary <|> parsePrimary
+parseFactor = liftM2 UnaryOp parseUnary parsePrimary <|> parsePrimary
 
 parsePrimary :: Parser Expr
-parsePrimary = parseNumber <|> (token OpenParen *> parseExpr <* token CloseParen)
+parsePrimary = parseValue <|> (requireToken OpenParen *> parseExpr <* requireToken CloseParen)
 
-parseNumber :: Parser Expr
-parseNumber = liftM2 Val number unit
+parseValue :: Parser Expr
+parseValue = liftM2 Val parseNumber parseUnit
