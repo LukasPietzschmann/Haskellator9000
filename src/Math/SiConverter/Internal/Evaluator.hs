@@ -2,14 +2,14 @@
 
 module Math.SiConverter.Internal.Evaluator (evaluate) where
 
-import Math.SiConverter.Internal.Expr (Expr, Op (..), foldExpr)
+import Math.SiConverter.Internal.Expr (Expr (..), Op (..), foldExpr, value)
 
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
 evaluate :: Expr   -- ^ the 'Expr' tree to evaluate
          -> Double -- ^ the resulting value
 evaluate =
   foldExpr
-    const
+    value
     evaluateBinOp
     evaluateUnaryOp
 

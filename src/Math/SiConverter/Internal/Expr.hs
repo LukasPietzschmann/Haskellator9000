@@ -26,6 +26,9 @@ data Value = Value {
     unit  :: Unit
 }
 
+instance Show Value where
+    show (Value v u) = show v ++ show u
+
 data Op = Plus | Minus | Mult | Div | Pow | UnaryMinus
     deriving (Enum, Bounded)
 
@@ -37,17 +40,17 @@ instance Show Op where
   show Pow = "^"
   show UnaryMinus = "-"
 
-data Expr = Val Double Unit | BinOp Expr Op Expr | UnaryOp Op Expr
+data Expr = Val Value | BinOp Expr Op Expr | UnaryOp Op Expr
 
 -- | Folds an expression tree
-foldExpr :: (Double -> Unit -> a) -- ^ function that folds a value
+foldExpr :: (Value -> a) -- ^ function that folds a value
          -> (a -> Op -> a -> a)   -- ^ function that folds a binary expression
          -> (Op -> a -> a)        -- ^ function that folds a unary expression
          -> Expr                  -- ^ the 'Expr' to fold over
          -> a                     -- ^ the resulting value
 foldExpr fv fb fu = doIt
   where
-    doIt (Val v u) = fv v u
+    doIt (Val v) = fv v
     doIt (BinOp e1 o e2) = fb (doIt e1) o (doIt e2)
     doIt (UnaryOp o e) = fu o $ doIt e
 
@@ -55,8 +58,7 @@ instance Eq Expr where
   e1 == e2 = show e1 == show e2
 
 instance Show Expr where
-  show = foldExpr showValue showBinOp showUnaryOp
+  show = foldExpr show showBinOp showUnaryOp
     where
-      showValue v u = show v ++ show u
       showBinOp e1 o e2 = "(" ++ e1 ++ " " ++ show o ++ " " ++ e2 ++ ")"
       showUnaryOp o e = "(" ++ show o ++ e ++ ")"
