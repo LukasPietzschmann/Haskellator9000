@@ -117,12 +117,8 @@ parseIdentifier = do
 parseUnit :: Parser Unit
 parseUnit = do {
     u <- parseIdentifier;
-    case u of
-        "m"  -> return Meter
-        "s"  -> return Second
-        "kg" -> return Kilo
-        x    -> fail $ "Invalid unit " ++ x
-    } <|> return Multiplier
+    either (\x -> fail $ "Invalid unit " ++ x) return (unitFromString u)
+  } <|> return Multiplier
 
 parseUnary :: Parser Op
 parseUnary = do
