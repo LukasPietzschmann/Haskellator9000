@@ -9,4 +9,4 @@ import Math.SiConverter.Internal.Parser
 -- | Evaluate a result from a given expression
 calculate :: String -- ^ The expression to evaluate
           -> Double -- ^ The numerical result of the expression
-calculate = evaluate . parse . scan
+calculate = evaluate . normalize . parse . scan
