@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Models an expression tree
 --
 -- Examples:
@@ -10,13 +12,19 @@
 
 module Math.SiConverter.Internal.Expr(Expr(..),Op(..),Unit(..),foldExpr) where
 
-data Unit = Multiplier | Second | Meter | Kilo
+import Math.SiConverter.Internal.TH.UnitGeneration(UnitDef(..), Quantity(..), generateUnits)
 
-instance Show Unit where
-  show Multiplier = ""
-  show Second = "s"
-  show Meter = "m"
-  show Kilo = "kg"
+$(generateUnits [
+    Quantity (UnitDef "Multiplier" "" 1) [],
+    Quantity (UnitDef "Meter" "m" 1) [],
+    Quantity (UnitDef "Second" "s" 1) [],
+    Quantity (UnitDef "Kilo" "kg" 1) []
+  ])
+
+data Value = Value {
+    value :: Double,
+    unit  :: Unit
+}
 
 data Op = Plus | Minus | Mult | Div | Pow | UnaryMinus
     deriving (Enum, Bounded)
@@ -52,6 +60,3 @@ instance Show Expr where
       showValue v u = show v ++ show u
       showBinOp e1 o e2 = "(" ++ e1 ++ " " ++ show o ++ " " ++ e2 ++ ")"
       showUnaryOp o e = "(" ++ show o ++ e ++ ")"
-
--- example :: Expr
--- example = BinOp (BinOp (Val 1 Multiplier) Plus (BinOp (Val 2 Multiplier) Mult (Val 3 Multiplier))) Minus (UnaryOp UnaryMinus (Val 4 Multiplier))

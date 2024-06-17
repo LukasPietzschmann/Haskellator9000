@@ -34,6 +34,8 @@ ghc-options:
 
 library:
   source-dirs: src
+  dependencies:
+  - template-haskell
 
 executables:
   si-calculator-exe:
