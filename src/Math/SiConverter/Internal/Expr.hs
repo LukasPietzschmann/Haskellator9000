@@ -3,10 +3,10 @@
 -- Examples:
 --
 -- >>> show $ BinOp (Val 1.0 Meter) Plus (BinOp (Val 2 Multiplier) Mult (Val 3.0 Meter))
--- 1.0m + 2.0 * 3.0m
+-- "(1.0m + (2.0 * 3.0m))"
 --
 -- >>> show $ BinOp (BinOp (Val 1.0 Meter) Plus (Val 2.0 Meter)) Mult (Val 3.0 Multiplier)
--- (1.0m + 2.0m) * 3.0
+-- "((1.0m + 2.0m) * 3.0)"
 
 module Math.SiConverter.Internal.Expr(Expr(..),Op(..),Unit(..),foldExpr) where
 
