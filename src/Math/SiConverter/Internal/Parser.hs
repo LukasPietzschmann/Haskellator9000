@@ -97,8 +97,8 @@ parseGracefully tokens = case runParser parseExpr tokens of
 
 -- | Parse a token stream to an expression tree and throws if the input is invalid
 parse :: Tokens -- ^ Token stream
-      -> Expr   -- ^ Parsed expression
-parse = either error id . parseGracefully
+      -> Either String Expr   -- ^ Parsed expression
+parse = parseGracefully
 
 satisfy :: (Token -> Bool) -> Parser Token
 satisfy predicate = ParserT $ \input -> return $ case input of

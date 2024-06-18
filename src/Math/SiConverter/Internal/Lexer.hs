@@ -31,29 +31,27 @@ type Tokens = [Token]
 scanGracefully :: String               -- ^ The input stream
                -> Either String Tokens -- ^ Error message or the list of tokens
 scanGracefully []       = Right []
-scanGracefully ('(':xs) = Right $ OpenParen : scan xs
-scanGracefully (')':xs) = Right $ CloseParen : scan xs
-scanGracefully ('+':xs) = Right $ Operator "+" : scan xs
-scanGracefully ('-':xs) = Right $ Operator "-" : scan xs
-scanGracefully ('*':xs) = Right $ Operator "*" : scan xs
-scanGracefully ('/':xs) = Right $ Operator "/" : scan xs
-scanGracefully ('^':xs) = Right $ Operator "^" : scan xs
+scanGracefully ('(':xs) = (OpenParen :)    <$> scan xs
+scanGracefully (')':xs) = (CloseParen :)   <$> scan xs
+scanGracefully ('+':xs) = (Operator "+" :) <$> scan xs
+scanGracefully ('-':xs) = (Operator "-" :) <$> scan xs
+scanGracefully ('*':xs) = (Operator "*" :) <$> scan xs
+scanGracefully ('/':xs) = (Operator "/" :) <$> scan xs
+scanGracefully ('^':xs) = (Operator "^" :) <$> scan xs
 scanGracefully (x:xs)   = if | elem x [' ', '\t', '\r', '\n'] -> scanGracefully xs
-                             | isDigit x -> Right $ scanNumber (x:xs)
-                             | isAlpha x -> Right $ scanIdentifier (x:xs)
+                             | isDigit x -> scanNumber (x:xs)
+                             | isAlpha x -> scanIdentifier (x:xs)
                              | otherwise -> Left $ "Unexpected character: " ++ [x]
 
 -- | Tokenizes an input stream to a list of 'Token's and throws if the input is invalid
 scan :: String -- ^ The input stream
-     -> Tokens -- ^ The list of tokens
-scan input = case scanGracefully input of
-    Right ts -> ts
-    Left err -> error err
+     -> Either String Tokens -- ^ The list of tokens
+scan = scanGracefully
 
-scanNumber :: String -> Tokens
-scanNumber xs = Number (read num) : scan rest
+scanNumber :: String -> Either String Tokens
+scanNumber xs = (Number (read num):) <$> scan rest
     where (num, rest) = span (\x -> any ($ x) [isDigit, (== '.'), (== 'e'), (== '-')]) xs
 
-scanIdentifier :: String -> Tokens
-scanIdentifier xs = Identifier i : scan rest
+scanIdentifier :: String -> Either String Tokens
+scanIdentifier xs = (Identifier i :) <$> scan rest
     where (i, rest) = span isAlpha xs

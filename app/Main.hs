@@ -14,9 +14,10 @@ repl = do
   case minput of
     Nothing -> return ()
     Just input -> do
-      unless (elem input exitCommands) $ do
-        let result = calculate input
-        outputStrLn $ show result
+      unless (input `elem` exitCommands) $ do
+        case calculate input of
+          Right res -> outputStrLn $ show res
+          Left err -> outputStrLn $ "Incorrect input: " ++ err
         repl
 
 replSettings :: MonadIO m => Settings m
