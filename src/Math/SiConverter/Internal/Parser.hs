@@ -58,10 +58,10 @@ instance Monad Parser where
         runParser (f a) res
 
 instance MonadFail Parser where
-    fail err = Parser $ \_ -> Left err
+    fail = Parser . const . Left
 
 instance Alternative Parser where
-    empty = Parser $ \_ -> Left "Empty parser"
+    empty = Parser $ const $ Left "Empty parser"
     (Parser p1) <|> (Parser p2) = Parser $ \input -> case p1 input of
         Left _ -> p2 input
         res    -> res
@@ -71,7 +71,7 @@ parseGracefully :: Tokens             -- ^ Token stream
                 -> Either String Expr -- ^ Error message or parsed expression
 parseGracefully tokens = case runParser parseExpr tokens of
     Right (result, []) -> Right result
-    Right (_, _)       -> Left "Parser was not abe to parse the full input"
+    Right (_, ts)      -> Left $ "Parser was unable to parse the full input. " ++ show ts ++ " remains in the token stream."
     Left err           -> Left err
 
 -- | Parse a token stream to an expression tree and throws if the input is invalid
@@ -82,7 +82,8 @@ parse = either error id . parseGracefully
 satisfy :: (Token -> Bool) -> Parser Token
 satisfy predicate = Parser $ \case
     (x:xs) | predicate x -> Right (x, xs)
-    _                    -> Left "Unexpected token"
+           | otherwise   -> Left $ "Unexpected token " ++ show x
+    _                    -> Left "Reached unexpected end of token stream"
 
 isOperator :: Token -> Bool
 isOperator (Operator _) = True
