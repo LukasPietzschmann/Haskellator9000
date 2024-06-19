@@ -21,14 +21,6 @@ $(generateUnits [
     Quantity (UnitDef "Kilo" "kg" 1) []
   ])
 
-data Value = Value {
-    value :: Double,
-    unit  :: Unit
-}
-
-instance Show Value where
-    show (Value v u) = show v ++ show u
-
 data Op = Plus | Minus | Mult | Div | Pow | UnaryMinus
     deriving (Enum, Bounded)
 

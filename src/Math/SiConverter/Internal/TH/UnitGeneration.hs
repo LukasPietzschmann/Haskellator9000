@@ -27,6 +27,12 @@ unitFromStringFun = mkName "unitFromString"
 convertToBaseFun :: Name
 convertToBaseFun = mkName "convertToBase"
 
+generateValueAdt :: [Dec]
+generateValueAdt = [dataDec, showInstance]
+  where dataDec = DataD [] valueADT [] Nothing [RecC valueADT [(mkName "value", Bang NoSourceUnpackedness NoSourceStrictness, ConT ''Double), (mkName "unit", Bang NoSourceUnpackedness NoSourceStrictness, ConT unitADT)]] []
+        showClauses = [Clause [ConP valueADT [] [VarP $ mkName "v", VarP $ mkName "u"]] (NormalB $ AppE (AppE (VarE '(++)) (AppE (VarE 'show) (VarE $ mkName "v"))) (AppE (VarE 'show) (VarE $ mkName "u"))) []]
+        showInstance = InstanceD Nothing [] (AppT (ConT ''Show) (ConT valueADT)) [FunD 'show showClauses]
+
 -- | Generate the unit types and function to work with them. Imagine the following call: @generateUnits [Quantity (UnitDef "Meter" "m" 1) [UnitDef "Kilometer" "km" 1000]]@.
 -- This function will then generate the following code:
 --
