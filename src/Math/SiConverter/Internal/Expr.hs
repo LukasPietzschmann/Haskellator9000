@@ -12,7 +12,7 @@
 
 module Math.SiConverter.Internal.Expr(Expr(..),Op(..),Unit(..),Value(..),foldExpr,unitFromString,convertToBase) where
 
-import Math.SiConverter.Internal.TH.UnitGeneration(UnitDef(..), Quantity(..), generateUnits)
+import Math.SiConverter.Internal.TH.UnitGeneration(UnitDef(..), Quantity(..), generateUnits, OperatorDef(..), generateOperators)
 
 $(generateUnits [
     Quantity (UnitDef "Multiplier" "" 1) [],
@@ -21,16 +21,14 @@ $(generateUnits [
     Quantity (UnitDef "Kilo" "kg" 1) []
   ])
 
-data Op = Plus | Minus | Mult | Div | Pow | UnaryMinus
-    deriving (Enum, Bounded)
-
-instance Show Op where
-  show Plus = "+"
-  show Minus = "-"
-  show Mult = "*"
-  show Div = "/"
-  show Pow = "^"
-  show UnaryMinus = "-"
+$(generateOperators [
+    OperDef "Plus" "+",
+    OperDef "Minus" "-",
+    OperDef "Mult" "*",
+    OperDef "Div" "/",
+    OperDef "Pow" "^",
+    OperDef "UnaryMinus" "-"
+  ])
 
 data Expr = Val Value | BinOp Expr Op Expr | UnaryOp Op Expr
 
