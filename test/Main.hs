@@ -18,7 +18,7 @@ instance Arbitrary Expr where
   arbitrary = let randomNumber = flip (Val .: Value) Multiplier <$> (arbitrary `suchThat` (>=0)) in frequency [
       (10, randomNumber),
       (6, liftM3 BinOp arbitrary arbitrary arbitrary),
-      (3, UnaryOp Minus <$> randomNumber)
+      (1, UnaryOp Minus <$> randomNumber)
     ]
 
 main :: IO ()
