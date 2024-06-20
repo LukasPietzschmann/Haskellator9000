@@ -1,6 +1,4 @@
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE TupleSections #-}
-
 -- | Parse a token stream to an expression tree
 --
 -- Examples:
@@ -103,7 +101,7 @@ parse :: Tokens -- ^ Token stream
 parse = either error id . parseGracefully
 
 satisfy :: (Token -> Bool) -> Parser Token
-satisfy predicate = Parser $ \case
+satisfy predicate = ParserT $ \input -> return $ case input of
     (x:xs) | predicate x -> Right (x, xs)
            | otherwise   -> Left $ "Unexpected token " ++ show x
     _                    -> Left "Reached unexpected end of token stream"
@@ -154,6 +152,7 @@ parseUnary = do
 parseTermOp :: Parser Op
 parseTermOp = do
     op <- parseOperator
+    lift $ put False
     case op of
       "+" -> return Plus
       "-" -> return Minus
@@ -162,6 +161,7 @@ parseTermOp = do
 parseFactorOp :: Parser Op
 parseFactorOp = do
     op <- parseOperator
+    lift $ put True
     case op of
       "^" -> return Pow
       "*" -> return Mult
@@ -184,7 +184,11 @@ parseFactor :: Parser Expr
 parseFactor = liftM2 UnaryOp parseUnary parsePrimary <|> parsePrimary
 
 parsePrimary :: Parser Expr
-parsePrimary = parseValue <|> (requireToken OpenParen *> parseExpr <* requireToken CloseParen)
+parsePrimary = (requireToken OpenParen *> parseExpr <* requireToken CloseParen) <|> parseValue
 
 parseValue :: Parser Expr
-parseValue = liftM2 (Val .: Value) parseNumber parseUnit
+parseValue = liftM2 (Val .: Value) parseNumber parseUnit <|> do
+    isInFactor <- lift get
+    if isInFactor
+        then Val . Value 1 <$> parseUnit
+        else fail "Value-less units are only allowed in factors"
