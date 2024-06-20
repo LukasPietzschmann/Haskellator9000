@@ -52,7 +52,7 @@ scan input = case scanGracefully input of
 
 scanNumber :: String -> Tokens
 scanNumber xs = Number (read num) : scan rest
-    where (num, rest) = span (\x -> isDigit x || x == '.' || x == 'e' || x == '-') xs
+    where (num, rest) = span (\x -> any ($x) [isDigit, (== '.'), (== 'e'), (== '-')]) xs
 
 scanIdentifier :: String -> Tokens
 scanIdentifier xs = Identifier i : scan rest

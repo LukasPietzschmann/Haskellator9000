@@ -6,6 +6,7 @@ import Control.Monad (liftM3)
 import Math.SiConverter.Internal.Expr ( Expr(..), Unit(..), Op(..), Value (..) )
 import Math.SiConverter.Internal.Lexer (scan)
 import Math.SiConverter.Internal.Parser (parse, parseGracefully)
+import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit ((@?=), testCase)
 import Test.Tasty.QuickCheck (testProperty, Arbitrary, arbitrary, frequency, arbitraryBoundedEnum, suchThat)
@@ -14,7 +15,7 @@ instance Arbitrary Op where
     arbitrary = arbitraryBoundedEnum
 
 instance Arbitrary Expr where
-  arbitrary = let randomNumber = flip (\v u -> Val $ Value v u) Multiplier <$> (arbitrary `suchThat` (>=0)) in frequency [
+  arbitrary = let randomNumber = flip (Val .: Value) Multiplier <$> (arbitrary `suchThat` (>=0)) in frequency [
       (10, randomNumber),
       (6, liftM3 BinOp arbitrary arbitrary arbitrary),
       (3, UnaryOp Minus <$> randomNumber)

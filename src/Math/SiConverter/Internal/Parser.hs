@@ -34,37 +34,60 @@ module Math.SiConverter.Internal.Parser (parseGracefully, parse) where
 
 import Control.Applicative ((<|>))
 import Control.Monad (liftM2)
+import Control.Monad.State
+import Data.Bifunctor (first)
 import GHC.Base (Alternative (empty))
 import Math.SiConverter.Internal.Expr
 import Math.SiConverter.Internal.Lexer (Token(..), Tokens)
+import Math.SiConverter.Internal.Utils.Composition ((.:))
 
-newtype Parser a = Parser { runParser :: Tokens -> Either String (a, Tokens) }
+newtype ParserT m a = ParserT { runParserT :: Tokens -> m (Either String (a, Tokens)) }
 
-instance Functor Parser where
-    fmap f (Parser p) = Parser $ \input -> do
-        (result, rest) <- p input
-        return (f result, rest)
+-- | Parser monad. The state encodes weather or not we're coming from a factor. This is
+-- only used when parsing things like "2m*s" where there's no explicit value for the seconds.
+-- And since "2m + s" is invalid, we can use this to differentiate between the two.
+type Parser = ParserT (State Bool)
 
-instance Applicative Parser where
-    pure a = Parser $ Right . (a,)
-    (Parser pf) <*> (Parser pp) = Parser $ \input -> do
-        (f, res1) <- pf input
-        (a, res2) <- pp res1
-        return (f a, res2)
+runParser :: Parser a -> Tokens -> Either String (a, Tokens)
+runParser p ts = evalState (runParserT p ts) False
 
-instance Monad Parser where
-    (Parser p) >>= f = Parser $ \input -> do
-        (a, res) <- p input
-        runParser (f a) res
 
-instance MonadFail Parser where
-    fail = Parser . const . Left
+instance Functor m => Functor (ParserT m) where
+    fmap f (ParserT p) = ParserT $ \input -> fmap (first f) <$> p input
 
-instance Alternative Parser where
-    empty = Parser $ const $ Left "Empty parser"
-    (Parser p1) <|> (Parser p2) = Parser $ \input -> case p1 input of
-        Left _ -> p2 input
-        res    -> res
+instance Monad m => Applicative (ParserT m) where
+    pure a = ParserT $ \input -> return $ Right (a, input)
+    (ParserT lhs) <*> (ParserT rhs) = ParserT $ \input -> do
+        lhs input >>= \case
+            Left err -> return $ Left err
+            Right (f, ts) -> rhs ts >>= \case
+                Left err -> return $ Left err
+                Right (res, ts') -> return $ Right (f res, ts')
+
+instance Monad m => Monad (ParserT m) where
+    (ParserT p) >>= f = ParserT $ \input -> do
+        p input >>= \case
+            Left err        -> return $ Left err
+            Right (res, ts) -> runParserT (f res) ts
+
+instance Monad m => MonadFail (ParserT m) where
+    fail = ParserT . const . return . Left
+
+instance Monad m => Alternative (ParserT m) where
+    empty = ParserT $ const $ return $ Left "Empty parser"
+    (ParserT p1) <|> (ParserT p2) = ParserT $ \input -> do
+        result <- p1 input
+        case result of
+            Left _  -> p2 input
+            Right _ -> return result
+
+instance MonadTrans ParserT where
+    lift op = ParserT $ \input -> do
+        result <- op
+        return $ Right (result, input)
+
+instance MonadIO m => MonadIO (ParserT m) where
+    liftIO = lift . liftIO
 
 -- | Parse a token stream to an expression tree
 parseGracefully :: Tokens             -- ^ Token stream
@@ -164,4 +187,4 @@ parsePrimary :: Parser Expr
 parsePrimary = parseValue <|> (requireToken OpenParen *> parseExpr <* requireToken CloseParen)
 
 parseValue :: Parser Expr
-parseValue = liftM2 (\n p -> Val $ Value n p) parseNumber parseUnit
+parseValue = liftM2 (Val .: Value) parseNumber parseUnit
