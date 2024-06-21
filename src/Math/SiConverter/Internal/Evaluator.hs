@@ -1,23 +1,18 @@
 -- | Evaluate the expression tree
-module Math.SiConverter.Internal.Evaluator (normalize, evaluate) where
+module Math.SiConverter.Internal.Evaluator (evaluate, normalize) where
 
-import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Value(..), convertToBase, foldExpr, foldExprM, value)
+import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Value (..), convertToBase,
+           foldExpr, foldExprM, value)
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (ImplementationError))
 
 -- | Normalize all values inside the tree to their base units
-normalize ::
-  -- | the 'Expr' tree to normalize
-  Expr ->
-  -- | the normalized 'Expr' tree
-  Either Error Expr
+normalize :: Expr              -- | the 'Expr' tree to normalize
+          -> Either Error Expr -- | the normalized 'Expr' tree
 normalize = Right . foldExpr (Val . convertToBase) BinOp UnaryOp
 
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
-evaluate ::
-  -- | the 'Expr' tree to evaluate
-  Expr ->
-  -- | the resulting value
-  Either Error Double
+evaluate :: Expr                -- | the 'Expr' tree to evaluate
+         -> Either Error Double -- | the resulting value
 evaluate = foldExprM (Right . value) evaluateBinOp evaluateUnaryOp
 
 evaluateBinOp :: Double -> Op -> Double -> Either Error Double

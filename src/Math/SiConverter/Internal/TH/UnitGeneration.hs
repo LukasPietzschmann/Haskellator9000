@@ -2,7 +2,13 @@
 
 -- | Generate the unit types and function to work with them
 
-module Math.SiConverter.Internal.TH.UnitGeneration(UnitDef(..), Quantity(..), generateUnits, OperatorDef(..), generateOperators) where
+module Math.SiConverter.Internal.TH.UnitGeneration (
+      OperatorDef (..)
+    , Quantity (..)
+    , UnitDef (..)
+    , generateOperators
+    , generateUnits
+    ) where
 
 import Language.Haskell.TH
 
@@ -11,21 +17,17 @@ class Showable a where
     abbreviation :: a -> String
 
 -- | Definition of a Unit
-data UnitDef = UnitDef String -- ^ Name of the unit
-                       String -- ^ Abbreviation of the unit
-                       Double -- ^ Factor to convert to the base unit
+data UnitDef = UnitDef String String Double
 
 instance Showable UnitDef where
     name (UnitDef n _ _) = n
     abbreviation (UnitDef _ a _) = a
 
 -- | A quantity made of a base unit and other related units
-data Quantity = Quantity UnitDef   -- ^ Base unit
-                         [UnitDef] -- ^ Other units
+data Quantity = Quantity UnitDef [UnitDef]
 
 -- | Definition of a operator
-data OperatorDef = OperDef String -- ^ Name of the operator
-                           String -- ^ Mathematical symbol of the operator
+data OperatorDef = OperDef String String
 
 instance Showable OperatorDef where
     name (OperDef n _) = n

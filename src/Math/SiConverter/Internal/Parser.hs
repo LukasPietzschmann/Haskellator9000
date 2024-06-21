@@ -31,15 +31,17 @@
 module Math.SiConverter.Internal.Parser (parse) where
 
 import Control.Applicative ((<|>))
+import Control.Monad (liftM2)
 import Control.Monad.State
+
 import Data.Bifunctor (first)
+
 import GHC.Base (Alternative (empty))
+
 import Math.SiConverter.Internal.Expr
-import Math.SiConverter.Internal.Lexer (Token(..), Tokens)
+import Math.SiConverter.Internal.Lexer (Token (..), Tokens)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
-import Math.SiConverter.Internal.Utils.Error
-    ( Kind(ParseError), Error(..) )
-import Control.Monad(liftM2)
+import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (ParseError))
 
 newtype ParserT m a = ParserT { runParserT :: Tokens -> m (Either String (a, Tokens)) }
 
@@ -59,9 +61,9 @@ instance Monad m => Applicative (ParserT m) where
     pure a = ParserT $ \input -> return $ Right (a, input)
     (ParserT lhs) <*> (ParserT rhs) = ParserT $ \input -> do
         lhs input >>= \case
-            Left err -> return $ Left err
+            Left err      -> return $ Left err
             Right (f, ts) -> rhs ts >>= \case
-                Left err -> return $ Left err
+                Left err         -> return $ Left err
                 Right (res, ts') -> return $ Right (f res, ts')
 
 instance Monad m => Monad (ParserT m) where
@@ -91,7 +93,7 @@ instance MonadIO m => MonadIO (ParserT m) where
 
 -- | Parse a token stream to an expression tree
 parse :: Tokens             -- ^ Token stream
-                -> Either Error Expr -- ^ Error message or parsed expression
+      -> Either Error Expr -- ^ Error message or parsed expression
 parse tokens = case runParser parseExpr tokens of
     Right (result, []) -> Right result
     Right (_, ts)      -> Left $ Error ParseError $ "Parser was unable to parse the full input. " ++ show ts ++ " remains in the token stream."
@@ -125,8 +127,8 @@ parseOperator = do
 
 parseNumber :: Parser Double
 parseNumber = do
-  Number n <- satisfy isNumber
-  return n
+    Number n <- satisfy isNumber
+    return n
 
 parseIdentifier :: Parser String
 parseIdentifier = do
@@ -160,10 +162,10 @@ parseFactorOp = do
     op <- parseOperator
     lift $ put True
     case op of
-      "^" -> return Pow
-      "*" -> return Mult
-      "/" -> return Div
-      x   -> fail $ "Invalid binary operator " ++ x
+        "^" -> return Pow
+        "*" -> return Mult
+        "/" -> return Div
+        x   -> fail $ "Invalid binary operator " ++ x
 
 parseExpr :: Parser Expr
 parseExpr = parseTerm >>= expr'

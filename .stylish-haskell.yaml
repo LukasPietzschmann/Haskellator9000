@@ -1,0 +1,50 @@
+steps:
+  - module_header:
+      indent: 4
+      sort: true
+      break_where: inline
+      open_bracket: same_line
+
+  - records:
+      equals: "same_line"
+      first_field: "same_line"
+      field_comment: 2
+      deriving: 2
+      via: "same_line"
+      sort_deriving: true
+      break_enums: false
+      break_single_constructors: false
+      curried_context: false
+  # Possible values:
+  # - always - Always align statements.
+  # - adjacent - Align statements that are on adjacent lines in groups.
+  # - never - Never align statements.
+  - simple_align:
+      cases: always
+      top_level_patterns: always
+      records: always
+      multi_way_if: always
+  - imports:
+      align: none
+      list_align: with_module_name
+      pad_module_names: false
+      long_list_align: inline
+      empty_list_align: right_after
+      list_padding: 4
+      separate_lists: true
+      space_surround: false
+      post_qualify: true
+      group_imports: true
+      group_rules:
+        - match: ".*"
+          sub_group: "^[^.]+"
+
+  - language_pragmas:
+      style: compact
+      align: false
+      remove_redundant: true
+      language_prefix: LANGUAGE
+
+columns: 88
+newline: lf
+cabal: true

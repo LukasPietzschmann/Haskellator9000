@@ -3,13 +3,16 @@
 module Main (main) where
 
 import Control.Monad (liftM3)
-import Math.SiConverter.Internal.Expr ( Expr(..), Unit(..), Op(..), Value (..) )
+
+import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Unit (..), Value (..))
 import Math.SiConverter.Internal.Lexer (scan)
 import Math.SiConverter.Internal.Parser (parse)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
+
 import Test.Tasty (TestTree, defaultMain, testGroup)
-import Test.Tasty.HUnit ((@?=), testCase)
-import Test.Tasty.QuickCheck (testProperty, Arbitrary, arbitrary, frequency, arbitraryBoundedEnum, suchThat)
+import Test.Tasty.HUnit (testCase, (@?=))
+import Test.Tasty.QuickCheck (Arbitrary, arbitrary, arbitraryBoundedEnum, frequency,
+           suchThat, testProperty)
 
 instance Arbitrary Op where
     arbitrary = arbitraryBoundedEnum

@@ -10,9 +10,19 @@
 -- >>> show $ BinOp (BinOp (Val $ Value 1.0 Meter) Plus (Val $ Value 2.0 Meter)) Mult (Val $ Value 3.0 Multiplier)
 -- "((1.0m + 2.0m) * 3.0)"
 
-module Math.SiConverter.Internal.Expr(Expr(..),Op(..),Unit(..),Value(..),foldExpr,foldExprM,unitFromString,convertToBase) where
+module Math.SiConverter.Internal.Expr (
+      Expr (..)
+    , Op (..)
+    , Unit (..)
+    , Value (..)
+    , convertToBase
+    , foldExpr
+    , foldExprM
+    , unitFromString
+    ) where
 
-import Math.SiConverter.Internal.TH.UnitGeneration(UnitDef(..), Quantity(..), generateUnits, OperatorDef(..), generateOperators)
+import Math.SiConverter.Internal.TH.UnitGeneration (OperatorDef (..), Quantity (..),
+           UnitDef (..), generateOperators, generateUnits)
 
 $(generateUnits [
     Quantity (UnitDef "Multiplier" "" 1) [],
@@ -30,41 +40,42 @@ $(generateOperators [
     OperDef "UnaryMinus" "-"
   ])
 
-data Expr = Val Value | BinOp Expr Op Expr | UnaryOp Op Expr
+data Expr = Val Value
+          | BinOp Expr Op Expr
+          | UnaryOp Op Expr
 
 -- | Folds an expression tree
-foldExpr :: (Value -> a) -- ^ function that folds a value
-         -> (a -> Op -> a -> a)   -- ^ function that folds a binary expression
-         -> (Op -> a -> a)        -- ^ function that folds a unary expression
-         -> Expr                  -- ^ the 'Expr' to fold over
-         -> a                     -- ^ the resulting value
+foldExpr :: (Value -> a)        -- ^ function that folds a value
+         -> (a -> Op -> a -> a) -- ^ function that folds a binary expression
+         -> (Op -> a -> a)      -- ^ function that folds a unary expression
+         -> Expr                -- ^ the 'Expr' to fold over
+         -> a                   -- ^ the resulting value
 foldExpr fv fb fu = doIt
   where
-    doIt (Val v) = fv v
+    doIt (Val v)         = fv v
     doIt (BinOp e1 o e2) = fb (doIt e1) o (doIt e2)
-    doIt (UnaryOp o e) = fu o $ doIt e
+    doIt (UnaryOp o e)   = fu o $ doIt e
 
 -- | Monadic fold over an expression tree
 foldExprM :: (Monad m) => (Value -> m a) -- ^ function that folds a value
          -> (a -> Op -> a -> m a)        -- ^ function that folds a binary expression
          -> (Op -> a -> m a)             -- ^ function that folds a unary expression
-         -> Expr                       -- ^ the 'Expr' to fold over
+         -> Expr                         -- ^ the 'Expr' to fold over
          -> m a                          -- ^ the resulting value
 foldExprM fv fb fu = doIt
   where
     doIt (Val v) = fv v
-    doIt (BinOp e1 o e2) = 
-      do
+    doIt (BinOp e1 o e2) = do
         v1 <- doIt e1
         v2 <- doIt e2
         fb v1 o v2
     doIt (UnaryOp o e) = doIt e >>= \v -> fu o v
 
 instance Eq Expr where
-  e1 == e2 = show e1 == show e2
+    e1 == e2 = show e1 == show e2
 
 instance Show Expr where
-  show = foldExpr show showBinOp showUnaryOp
-    where
-      showBinOp e1 o e2 = "(" ++ e1 ++ " " ++ show o ++ " " ++ e2 ++ ")"
-      showUnaryOp o e = "(" ++ show o ++ e ++ ")"
+    show = foldExpr show showBinOp showUnaryOp
+      where
+        showBinOp e1 o e2 = "(" ++ e1 ++ " " ++ show o ++ " " ++ e2 ++ ")"
+        showUnaryOp o e = "(" ++ show o ++ e ++ ")"
