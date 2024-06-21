@@ -26,6 +26,7 @@ library
       Math.SiConverter.Internal.Parser
       Math.SiConverter.Internal.TH.UnitGeneration
       Math.SiConverter.Internal.Utils.Composition
+      Math.SiConverter.Internal.Utils.Error
   other-modules:
       Paths_si_calculator
   autogen-modules:

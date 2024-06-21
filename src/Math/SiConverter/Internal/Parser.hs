@@ -1,5 +1,4 @@
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE InstanceSigs #-}
 -- | Parse a token stream to an expression tree
 --
 -- Examples:
@@ -38,6 +37,8 @@ import GHC.Base (Alternative (empty))
 import Math.SiConverter.Internal.Expr
 import Math.SiConverter.Internal.Lexer (Token(..), Tokens)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
+import Math.SiConverter.Internal.Utils.Error
+    ( Kind(ParseError), Error(..) )
 
 newtype ParserT m a = ParserT { runParserT :: Tokens -> m (Either String (a, Tokens)) }
 
@@ -89,11 +90,11 @@ instance MonadIO m => MonadIO (ParserT m) where
 
 -- | Parse a token stream to an expression tree
 parse :: Tokens             -- ^ Token stream
-                -> Either String Expr -- ^ Error message or parsed expression
+                -> Either Error Expr -- ^ Error message or parsed expression
 parse tokens = case runParser parseExpr tokens of
     Right (result, []) -> Right result
-    Right (_, ts)      -> Left $ "Parser was unable to parse the full input. " ++ show ts ++ " remains in the token stream."
-    Left err           -> Left err
+    Right (_, ts)      -> Left $ Error ParseError $ "Parser was unable to parse the full input. " ++ show ts ++ " remains in the token stream."
+    Left err           -> Left $ Error ParseError err
 
 satisfy :: (Token -> Bool) -> Parser Token
 satisfy predicate = ParserT $ \input -> return $ case input of

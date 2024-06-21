@@ -16,6 +16,7 @@ module Math.SiConverter.Internal.Lexer (Token(..), Tokens, scan) where
 
 import Data.Char (isDigit)
 import GHC.Unicode (isAlpha)
+import Math.SiConverter.Internal.Utils.Error
 
 data Token = Number Double -- ^ A number (integers are also represented as floats)
     | Operator String      -- ^ An operator
@@ -29,7 +30,7 @@ type Tokens = [Token]
 
 -- | Tokenizes an input stream to a list of 'Token's
 scan :: String               -- ^ The input stream
-               -> Either String Tokens -- ^ Error message or the list of tokens
+               -> Either Error Tokens -- ^ Error message or the list of tokens
 scan []       = Right []
 scan ('(':xs) = (OpenParen :)    <$> scan xs
 scan (')':xs) = (CloseParen :)   <$> scan xs
@@ -41,12 +42,12 @@ scan ('^':xs) = (Operator "^" :) <$> scan xs
 scan (x:xs)   = if | elem x [' ', '\t', '\r', '\n'] -> scan xs
                              | isDigit x -> scanNumber (x:xs)
                              | isAlpha x -> scanIdentifier (x:xs)
-                             | otherwise -> Left $ "Unexpected character: " ++ [x]
+                             | otherwise -> Left $ Error ScanError $ "Unexpected character: " ++ [x]
 
-scanNumber :: String -> Either String Tokens
+scanNumber :: String -> Either Error Tokens
 scanNumber xs = (Number (read num):) <$> scan rest
     where (num, rest) = span (\x -> any ($ x) [isDigit, (== '.'), (== 'e'), (== '-')]) xs
 
-scanIdentifier :: String -> Either String Tokens
+scanIdentifier :: String -> Either Error Tokens
 scanIdentifier xs = (Identifier i :) <$> scan rest
     where (i, rest) = span isAlpha xs

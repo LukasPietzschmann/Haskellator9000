@@ -1,4 +1,4 @@
-module Main where
+module Main(main) where
 
 import Control.Monad
 import Control.Monad.IO.Class
@@ -17,7 +17,7 @@ repl = do
       unless (input `elem` exitCommands) $ do
         case calculate input of
           Right res -> outputStrLn $ show res
-          Left err -> outputStrLn $ "Incorrect input: " ++ err
+          Left err -> outputStrLn $ show err
         repl
 
 replSettings :: MonadIO m => Settings m
