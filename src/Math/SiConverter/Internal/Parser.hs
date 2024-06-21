@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE InstanceSigs #-}
 -- | Parse a token stream to an expression tree
 --
 -- Examples:
@@ -28,10 +29,9 @@
 -- >             | "(" <expr> ")"
 -- > <number> ::= <value> <unit>
 -- > <unit> ::= "m" | "s" | "kg" | ε
-module Math.SiConverter.Internal.Parser (parseGracefully, parse) where
+module Math.SiConverter.Internal.Parser (parse) where
 
 import Control.Applicative ((<|>))
-import Control.Monad (liftM2)
 import Control.Monad.State
 import Data.Bifunctor (first)
 import GHC.Base (Alternative (empty))
@@ -88,17 +88,12 @@ instance MonadIO m => MonadIO (ParserT m) where
     liftIO = lift . liftIO
 
 -- | Parse a token stream to an expression tree
-parseGracefully :: Tokens             -- ^ Token stream
+parse :: Tokens             -- ^ Token stream
                 -> Either String Expr -- ^ Error message or parsed expression
-parseGracefully tokens = case runParser parseExpr tokens of
+parse tokens = case runParser parseExpr tokens of
     Right (result, []) -> Right result
     Right (_, ts)      -> Left $ "Parser was unable to parse the full input. " ++ show ts ++ " remains in the token stream."
     Left err           -> Left err
-
--- | Parse a token stream to an expression tree and throws if the input is invalid
-parse :: Tokens -- ^ Token stream
-      -> Either String Expr   -- ^ Parsed expression
-parse = parseGracefully
 
 satisfy :: (Token -> Bool) -> Parser Token
 satisfy predicate = ParserT $ \input -> return $ case input of
