@@ -39,6 +39,7 @@ import Math.SiConverter.Internal.Lexer (Token(..), Tokens)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error
     ( Kind(ParseError), Error(..) )
+import Control.Monad(liftM2)
 
 newtype ParserT m a = ParserT { runParserT :: Tokens -> m (Either String (a, Tokens)) }
 
