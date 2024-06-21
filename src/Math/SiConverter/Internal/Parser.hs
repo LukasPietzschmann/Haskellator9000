@@ -4,13 +4,13 @@
 -- Examples:
 --
 -- >>> parse [Number 1.0,Operator "+",Number 2.0]
--- (1.0 + 2.0)
+-- Right (1.0 + 2.0)
 --
 -- >>> parse [OpenParen,Number 3.0,Operator "/",Number 2.0,Operator "+",OpenParen,Number 1.5,Operator "*",Number 2.0,CloseParen,CloseParen,Operator "+",Number 4.95]
--- (((3.0 / 2.0) + (1.5 * 2.0)) + 4.95)
+-- Right (((3.0 / 2.0) + (1.5 * 2.0)) + 4.95)
 --
 -- >>> parse [Number 9001.0,Operator "*",Number 29.12]
--- (9001.0 * 29.12)
+-- Right (9001.0 * 29.12)
 --
 -- We parse the following grammar:
 --
