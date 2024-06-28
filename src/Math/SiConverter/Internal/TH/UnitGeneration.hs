@@ -90,7 +90,7 @@ generateUnits unitGroups = do
       fromStringClauses  = (mkFromStringClause <$> allUnits) ++ [Clause [VarP $ mkName "x"] (NormalB $ AppE (ConE 'Left) (VarE $ mkName "x")) []]
       convertClauses     = concatMap (\(Quantity b us) -> mkConvertClaus b <$> b:us) unitGroups
 
-      dataDec            = DataD [] unitADT [] Nothing unitConstructors []
+      dataDec            = DataD [] unitADT [] Nothing unitConstructors [DerivClause Nothing [ConT ''Eq]]
       showInstance       = InstanceD Nothing [] (AppT (ConT ''Show) (ConT unitADT)) [FunD 'show showClauses]
       fromStringSig      = SigD unitFromStringFun (AppT (AppT ArrowT (ConT ''String)) (AppT (AppT (ConT ''Either) (ConT ''String)) (ConT unitADT)))
       fromStringFunction = FunD unitFromStringFun fromStringClauses
