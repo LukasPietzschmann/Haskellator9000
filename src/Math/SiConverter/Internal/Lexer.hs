@@ -46,7 +46,7 @@ scan (x:xs)   = if | elem x [' ', '\t', '\r', '\n'] -> scan xs
 
 scanNumber :: String -> Either Error Tokens
 scanNumber xs = (Number (read num):) <$> scan rest
-    where (num, rest) = span (\x -> any ($ x) [isDigit, (== '.'), (== 'e'), (== '-')]) xs
+    where (num, rest) = span (\x -> any ($ x) [isDigit, (== '.')]) xs
 
 scanIdentifier :: String -> Either Error Tokens
 scanIdentifier xs = (Identifier i :) <$> scan rest
