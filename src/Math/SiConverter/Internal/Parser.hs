@@ -177,7 +177,7 @@ parseTerm :: Parser Expr
 parseTerm = parseFactor >>= term'
     where term' parsedLhs = do {
         liftM2 (BinOp parsedLhs) parseFactorOp parseFactor >>= term'
-    } <|> return parsedLhs
+    } <|> BinOp parsedLhs Mult <$> (requireToken OpenParen *> parseExpr <* requireToken CloseParen) <|> return parsedLhs
 
 parseFactor :: Parser Expr
 parseFactor = liftM2 UnaryOp parseUnary parsePrimary <|> parsePrimary
