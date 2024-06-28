@@ -20,4 +20,4 @@ calculate :: String                 -- ^ The expression to evaluate
           -> Either Error EvalValue -- ^ The result of the expression
 calculate input = do
     ast <- getAst input
-    liftM2 Value (evaluate ast) (determineFinalUnits ast)
+    liftM2 Value (evaluate ast) (determineDimension ast)

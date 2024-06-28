@@ -3,7 +3,7 @@
 -- | Evaluate the expression tree
 module Math.SiConverter.Internal.Evaluator (
       Dimension
-    , determineFinalUnits
+    , determineDimension
     , evaluate
     , normalize
     ) where
@@ -14,7 +14,8 @@ import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Unit, Value (..),
            convertToBase, foldExpr, foldExprM)
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (ImplementationError))
 
-data DimensionPart = DimPart { dimUnit :: Unit
+-- | A single unit constituting a dimension
+data DimensionPart = DimPart { dimUnit :: Unit -- ^ the unit
                              , power   :: Int
                              }
 
@@ -24,13 +25,18 @@ instance Show DimensionPart where
 instance Eq DimensionPart where
     (DimPart u1 _) == (DimPart u2 _) = u1 == u2
 
+-- | The dimension of a quantity is given by a set of units raised to a power. Those
+-- units are implicitly connected by multiplication.
 type Dimension = [DimensionPart]
 
 instance {-# OVERLAPPING #-} Show Dimension where
     show xs = intercalate "*" (show <$> xs)
 
-determineFinalUnits :: Expr -> Either Error Dimension
-determineFinalUnits= fmap (filter ((/=0) . power)) . foldExprM (return . pure . flip DimPart 1 . unit) handleBinOp handleUnaryOp
+-- | Determines the resulting dimension of an expression tree. If you would evaluate the
+-- expression treee, the numerical result has the dimension returned by this function.
+determineDimension :: Expr                   -- ^ the 'Expr' tree to determine the resulting dimension of
+                   -> Either Error Dimension -- ^ the resulting dimension
+determineDimension = fmap (filter ((/=0) . power)) . foldExprM (\(Value _ u) -> return $ pure $ DimPart u 1) handleBinOp handleUnaryOp
   where
     handleBinOp lhs Mult rhs  = return $ mergeUnits lhs rhs
     handleBinOp lhs Div rhs   = return $ subtractUnits lhs rhs
