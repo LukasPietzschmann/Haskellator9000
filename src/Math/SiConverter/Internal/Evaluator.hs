@@ -54,13 +54,13 @@ subtractUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = DimPart (dimUnit x) (powe
                             | otherwise              = x : subtractUnits xs (y:ys)
 
 -- | Normalize all values inside the tree to their base units
-normalize :: Expr              -- | the 'Expr' tree to normalize
-          -> Either Error Expr -- | the normalized 'Expr' tree
+normalize :: Expr              -- ^ the 'Expr' tree to normalize
+          -> Either Error Expr -- ^ the normalized 'Expr' tree
 normalize = Right . foldExpr (Val . convertToBase) BinOp UnaryOp
 
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
-evaluate :: Expr                -- | the 'Expr' tree to evaluate
-         -> Either Error Double -- | the resulting value
+evaluate :: Expr                -- ^ the 'Expr' tree to evaluate
+         -> Either Error Double -- ^ the resulting value
 evaluate = foldExprM (Right . value) evaluateBinOp evaluateUnaryOp
 
 evaluateBinOp :: Double -> Op -> Double -> Either Error Double

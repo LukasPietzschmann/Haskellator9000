@@ -29,8 +29,8 @@ data Token = Number Double -- ^ A number (integers are also represented as float
 type Tokens = [Token]
 
 -- | Tokenizes an input stream to a list of 'Token's
-scan :: String               -- ^ The input stream
-               -> Either Error Tokens -- ^ Error message or the list of tokens
+scan :: String              -- ^ The input stream
+     -> Either Error Tokens -- ^ Error message or the list of tokens
 scan []       = Right []
 scan ('(':xs) = (OpenParen :)    <$> scan xs
 scan (')':xs) = (CloseParen :)   <$> scan xs

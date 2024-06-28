@@ -92,7 +92,7 @@ instance MonadIO m => MonadIO (ParserT m) where
     liftIO = lift . liftIO
 
 -- | Parse a token stream to an expression tree
-parse :: Tokens             -- ^ Token stream
+parse :: Tokens            -- ^ Token stream
       -> Either Error Expr -- ^ Error message or parsed expression
 parse tokens = case runParser parseExpr tokens of
     Right (result, []) -> Right result
