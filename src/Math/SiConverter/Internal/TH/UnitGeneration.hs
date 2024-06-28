@@ -17,17 +17,24 @@ class Showable a where
     abbreviation :: a -> String
 
 -- | Definition of a Unit
-data UnitDef = UnitDef String String Double
+data UnitDef = UnitDef 
+  String -- ^ Readable name (e.g. "meter")
+  String -- ^ Abbreviation (e.g. "m")
+  Double -- ^ Value
 
 instance Showable UnitDef where
     name (UnitDef n _ _) = n
     abbreviation (UnitDef _ a _) = a
 
 -- | A quantity made of a base unit and other related units
-data Quantity = Quantity UnitDef [UnitDef]
+data Quantity = Quantity 
+  UnitDef    -- ^ Base unit (e.g. "m")
+  [UnitDef]  -- ^ Derived units (e.g. "cm", "dm")
 
 -- | Definition of a operator
-data OperatorDef = OperDef String String
+data OperatorDef = OperDef 
+  String -- ^ Name
+  String -- ^ Symbol
 
 instance Showable OperatorDef where
     name (OperDef n _) = n
@@ -85,9 +92,10 @@ generateValueAdt = [dataDec, showInstance]
 generateUnits :: [Quantity] -> Q [Dec]
 generateUnits unitGroups = do
   let allUnits           = concatMap (\(Quantity b us) -> b:us) unitGroups
-      unitConstructors   = mkConstructor <$> allUnits
-      showClauses        = mkShowClause <$> allUnits
-      fromStringClauses  = (mkFromStringClause <$> allUnits) ++ [Clause [VarP $ mkName "x"] (NormalB $ AppE (ConE 'Left) (VarE $ mkName "x")) []]
+      unitConstructors   = mkConstructorWithInt <$> allUnits
+      showClauses        = mkShowClauseWithInt <$> allUnits
+      fromStringClauses  = (mkFromStringClause <$> allUnits) -- RightCases 
+        ++ [Clause [VarP $ mkName "x"] (NormalB $ AppE (ConE 'Left) (VarE $ mkName "x")) []] -- Left case
       convertClauses     = concatMap (\(Quantity b us) -> mkConvertClaus b <$> b:us) unitGroups
 
       dataDec            = DataD [] unitADT [] Nothing unitConstructors [DerivClause Nothing [ConT ''Eq]]
@@ -99,10 +107,11 @@ generateUnits unitGroups = do
 
   return $ [dataDec, showInstance] ++ generateValueAdt  ++ [fromStringSig, fromStringFunction, convertSig, convertFunction]
 
+-- TODO Consider exponents (e.g. 1km^2 = 1 000 000 m^2 != 1000 m^2)!
 mkConvertClaus :: UnitDef -> UnitDef -> Clause
 mkConvertClaus (UnitDef baseUnit _ _) (UnitDef unit _ factor) =
-  let pattern = ConP valueADT [] [VarP (mkName "v"), ConP (mkName unit) [] []]
-      body    = NormalB $ AppE (AppE (ConE valueADT) (InfixE (Just $ VarE $ mkName "v") (VarE $ mkName "*") (Just $ LitE $ RationalL $ toRational factor))) (ConE $ mkName baseUnit)
+  let pattern = ConP valueADT [] [VarP (mkName "v"), ConP (mkName unit) [] [VarP (mkName "e")]]
+      body    = NormalB $ AppE (AppE (ConE valueADT) (InfixE (Just $ InfixE (Just $ VarE $ mkName "v") (VarE '(*)) (Just $ LitE $ RationalL $ toRational factor)) (VarE '(^)) (Just $ VarE $ mkName "e"))) (AppE (ConE $ mkName baseUnit) (VarE $ mkName "e"))
   in Clause [pattern] body []
 
 -- | Generate the operator types and function to work with them. Imagine the following call: @generateOperators [OperDef "Plus" "+", OperDef "Minus" "-"]@.
@@ -130,14 +139,23 @@ generateOperators operators = do
 mkConstructor :: Showable a => a -> Con
 mkConstructor a = NormalC (mkName $ name a) []
 
+mkConstructorWithInt :: Showable a => a -> Con
+mkConstructorWithInt a = NormalC (mkName $ name a) [(Bang NoSourceUnpackedness NoSourceStrictness, ConT ''Int)]
+
 mkShowClause :: Showable a => a -> Clause
 mkShowClause a =
   let pattern = ConP (mkName $ name a) [] []
       body    = NormalB $ LitE $ StringL $ abbreviation a
   in Clause [pattern] body []
 
+mkShowClauseWithInt :: Showable a => a -> Clause
+mkShowClauseWithInt a =
+  let pattern = ConP (mkName $ name a) [] [WildP]
+      body    = NormalB $ LitE $ StringL $ abbreviation a
+  in Clause [pattern] body []
+
 mkFromStringClause :: Showable a => a -> Clause
 mkFromStringClause a =
   let pattern = LitP $ StringL $ abbreviation a
-      body    = NormalB $ AppE (ConE 'Right) (ConE $ mkName $ name a)
+      body    = NormalB $ AppE (ConE 'Right) (AppE (ConE $ mkName $ name a) (LitE $ IntegerL 1))
   in Clause [pattern] body []
