@@ -10,8 +10,8 @@ module Math.SiConverter.Internal.Evaluator (
 
 import Data.List (intercalate)
 
-import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Unit, Value (..),
-           convertToBase, foldExpr, foldExprM)
+import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Unit (Multiplier),
+           Value (..), convertToBase, foldExpr, foldExprM)
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (ImplementationError))
 
 -- | A single unit constituting a dimension
@@ -36,7 +36,7 @@ instance {-# OVERLAPPING #-} Show Dimension where
 -- expression treee, the numerical result has the dimension returned by this function.
 determineDimension :: Expr                   -- ^ the 'Expr' tree to determine the resulting dimension of
                    -> Either Error Dimension -- ^ the resulting dimension
-determineDimension = fmap (filter ((/=0) . power)) . foldExprM (\(Value _ u) -> return $ pure $ DimPart u 1) handleBinOp handleUnaryOp
+determineDimension = fmap (filter ((/=Multiplier) . dimUnit) . filter ((/=0) . power)) . foldExprM (\(Value _ u) -> return $ pure $ DimPart u 1) handleBinOp handleUnaryOp
   where
     handleBinOp lhs Mult rhs  = return $ mergeUnits lhs rhs
     handleBinOp lhs Div rhs   = return $ subtractUnits lhs rhs
