@@ -42,7 +42,9 @@ unitTests = testGroup "Simple expression parsing" [
     testCase "Simple addition" $ (scan "1 + 2" >>= parse) @?= Right (BinOp (Val $ Value 1 Multiplier) Plus (Val $ Value 2 Multiplier)),
     testCase "Precedence (* before +)" $ (scan "1 + 2 * 3" >>= parse) @?= Right (BinOp (Val $ Value 1 Multiplier) Plus (BinOp (Val $ Value 2 Multiplier) Mult (Val $ Value 3 Multiplier))),
     testCase "Precedence (^ before *)" $ (scan "2 ^ 3 * 4" >>= parse) @?= Right (BinOp (BinOp (Val $ Value 2 Multiplier) Pow (Val $ Value 3 Multiplier)) Mult (Val $ Value 4 Multiplier)),
-    testCase "Changed precedence (parentheses)" $ (scan "(1 + 2) * 3" >>= parse) @?= Right (BinOp (BinOp (Val $ Value 1 Multiplier) Plus (Val $ Value 2 Multiplier)) Mult (Val $ Value 3 Multiplier))
+    testCase "Changed precedence (parentheses)" $ (scan "(1 + 2) * 3" >>= parse) @?= Right (BinOp (BinOp (Val $ Value 1 Multiplier) Plus (Val $ Value 2 Multiplier)) Mult (Val $ Value 3 Multiplier)),
+    testCase "Minus and unary minus" $ (scan "1--2" >>= parse) @?= Right (BinOp (Val $ Value 1 Multiplier) Minus (UnaryOp Minus (Val $ Value 2 Multiplier))),
+    testCase "Mult oper can be omitted" $ (scan "2(3+1)" >>= parse) @?= Right (BinOp (Val $ Value 2 Multiplier) Mult (BinOp (Val $ Value 3 Multiplier) Plus (Val $ Value 1 Multiplier)))
   ]
 
 propertyTests :: TestTree
