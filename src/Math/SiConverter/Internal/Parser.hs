@@ -141,6 +141,9 @@ parseUnit = do {
     either (\x -> fail $ "Invalid unit " ++ x) return (unitFromString u)
   } <|> return Multiplier
 
+parseExprInParens :: Parser Expr
+parseExprInParens = requireToken OpenParen *> parseExpr <* requireToken CloseParen
+
 parseUnary :: Parser Op
 parseUnary = do
     op <- parseOperator
@@ -177,13 +180,13 @@ parseTerm :: Parser Expr
 parseTerm = parseFactor >>= term'
     where term' parsedLhs = do {
         liftM2 (BinOp parsedLhs) parseFactorOp parseFactor >>= term'
-    } <|> BinOp parsedLhs Mult <$> (requireToken OpenParen *> parseExpr <* requireToken CloseParen) <|> return parsedLhs
+    } <|> BinOp parsedLhs Mult <$> parseExprInParens <|> return parsedLhs
 
 parseFactor :: Parser Expr
 parseFactor = liftM2 UnaryOp parseUnary parsePrimary <|> parsePrimary
 
 parsePrimary :: Parser Expr
-parsePrimary = (requireToken OpenParen *> parseExpr <* requireToken CloseParen) <|> parseValue
+parsePrimary = parseExprInParens <|> parseValue
 
 parseValue :: Parser Expr
 parseValue = liftM2 (Val .: Value) parseNumber parseUnit <|> do
