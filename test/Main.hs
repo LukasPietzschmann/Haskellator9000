@@ -11,14 +11,19 @@ import Math.SiConverter.Internal.Utils.Composition ((.:))
 
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit (testCase, (@?=))
-import Test.Tasty.QuickCheck (Arbitrary, arbitrary, arbitraryBoundedEnum, frequency,
-           suchThat, testProperty)
+import Test.Tasty.QuickCheck (Arbitrary, Gen, arbitrary, arbitraryBoundedEnum, choose,
+           frequency, testProperty)
 
 instance Arbitrary Op where
     arbitrary = arbitraryBoundedEnum
 
+genNumber :: Gen Double
+genNumber = do
+    n <- choose (0, 999999)
+    return $ fromInteger n / 1000.0
+
 instance Arbitrary Expr where
-  arbitrary = let randomNumber = flip (Val .: Value) Multiplier <$> (arbitrary `suchThat` (>=0)) in frequency [
+  arbitrary = let randomNumber = flip (Val .: Value) Multiplier <$> genNumber in frequency [
       (10, randomNumber),
       (6, liftM3 BinOp arbitrary arbitrary arbitrary),
       (1, UnaryOp Minus <$> randomNumber)
