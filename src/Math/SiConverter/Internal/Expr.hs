@@ -11,7 +11,8 @@
 -- "((1.0m + 2.0m) * 3.0)"
 
 module Math.SiConverter.Internal.Expr (
-      Expr (..)
+      AstValue
+    , Expr (..)
     , Op (..)
     , Unit (..)
     , Value (..)
@@ -40,12 +41,14 @@ $(generateOperators [
     OperDef "UnaryMinus" "-"
   ])
 
-data Expr = Val Value
+type AstValue = Value Unit
+
+data Expr = Val AstValue
           | BinOp Expr Op Expr
           | UnaryOp Op Expr
 
 -- | Folds an expression tree
-foldExpr :: (Value -> a)        -- ^ function that folds a value
+foldExpr :: (AstValue -> a)     -- ^ function that folds a value
          -> (a -> Op -> a -> a) -- ^ function that folds a binary expression
          -> (Op -> a -> a)      -- ^ function that folds a unary expression
          -> Expr                -- ^ the 'Expr' to fold over
@@ -57,11 +60,11 @@ foldExpr fv fb fu = doIt
     doIt (UnaryOp o e)   = fu o $ doIt e
 
 -- | Monadic fold over an expression tree
-foldExprM :: (Monad m) => (Value -> m a) -- ^ function that folds a value
-         -> (a -> Op -> a -> m a)        -- ^ function that folds a binary expression
-         -> (Op -> a -> m a)             -- ^ function that folds a unary expression
-         -> Expr                         -- ^ the 'Expr' to fold over
-         -> m a                          -- ^ the resulting value
+foldExprM :: (Monad m) => (AstValue -> m a) -- ^ function that folds a value
+         -> (a -> Op -> a -> m a)           -- ^ function that folds a binary expression
+         -> (Op -> a -> m a)                -- ^ function that folds a unary expression
+         -> Expr                            -- ^ the 'Expr' to fold over
+         -> m a                             -- ^ the resulting value
 foldExprM fv fb fu = doIt
   where
     doIt (Val v) = fv v

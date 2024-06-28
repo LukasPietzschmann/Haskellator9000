@@ -39,6 +39,9 @@ valueADT = mkName "Value"
 unitADT :: Name
 unitADT = mkName "Unit"
 
+simpleValue :: Type
+simpleValue = AppT (ConT valueADT) (ConT unitADT)
+
 operADT :: Name
 operADT = mkName "Op"
 
@@ -50,9 +53,9 @@ convertToBaseFun = mkName "convertToBase"
 
 generateValueAdt :: [Dec]
 generateValueAdt = [dataDec, showInstance]
-  where dataDec = DataD [] valueADT [] Nothing [RecC valueADT [(mkName "value", Bang NoSourceUnpackedness NoSourceStrictness, ConT ''Double), (mkName "unit", Bang NoSourceUnpackedness NoSourceStrictness, ConT unitADT)]] []
+  where dataDec = DataD [] valueADT [PlainTV (mkName "u") ()] Nothing [RecC valueADT [(mkName "value", Bang NoSourceUnpackedness NoSourceStrictness, ConT ''Double), (mkName "unit", Bang NoSourceUnpackedness NoSourceStrictness, VarT $ mkName "u")]] []
         showClauses = [Clause [ConP valueADT [] [VarP $ mkName "v", VarP $ mkName "u"]] (NormalB $ AppE (AppE (VarE '(++)) (AppE (VarE 'show) (VarE $ mkName "v"))) (AppE (VarE 'show) (VarE $ mkName "u"))) []]
-        showInstance = InstanceD Nothing [] (AppT (ConT ''Show) (ConT valueADT)) [FunD 'show showClauses]
+        showInstance = InstanceD Nothing [AppT (ConT ''Show) (VarT $ mkName "u")] (AppT (ConT ''Show) (AppT (ConT valueADT) (VarT $ mkName "u"))) [FunD 'show showClauses]
 
 -- | Generate the unit types and function to work with them. Imagine the following call: @generateUnits [Quantity (UnitDef "Meter" "m" 1) [UnitDef "Kilometer" "km" 1000]]@.
 -- This function will then generate the following code:
@@ -91,7 +94,7 @@ generateUnits unitGroups = do
       showInstance       = InstanceD Nothing [] (AppT (ConT ''Show) (ConT unitADT)) [FunD 'show showClauses]
       fromStringSig      = SigD unitFromStringFun (AppT (AppT ArrowT (ConT ''String)) (AppT (AppT (ConT ''Either) (ConT ''String)) (ConT unitADT)))
       fromStringFunction = FunD unitFromStringFun fromStringClauses
-      convertSig         = SigD convertToBaseFun (AppT (AppT ArrowT (ConT valueADT)) (ConT valueADT))
+      convertSig         = SigD convertToBaseFun (AppT (AppT ArrowT simpleValue) simpleValue)
       convertFunction    = FunD convertToBaseFun convertClauses
 
   return $ [dataDec, showInstance] ++ generateValueAdt  ++ [fromStringSig, fromStringFunction, convertSig, convertFunction]
