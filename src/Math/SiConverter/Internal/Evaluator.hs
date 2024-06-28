@@ -15,7 +15,7 @@ import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Unit, Value (..),
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (ImplementationError))
 
 -- | A single unit constituting a dimension
-data DimensionPart = DimPart { dimUnit :: Unit -- ^ the unit
+data DimensionPart = DimPart { dimUnit :: Unit
                              , power   :: Int
                              }
 
