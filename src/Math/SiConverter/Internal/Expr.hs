@@ -19,6 +19,7 @@ module Math.SiConverter.Internal.Expr (
     , convertToBase
     , foldExpr
     , foldExprM
+    , isMultiplier
     , unitFromString
     ) where
 

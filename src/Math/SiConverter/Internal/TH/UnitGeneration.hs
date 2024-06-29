@@ -82,6 +82,15 @@ generateValueAdt = [dataDec, showInstance]
 -- > convertToBase :: Value -> Value
 -- > convertToBase (Value v (Meter e)) = Value ((v * 1.0) ^ e) (Meter e)
 -- > convertToBase (Value v (KiloMeter e)) = Value ((v * 0.0001) ^ e) (Meter e)
+--
+--     * A function to check whether a given unit is a specific unit
+--
+-- > isMeter :: Unit -> Bool
+-- > isMeter (Meter _) = True
+-- > isMeter _ = False
+-- > isKilometer :: Unit -> Bool
+-- > isKilometer (Kilometer _) = True
+-- > isKilometer _ = False
 generateUnits :: [Quantity] -> Q [Dec]
 generateUnits unitGroups = do
   let allUnits           = concatMap (\(Quantity b us) -> b:us) unitGroups
@@ -97,8 +106,21 @@ generateUnits unitGroups = do
       fromStringFunction = FunD unitFromStringFun fromStringClauses
       convertSig         = SigD convertToBaseFun (AppT (AppT ArrowT simpleValue) simpleValue)
       convertFunction    = FunD convertToBaseFun convertClauses
+      isUnitFuns         = generateIsUnitFuns unitGroups
 
-  return $ [dataDec, showInstance] ++ generateValueAdt  ++ [fromStringSig, fromStringFunction, convertSig, convertFunction]
+  return $ [dataDec, showInstance] ++ generateValueAdt  ++ [fromStringSig, fromStringFunction, convertSig, convertFunction] ++ isUnitFuns
+
+generateIsUnitFuns :: [Quantity] -> [Dec]
+generateIsUnitFuns unitGroups = mkIsUnitFun <$> concatMap (\(Quantity b us) -> b:us) unitGroups
+
+mkIsUnitFun :: UnitDef -> Dec
+mkIsUnitFun (UnitDef unit _ _) = FunD funName [def, def']
+  where funName = mkName $ "is" ++ unit
+        pattern = ConP (mkName unit) [] [WildP]
+        body    = NormalB $ ConE 'True
+        def     = Clause [pattern] body []
+        body'   = NormalB $ ConE 'False
+        def'    = Clause [WildP] body' []
 
 -- TODO Consider exponents (e.g. 1km^2 = 1 000 000 m^2 != 1000 m^2)!
 mkConvertClaus :: UnitDef -> UnitDef -> Clause
