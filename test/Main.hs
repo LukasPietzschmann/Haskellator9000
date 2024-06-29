@@ -6,6 +6,8 @@ module Main (main) where
 
 import Control.Monad (liftM3, (>=>))
 
+import Data.Either (fromRight)
+
 import Math.SiConverter.Internal.Evaluator (evaluate)
 import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Unit (..), Value (..))
 import Math.SiConverter.Internal.Lexer (scan)
@@ -71,5 +73,6 @@ simpleEvalTests = testGroup "Simple expression evaluation" [
 
 propertyTests :: TestTree
 propertyTests = testGroup "Propery tests" [
-    testProperty "Parser should not fail on valid input" $ \x -> either (const False) (const True) (scan (show (x :: Expr)) >>= parse)
+    testProperty "Parser should not fail on valid input" $ \x -> either (const False) (const True) (parseString (show (x :: Expr))),
+    testProperty "Idempotence of the parser" $ \x -> fromRight False (scan (show (x :: Expr)) >>= parse >>= Right . (==x))
   ]
