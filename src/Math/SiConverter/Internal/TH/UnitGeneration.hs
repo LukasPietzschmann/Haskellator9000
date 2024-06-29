@@ -17,24 +17,17 @@ class Showable a where
     abbreviation :: a -> String
 
 -- | Definition of a Unit
-data UnitDef = UnitDef 
-  String -- ^ Readable name (e.g. "meter")
-  String -- ^ Abbreviation (e.g. "m")
-  Double -- ^ Value
+data UnitDef = UnitDef String String Double
 
 instance Showable UnitDef where
     name (UnitDef n _ _) = n
     abbreviation (UnitDef _ a _) = a
 
 -- | A quantity made of a base unit and other related units
-data Quantity = Quantity 
-  UnitDef    -- ^ Base unit (e.g. "m")
-  [UnitDef]  -- ^ Derived units (e.g. "cm", "dm")
+data Quantity = Quantity UnitDef [UnitDef]
 
 -- | Definition of a operator
-data OperatorDef = OperDef 
-  String -- ^ Name
-  String -- ^ Symbol
+data OperatorDef = OperDef String String
 
 instance Showable OperatorDef where
     name (OperDef n _) = n
@@ -94,7 +87,7 @@ generateUnits unitGroups = do
   let allUnits           = concatMap (\(Quantity b us) -> b:us) unitGroups
       unitConstructors   = mkConstructorWithInt <$> allUnits
       showClauses        = mkShowClauseWithInt <$> allUnits
-      fromStringClauses  = (mkFromStringClause <$> allUnits) -- RightCases 
+      fromStringClauses  = (mkFromStringClause <$> allUnits) -- RightCases
         ++ [Clause [VarP $ mkName "x"] (NormalB $ AppE (ConE 'Left) (VarE $ mkName "x")) []] -- Left case
       convertClauses     = concatMap (\(Quantity b us) -> mkConvertClaus b <$> b:us) unitGroups
 
