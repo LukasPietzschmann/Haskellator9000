@@ -139,7 +139,7 @@ parseUnit :: Parser Unit
 parseUnit = do {
     u <- parseIdentifier;
     either (\x -> fail $ "Invalid unit " ++ x) return (unitFromString u)
-  } <|> return Multiplier
+  } <|> return (Multiplier 1)
 
 parseExprInParens :: Parser Expr
 parseExprInParens = requireToken OpenParen *> parseExpr <* requireToken CloseParen
