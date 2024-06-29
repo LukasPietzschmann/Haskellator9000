@@ -62,26 +62,26 @@ generateValueAdt = [dataDec, showInstance]
 --
 --     * A data type with all the units
 --
--- > data Unit = Meter | Kilometer
+-- > data Unit = Meter Int | Kilometer Int
 --
 --     * An instance of Show for the data type
 --
--- > instance Show Unit where
--- >   show Meter = "m"
--- >   show Kilometer = "km"
+-- > instance Show Unit where -- e is the exponent (is not equal to 1)
+-- >   show Meter = "m^e"
+-- >   show Kilometer = "km^e"
 --
 --     * A function to convert a string to a unit
 --
 -- > unitFromString :: String -> Either String Unit
--- > unitFromString "m" = Right Meter
--- > unitFromString "km" = Right Kilometer
+-- > unitFromString "m" = Right (Meter 1)
+-- > unitFromString "km" = Right (Kilometer 1)
 -- > unitFromString x = Left x
 --
 --     * A function to convert a value to the base unit
 --
 -- > convertToBase :: Value -> Value
--- > convertToBase (Value v Meter) = Value (v * 1.0) Meter
--- > convertToBase (Value v KiloMeter) = Value (v * 1000.0) Meter
+-- > convertToBase (Value v (Meter e)) = Value ((v * 1.0) ^ e) (Meter e)
+-- > convertToBase (Value v (KiloMeter e)) = Value ((v * 0.0001) ^ e) (Meter e)
 generateUnits :: [Quantity] -> Q [Dec]
 generateUnits unitGroups = do
   let allUnits           = concatMap (\(Quantity b us) -> b:us) unitGroups
