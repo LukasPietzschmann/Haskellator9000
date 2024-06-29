@@ -36,11 +36,14 @@ instance Arbitrary Expr where
 parseString :: String -> Either Error Expr
 parseString = scan >=> parse
 
+evalString :: String -> Either Error Double
+evalString = scan >=> parse >=> evaluate
+
 main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "Tests" [simpleExprParseTests, propertyTests]
+tests = testGroup "Tests" [simpleExprParseTests, simpleEvalTests, propertyTests]
 
 simpleExprParseTests :: TestTree
 simpleExprParseTests = testGroup "Simple expression parsing" [
@@ -52,6 +55,18 @@ simpleExprParseTests = testGroup "Simple expression parsing" [
     testCase "Changed precedence (parentheses)" $ parseString "(1 + 2) * 3" @?= Right (BinOp (BinOp (Val $ Value 1 $ Multiplier 1) Plus (Val $ Value 2 $ Multiplier 1)) Mult (Val $ Value 3 $ Multiplier 1)),
     testCase "Minus and unary minus" $ parseString "1--2" @?= Right (BinOp (Val $ Value 1 $ Multiplier 1) Minus (UnaryOp Minus (Val $ Value 2 $ Multiplier 1))),
     testCase "Mult oper can be omitted" $ parseString "2(3+1)" @?= Right (BinOp (Val $ Value 2 $ Multiplier 1) Mult (BinOp (Val $ Value 3 $ Multiplier 1) Plus (Val $ Value 1 $ Multiplier 1)))
+  ]
+
+simpleEvalTests :: TestTree
+simpleEvalTests = testGroup "Simple expression evaluation" [
+    testCase "Constant" $ evalString "1" @?= Right 1,
+    testCase "Addition" $ evalString "1 + 2" @?= Right 3,
+    testCase "Subtraction" $ evalString "3 - 2" @?= Right 1,
+    testCase "Multiplication" $ evalString "2 * 3" @?= Right 6,
+    testCase "Division" $ evalString "6 / 3" @?= Right 2,
+    testCase "Power" $ evalString "2 ^ 3" @?= Right 8,
+    testCase "Unary minus" $ evalString "-2" @?= Right (-2),
+    testCase "Unary minus in expression" $ evalString "1--2" @?= Right 3
   ]
 
 propertyTests :: TestTree
