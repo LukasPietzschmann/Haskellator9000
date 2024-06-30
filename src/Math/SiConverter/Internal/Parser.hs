@@ -31,7 +31,7 @@
 module Math.SiConverter.Internal.Parser (parse) where
 
 import Control.Applicative ((<|>))
-import Control.Monad (liftM2)
+import Control.Monad (liftM2, void)
 import Control.Monad.State
 
 import Data.Bifunctor (first)
@@ -117,8 +117,8 @@ isIdentifier :: Token -> Bool
 isIdentifier (Identifier _) = True
 isIdentifier _              = False
 
-requireToken :: Token -> Parser Token
-requireToken t = satisfy (==t)
+requireToken :: Token -> Parser ()
+requireToken t = void $ satisfy (==t)
 
 parseOperator :: Parser String
 parseOperator = do
@@ -129,6 +129,11 @@ parseNumber :: Parser Double
 parseNumber = do
     Number n <- satisfy isNumber
     return n
+
+requireOperator :: String -> Parser ()
+requireOperator op = do
+    parsedOp <- parseOperator
+    unless (parsedOp == op) $ fail $ "Expected operator " ++ op ++ " but got " ++ parsedOp
 
 parseIdentifier :: Parser String
 parseIdentifier = do
@@ -146,10 +151,8 @@ parseExprInParens = requireToken OpenParen *> parseExpr <* requireToken ClosePar
 
 parseUnary :: Parser Op
 parseUnary = do
-    op <- parseOperator
-    case op of
-        "-" -> return UnaryMinus
-        x   -> fail $ "Invalid unary operator " ++ x
+    requireOperator "-"
+    return UnaryMinus
 
 parseTermOp :: Parser Op
 parseTermOp = do
