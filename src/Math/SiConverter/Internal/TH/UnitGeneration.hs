@@ -111,10 +111,10 @@ generateUnits unitGroups = do
   return $ [dataDec, showInstance] ++ generateValueAdt  ++ [fromStringSig, fromStringFunction, convertSig, convertFunction] ++ isUnitFuns
 
 generateIsUnitFuns :: [Quantity] -> [Dec]
-generateIsUnitFuns unitGroups = mkIsUnitFun <$> concatMap (\(Quantity b us) -> b:us) unitGroups
+generateIsUnitFuns unitGroups = concatMap mkIsUnitFun $ concatMap (\(Quantity b us) -> b:us) unitGroups
 
-mkIsUnitFun :: UnitDef -> Dec
-mkIsUnitFun (UnitDef unit _ _) = FunD funName [def, def']
+mkIsUnitFun :: UnitDef -> [Dec]
+mkIsUnitFun (UnitDef unit _ _) = [SigD funName $ AppT (AppT ArrowT $ ConT unitADT) (ConT ''Bool), FunD funName [def, def']]
   where funName = mkName $ "is" ++ unit
         pattern = ConP (mkName unit) [] [WildP]
         body    = NormalB $ ConE 'True
