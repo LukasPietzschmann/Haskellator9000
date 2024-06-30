@@ -31,7 +31,7 @@
 module Math.SiConverter.Internal.Parser (parse) where
 
 import Control.Applicative ((<|>))
-import Control.Monad (liftM2, void)
+import Control.Monad (liftM2, unless, void)
 import Control.Monad.State
 
 import Data.Bifunctor (first)
@@ -142,8 +142,13 @@ parseIdentifier = do
 
 parseUnit :: Parser Unit
 parseUnit = do {
-    u <- parseIdentifier;
-    either (\x -> fail $ "Invalid unit " ++ x) return (unitFromString u)
+    i <- parseIdentifier;
+    either (\x -> fail $ "Invalid unit " ++ x) (\u -> do {
+        requireOperator "^";
+        expr <- parsePrimary;
+        -- TODO: eval expr and set it as the exponent of unit u
+        return u
+    } <|> return u) $ unitFromString i
   } <|> return (Multiplier 1)
 
 parseExprInParens :: Parser Expr
