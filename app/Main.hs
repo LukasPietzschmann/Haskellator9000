@@ -18,7 +18,7 @@ repl = do
         Just input -> do
             unless (input `elem` exitCommands) $ do
                 case calculate input of
-                    Right res -> outputStrLn $ show res
+                    Right res -> outputStrLn $ "= " ++ show res
                     Left err  -> outputStrLn $ show err
                 repl
 
