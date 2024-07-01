@@ -179,7 +179,16 @@ parseFactorOp = do
         x   -> fail $ "Invalid binary operator " ++ x
 
 parseExpr :: Parser Expr
-parseExpr = parseTerm
+parseExpr = parseVarBinding
+
+parseVarBinding :: Parser Expr
+parseVarBinding = do {
+    lhs <- parseIdentifier;
+    requireToken Equal;
+    rhs <- parseTerm;
+    requireToken Arrow;
+    VarBinding lhs rhs <$> parseExpr;
+  } <|> parseTerm
 
 parseTerm :: Parser Expr
 parseTerm = parseFactor >>= expr'
