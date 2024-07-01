@@ -12,20 +12,22 @@
 --
 -- >>> scan "9001*29.12"
 -- Right [Number 9001.0,Operator "*",Number 29.12]
-module Math.SiConverter.Internal.Lexer (Token(..), Tokens, scan) where
+module Math.SiConverter.Internal.Lexer (Token (..), Tokens, scan) where
 
 import Data.Char (isDigit)
+
 import GHC.Unicode (isAlpha)
+
 import Math.SiConverter.Internal.Utils.Error
 
 data Token = Number Double -- ^ A number (integers are also represented as floats)
-    | Operator String      -- ^ An operator
-    | OpenParen            -- ^ Open parenthesis "("
-    | CloseParen           -- ^ Close parenthesis ")"
-    | Identifier String    -- ^ Identifier (e.g. variable and function name) or unit
-    | Arrow                -- ^ Arrow "->"
-    | Equal                -- ^ Single equal sign "="
-    deriving (Show, Eq)
+           | Operator String -- ^ An operator
+           | OpenParen -- ^ Open parenthesis "("
+           | CloseParen -- ^ Close parenthesis ")"
+           | Identifier String -- ^ Identifier (e.g. variable and function name) or unit
+           | Arrow -- ^ Arrow "->"
+           | Equal -- ^ Single equal sign "="
+  deriving (Eq, Show)
 
 -- | A simple alias for the 'Token' stream
 type Tokens = [Token]
@@ -44,9 +46,9 @@ scan ('/':xs)     = (Operator "/" :) <$> scan xs
 scan ('^':xs)     = (Operator "^" :) <$> scan xs
 scan ('=':xs)     = (Equal :)        <$> scan xs
 scan (x:xs)       = if | elem x [' ', '\t', '\r', '\n'] -> scan xs
-                             | isDigit x -> scanNumber (x:xs)
-                             | isAlpha x -> scanIdentifier (x:xs)
-                             | otherwise -> Left $ Error ScanError $ "Unexpected character: " ++ [x]
+                       | isDigit x -> scanNumber (x:xs)
+                       | isAlpha x -> scanIdentifier (x:xs)
+                       | otherwise -> Left $ Error ScanError $ "Unexpected character: " ++ [x]
 
 scanNumber :: String -> Either Error Tokens
 scanNumber xs = (Number (read num):) <$> scan rest
