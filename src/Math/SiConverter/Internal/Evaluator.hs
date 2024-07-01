@@ -23,7 +23,7 @@ instance Show DimensionPart where
     show (DimPart u p) = show u ++ (if p == 1 then "" else "^" ++ show p)
 
 instance Eq DimensionPart where
-    (DimPart u1 _) == (DimPart u2 _) = u1 == u2
+    (DimPart u1 p1) == (DimPart u2 p2) = u1 == u2 && p1 == p2
 
 -- | The dimension of a quantity is given by a set of units raised to a power. Those
 -- units are implicitly connected by multiplication.
@@ -36,7 +36,7 @@ instance {-# OVERLAPPING #-} Show Dimension where
 -- expression treee, the numerical result has the dimension returned by this function.
 determineDimension :: Expr                   -- ^ the 'Expr' tree to determine the resulting dimension of
                    -> Either Error Dimension -- ^ the resulting dimension
-determineDimension = fmap (filter (isMultiplier . dimUnit) . filter ((/=0) . power)) . foldExprM (\(Value _ u) -> return $ pure $ DimPart u 1) handleBinOp handleUnaryOp
+determineDimension = fmap (filter (not . isMultiplier . dimUnit) . filter ((/=0) . power)) . foldExprM (\(Value _ u) -> return $ pure $ DimPart u 1) handleBinOp handleUnaryOp
   where
     handleBinOp lhs Mult rhs  = return $ mergeUnits lhs rhs
     handleBinOp lhs Div rhs   = return $ subtractUnits lhs rhs
