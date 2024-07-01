@@ -23,6 +23,8 @@ data Token = Number Double -- ^ A number (integers are also represented as float
     | OpenParen            -- ^ Open parenthesis "("
     | CloseParen           -- ^ Close parenthesis ")"
     | Identifier String    -- ^ Identifier (e.g. variable and function name) or unit
+    | Arrow                -- ^ Arrow "->"
+    | Equal                -- ^ Single equal sign "="
     deriving (Show, Eq)
 
 -- | A simple alias for the 'Token' stream
@@ -32,14 +34,16 @@ type Tokens = [Token]
 scan :: String              -- ^ The input stream
      -> Either Error Tokens -- ^ Error message or the list of tokens
 scan []       = Right []
-scan ('(':xs) = (OpenParen :)    <$> scan xs
-scan (')':xs) = (CloseParen :)   <$> scan xs
-scan ('+':xs) = (Operator "+" :) <$> scan xs
-scan ('-':xs) = (Operator "-" :) <$> scan xs
-scan ('*':xs) = (Operator "*" :) <$> scan xs
-scan ('/':xs) = (Operator "/" :) <$> scan xs
-scan ('^':xs) = (Operator "^" :) <$> scan xs
-scan (x:xs)   = if | elem x [' ', '\t', '\r', '\n'] -> scan xs
+scan ('(':xs)     = (OpenParen :)    <$> scan xs
+scan (')':xs)     = (CloseParen :)   <$> scan xs
+scan ('-':'>':xs) = (Arrow :)        <$> scan xs
+scan ('+':xs)     = (Operator "+" :) <$> scan xs
+scan ('-':xs)     = (Operator "-" :) <$> scan xs
+scan ('*':xs)     = (Operator "*" :) <$> scan xs
+scan ('/':xs)     = (Operator "/" :) <$> scan xs
+scan ('^':xs)     = (Operator "^" :) <$> scan xs
+scan ('=':xs)     = (Equal :)        <$> scan xs
+scan (x:xs)       = if | elem x [' ', '\t', '\r', '\n'] -> scan xs
                              | isDigit x -> scanNumber (x:xs)
                              | isAlpha x -> scanIdentifier (x:xs)
                              | otherwise -> Left $ Error ScanError $ "Unexpected character: " ++ [x]
