@@ -154,8 +154,8 @@ parseUnit = do {
 parseExprInParens :: Parser Expr
 parseExprInParens = requireToken OpenParen *> parseExpr <* requireToken CloseParen
 
-parseUnary :: Parser Op
-parseUnary = do
+parseUnaryOp :: Parser Op
+parseUnaryOp = do
     requireOperator "-"
     return UnaryMinus
 
@@ -179,19 +179,22 @@ parseFactorOp = do
         x   -> fail $ "Invalid binary operator " ++ x
 
 parseExpr :: Parser Expr
-parseExpr = parseTerm >>= expr'
-    where expr' parsedLhs = do {
-         liftM2 (BinOp parsedLhs) parseTermOp parseTerm >>= expr'
-    } <|> return parsedLhs
+parseExpr = parseTerm
 
 parseTerm :: Parser Expr
-parseTerm = parseFactor >>= term'
-    where term' parsedLhs = do {
-        liftM2 (BinOp parsedLhs) parseFactorOp parseFactor >>= term'
-    } <|> BinOp parsedLhs Mult <$> parseExprInParens <|> return parsedLhs
+parseTerm = parseFactor >>= expr'
+    where expr' parsedLhs = do {
+         liftM2 (BinOp parsedLhs) parseTermOp parseFactor >>= expr'
+    } <|> return parsedLhs
 
 parseFactor :: Parser Expr
-parseFactor = liftM2 UnaryOp parseUnary parsePrimary <|> parsePrimary
+parseFactor = parseUnary >>= term'
+    where term' parsedLhs = do {
+        liftM2 (BinOp parsedLhs) parseFactorOp parseUnary >>= term'
+    } <|> BinOp parsedLhs Mult <$> parseExprInParens <|> return parsedLhs
+
+parseUnary :: Parser Expr
+parseUnary = liftM2 UnaryOp parseUnaryOp parsePrimary <|> parsePrimary
 
 parsePrimary :: Parser Expr
 parsePrimary = parseExprInParens <|> parseValue
