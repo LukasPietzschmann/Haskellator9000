@@ -8,6 +8,7 @@ module Math.SiConverter.Internal.Evaluator (
     , normalize
     ) where
 
+import Control.Monad.Except (ExceptT, runExceptT, throwError)
 import Control.Monad.State (State, evalState, get, modify)
 
 import Data.List (intercalate)
@@ -15,7 +16,7 @@ import Data.Map (Map, insert, (!?))
 
 import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Unit, Value (..),
            convertToBase, foldExpr, isMultiplier)
-import Math.SiConverter.Internal.Utils.Error (Error)
+import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
 import Math.SiConverter.Internal.Utils.Stack (Stack, pop, push, top)
 
 -- | A single unit constituting a dimension
@@ -40,9 +41,9 @@ instance {-# OVERLAPPING #-} Show Dimension where
 -- expression tree, the numerical result has the dimension returned by this function.
 determineDimension :: Expr                   -- ^ the 'Expr' tree to determine the resulting dimension of
                    -> Either Error Dimension -- ^ the resulting dimension
-determineDimension = return . (filter (not . isMultiplier . dimUnit) . filter ((/=0) . power)) . flip evalState mempty . determineDimension'
+determineDimension expr = filter (not . isMultiplier . dimUnit) . filter ((/=0) . power) <$> evalState (runExceptT $ determineDimension' expr) (push mempty mempty)
 
-determineDimension' :: Expr -> State (Stack (Map String Dimension)) Dimension
+determineDimension' :: Expr -> ExceptT Error (State (Stack (Map String Dimension))) Dimension
 determineDimension' (Val (Value _ u)) = return [DimPart u 1]
 determineDimension' (BinOp lhs op rhs) = do
     l <- determineDimension' lhs
@@ -52,12 +53,12 @@ determineDimension' (BinOp lhs op rhs) = do
         Div   -> return $ subtractUnits l r
         Plus  -> if l == r then return l else error "Addition of different units is not supported"
         Minus -> if l == r then return l else error "Subtraction of different units is not supported"
-        _     -> error $ "Unknown binary operator " ++ show op
+        _     -> throwError $ Error ImplementationError $ "Unknown binary operator " ++ show op
 determineDimension' (UnaryOp op e) = do
     d <- determineDimension' e
     case op of
         UnaryMinus -> return d
-        _          -> error $ "Unknown unary operator " ++ show op
+        _          -> throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
 determineDimension' (VarBinding lhs rhs expr) = do
     rhsv <- determineDimension' rhs
     modify $ push $ insert lhs rhsv mempty
@@ -68,7 +69,7 @@ determineDimension' (Var n) = do
     context <- get
     case top context !? n of
         Just d  -> return d
-        Nothing -> error $ "Variable " ++ n ++ " not in scope"
+        Nothing -> throwError $ Error RuntimeError $ "Variable '" ++ n ++ "' not in scope"
 
 mergeUnits :: Dimension -> Dimension -> Dimension
 mergeUnits [] ys = ys
@@ -90,9 +91,9 @@ normalize = Right . foldExpr (Val . convertToBase) BinOp UnaryOp VarBinding Var
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
 evaluate :: Expr                -- ^ the 'Expr' tree to evaluate
          -> Either Error Double -- ^ the resulting value
-evaluate = return . flip evalState (push mempty mempty) . evaluate'
+evaluate expr = evalState (runExceptT $ evaluate' expr) (push mempty mempty)
 
-evaluate' :: Expr -> State (Stack (Map String Double)) Double
+evaluate' :: Expr -> ExceptT Error (State (Stack (Map String Double))) Double
 evaluate' (Val v) = return $ value v
 evaluate' (BinOp lhs op rhs) = do
     v1 <- evaluate' lhs
@@ -103,12 +104,12 @@ evaluate' (BinOp lhs op rhs) = do
         Mult  -> return $ v1 * v2
         Div   -> return $ v1 / v2
         Pow   -> return $ v1 ** v2
-        _     -> error $ "Unknown binary operator " ++ show op
+        _     -> throwError $ Error ImplementationError $ "Unknown binary operator " ++ show op
 evaluate' (UnaryOp op e) = do
     v <- evaluate' e
     case op of
         UnaryMinus -> return $ -v
-        _          -> error $ "Unknown unary operator " ++ show op
+        _          -> throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
 evaluate' (VarBinding lhs rhs expr) = do
     rhsv <- evaluate' rhs
     modify $ push $ insert lhs rhsv mempty
@@ -119,4 +120,4 @@ evaluate' (Var n) = do
     context <- get
     case top context !? n of
         Just v  -> return v
-        Nothing -> error $ "Variable " ++ n ++ " not in scope"
+        Nothing -> throwError $ Error RuntimeError $ "Variable '" ++ n ++ "' not in scope"
