@@ -1,5 +1,6 @@
 module Math.SiConverter.Internal.Utils.Stack (Stack, isEmpty, pop, push, top) where
 
+-- | A simple stack implementation
 newtype Stack a = Stack [a]
 
 instance Functor Stack where
@@ -15,17 +16,26 @@ instance Semigroup (Stack a) where
 instance Monoid (Stack a) where
     mempty = Stack []
 
-push :: a -> Stack a -> Stack a
+-- | Push an element onto the stack
+push :: a       -- ^ The element to push
+     -> Stack a -- ^ The stack to push onto
+     -> Stack a -- ^ The new stack, containing the element
 push x (Stack xs) = Stack (x:xs)
 
-pop :: Stack a -> (a, Stack a)
+-- | Pop an element from the stack. If the stack is empty, an error is thrown.
+pop :: Stack a      -- ^ The stack to pop from
+    -> (a, Stack a) -- ^ The popped element and the stack without the element
 pop (Stack (x:xs)) = (x, Stack xs)
 pop _              = error "empty stack"
 
-top :: Stack a -> a
+-- | Get the top element of the stack. If the stack is empty, an error is thrown.
+top :: Stack a -- ^ The stack to get the top element from
+    -> a       -- ^ The top element
 top (Stack (x:_)) = x
 top _             = error "empty stack"
 
-isEmpty :: Stack a -> Bool
+-- | Check if the stack is empty
+isEmpty :: Stack a -- ^ The stack to check
+        -> Bool    -- ^ 'True' if the stack is empty, 'False' otherwise
 isEmpty (Stack []) = True
 isEmpty _          = False
