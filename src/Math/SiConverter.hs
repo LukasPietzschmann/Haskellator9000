@@ -8,6 +8,7 @@ import Math.SiConverter.Internal.DetermineDimension
 import Math.SiConverter.Internal.Evaluate
 import Math.SiConverter.Internal.Expr
 import Math.SiConverter.Internal.Lexer
+import Math.SiConverter.Internal.Normalize
 import Math.SiConverter.Internal.Parser
 import Math.SiConverter.Internal.Utils.Error
 

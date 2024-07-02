@@ -1,5 +1,5 @@
 -- | Evaluate the expression tree
-module Math.SiConverter.Internal.Evaluate (evaluate, normalize) where
+module Math.SiConverter.Internal.Evaluate (evaluate) where
 
 import Control.Monad.Except (runExceptT, throwError)
 import Control.Monad.State (evalState, get, modify)
@@ -7,14 +7,9 @@ import Control.Monad.State (evalState, get, modify)
 import Data.Map (insert, (!?))
 
 import Math.SiConverter.Internal.Expr (AstFold, Expr (..), Op (..), Thunk (..),
-           Value (..), convertToBase, foldExpr, partiallyFoldExprM)
+           Value (..), partiallyFoldExprM)
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
 import Math.SiConverter.Internal.Utils.Stack (mapTop, pop, push, top)
-
--- | Normalize all values inside the tree to their base units
-normalize :: Expr              -- ^ the 'Expr' tree to normalize
-          -> Either Error Expr -- ^ the normalized 'Expr' tree
-normalize = Right . foldExpr (Val . convertToBase) BinOp UnaryOp VarBinding Var
 
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
 evaluate :: Expr                -- ^ the 'Expr' tree to evaluate
