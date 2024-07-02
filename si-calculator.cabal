@@ -21,7 +21,7 @@ library
   exposed-modules:
       Math.SiConverter
       Math.SiConverter.Internal.DetermineDimension
-      Math.SiConverter.Internal.Evaluator
+      Math.SiConverter.Internal.Evaluate
       Math.SiConverter.Internal.Expr
       Math.SiConverter.Internal.Lexer
       Math.SiConverter.Internal.Parser

@@ -1,5 +1,5 @@
 -- | Evaluate the expression tree
-module Math.SiConverter.Internal.Evaluator (evaluate, normalize) where
+module Math.SiConverter.Internal.Evaluate (evaluate, normalize) where
 
 import Control.Monad.Except (runExceptT, throwError)
 import Control.Monad.State (evalState, get, modify)
