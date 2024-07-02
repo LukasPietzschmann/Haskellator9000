@@ -15,7 +15,7 @@ module Math.SiConverter.Internal.Expr (
     , Expr (..)
     , Op (..)
     , Unit (..)
-    , Value (..)
+    , Value
     , convertToBase
     , foldExpr
     , foldExprM
@@ -24,7 +24,7 @@ module Math.SiConverter.Internal.Expr (
     ) where
 
 import Math.SiConverter.Internal.TH.UnitGeneration (OperatorDef (..), Quantity (..),
-           UnitDef (..), generateOperators, generateUnits)
+           UnitDef (..), generateOperators, generateUnits, Value)
 
 $(generateUnits [
     Quantity (UnitDef "Multiplier" "" 1) [],
