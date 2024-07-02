@@ -11,7 +11,8 @@
 -- "((1.0m + 2.0m) * 3.0)"
 
 module Math.SiConverter.Internal.Expr (
-      AstValue
+      AstFold
+    , AstValue
     , Expr (..)
     , Op (..)
     , Thunk (..)
@@ -19,13 +20,20 @@ module Math.SiConverter.Internal.Expr (
     , Value (..)
     , convertToBase
     , foldExpr
-    , foldExprM
     , isMultiplier
+    , partiallyFoldExprM
     , unitFromString
     ) where
 
+import Control.Monad.Except (ExceptT)
+import Control.Monad.State (State)
+
+import Data.Map (Map)
+
 import Math.SiConverter.Internal.TH.UnitGeneration (OperatorDef (..), Quantity (..),
            UnitDef (..), generateOperators, generateUnits)
+import Math.SiConverter.Internal.Utils.Error (Error)
+import Math.SiConverter.Internal.Utils.Stack (Stack)
 
 $(generateUnits [
     Quantity (UnitDef "Multiplier" "" 1) [],
@@ -70,27 +78,25 @@ foldExpr fv fb fu fvb fvn = doIt
     doIt (VarBinding l r e) = fvb l (doIt r) (doIt e)
     doIt (Var n)            = fvn n
 
--- | Monadic fold over an expression tree
-foldExprM :: (Monad m) => (AstValue -> m a) -- ^ function that folds a value
-         -> (a -> Op -> a -> m a)           -- ^ function that folds a binary expression
-         -> (Op -> a -> m a)                -- ^ function that folds a unary expression
-         -> (String -> a -> a -> m a)       -- ^ function that folds a variable binding
-         -> (String -> m a)                 -- ^ function that folds a variable
-         -> Expr                            -- ^ the 'Expr' to fold over
-         -> m a                             -- ^ the resulting value
-foldExprM fv fb fu fvb fvn = doIt
-  where
-    doIt (Val v) = fv v
-    doIt (BinOp e1 o e2) = do
-        v1 <- doIt e1
-        v2 <- doIt e2
-        fb v1 o v2
-    doIt (UnaryOp o e) = doIt e >>= \v -> fu o v
-    doIt (VarBinding l r e) = do
-        r' <- doIt r
-        e' <- doIt e
-        fvb l r' e'
-    doIt (Var n) = fvn n
+-- | Encapsulates the result 'a' of folding an expression tree and holds the current
+-- state of variable bindings
+type AstFold a = ExceptT Error (State (Stack (Map String (Thunk a)))) a
+
+-- | Like 'foldExpr', but does not fold into variable bindings and returns a monadic
+-- result
+partiallyFoldExprM :: (AstValue -> AstFold a) -> (a -> Op -> a -> AstFold a) -> (Op -> a -> AstFold a) -> (String -> Expr -> Expr -> AstFold a) -> (String -> AstFold a) -> Expr -> AstFold a
+partiallyFoldExprM fv fb fu fbv fvar = doIt
+    where
+        doIt (Val v) = fv v
+        doIt (BinOp lhs op rhs) = do
+            l <- doIt lhs
+            r <- doIt rhs
+            fb l op r
+        doIt (UnaryOp op e) = do
+            v <- doIt e
+            fu op v
+        doIt (VarBinding lhs rhs expr) = fbv lhs rhs expr
+        doIt (Var n) = fvar n
 
 instance Eq Expr where
     e1 == e2 = show e1 == show e2
