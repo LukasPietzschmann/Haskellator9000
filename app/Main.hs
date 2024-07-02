@@ -32,7 +32,7 @@ replSettings = do
             let filepath = stateDir ++ "/haskellator-history"
             putStrLn $ "Saving REPL history to " ++ filepath
             return $ pure filepath
-        else putStrLn "Could not find temp dir. REPL history will not be saved." >> return Nothing
+        else putStrLn "Could not find XDG state directory. REPL history will not be saved." >> return Nothing
     return $ Settings {
         complete = noCompletion,
         historyFile = histFilePath,
