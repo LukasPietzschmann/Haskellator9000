@@ -8,7 +8,7 @@ module Math.SiConverter.Internal.TH.UnitGeneration (
     , UnitDef (..)
     , generateOperators
     , generateUnits
-    , Value
+    , Value (..)
     ) where
 
 import Language.Haskell.TH
