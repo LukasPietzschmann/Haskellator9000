@@ -1,4 +1,11 @@
-module Math.SiConverter.Internal.Utils.Stack (Stack, isEmpty, pop, push, top) where
+module Math.SiConverter.Internal.Utils.Stack (
+      Stack
+    , isEmpty
+    , mapTop
+    , pop
+    , push
+    , top
+    ) where
 
 -- | A simple stack implementation
 newtype Stack a = Stack [a]
@@ -15,6 +22,13 @@ instance Semigroup (Stack a) where
 
 instance Monoid (Stack a) where
     mempty = Stack []
+
+-- | Map a function over the top element of the stack
+mapTop :: (a -> a) -- ^ The function to map
+       -> Stack a  -- ^ The stack to map over
+       -> Stack a  -- ^ The new stack, with the top element mapped
+mapTop f (Stack (x:xs)) = Stack (f x:xs)
+mapTop _ s              = s
 
 -- | Push an element onto the stack
 push :: a       -- ^ The element to push

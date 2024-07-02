@@ -14,10 +14,10 @@ import Control.Monad.State (State, evalState, get, modify)
 import Data.List (intercalate)
 import Data.Map (Map, insert, (!?))
 
-import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Unit, Value (..),
+import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Thunk (..), Unit, Value (..),
            convertToBase, foldExpr, isMultiplier)
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
-import Math.SiConverter.Internal.Utils.Stack (Stack, pop, push, top)
+import Math.SiConverter.Internal.Utils.Stack (Stack, mapTop, pop, push, top)
 
 -- | A single unit constituting a dimension
 data DimensionPart = DimPart { dimUnit :: Unit
@@ -43,7 +43,7 @@ determineDimension :: Expr                   -- ^ the 'Expr' tree to determine t
                    -> Either Error Dimension -- ^ the resulting dimension
 determineDimension expr = filter (not . isMultiplier . dimUnit) . filter ((/=0) . power) <$> evalState (runExceptT $ determineDimension' expr) (push mempty mempty)
 
-determineDimension' :: Expr -> ExceptT Error (State (Stack (Map String Dimension))) Dimension
+determineDimension' :: Expr -> ExceptT Error (State (Stack (Map String (Thunk Dimension)))) Dimension
 determineDimension' (Val (Value _ u)) = return [DimPart u 1]
 determineDimension' (BinOp lhs op rhs) = do
     l <- determineDimension' lhs
@@ -60,16 +60,19 @@ determineDimension' (UnaryOp op e) = do
         UnaryMinus -> return d
         _          -> throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
 determineDimension' (VarBinding lhs rhs expr) = do
-    rhsv <- determineDimension' rhs
-    modify $ push $ insert lhs rhsv mempty
+    modify $ push $ insert lhs (Expr rhs) mempty
     result <- determineDimension' expr
     modify $ snd . pop
     return result
 determineDimension' (Var n) = do
     context <- get
     case top context !? n of
-        Just d  -> return d
-        Nothing -> throwError $ Error RuntimeError $ "Variable '" ++ n ++ "' not in scope"
+        Just (Result d) -> return d
+        Just (Expr e)   -> do
+            result <- determineDimension' e
+            modify $ mapTop $ insert n $ Result result
+            return result
+        Nothing          -> throwError $ Error RuntimeError $ "Variable '" ++ n ++ "' not in scope"
 
 mergeUnits :: Dimension -> Dimension -> Dimension
 mergeUnits [] ys = ys
@@ -93,7 +96,7 @@ evaluate :: Expr                -- ^ the 'Expr' tree to evaluate
          -> Either Error Double -- ^ the resulting value
 evaluate expr = evalState (runExceptT $ evaluate' expr) (push mempty mempty)
 
-evaluate' :: Expr -> ExceptT Error (State (Stack (Map String Double))) Double
+evaluate' :: Expr -> ExceptT Error (State (Stack (Map String (Thunk Double)))) Double
 evaluate' (Val v) = return $ value v
 evaluate' (BinOp lhs op rhs) = do
     v1 <- evaluate' lhs
@@ -111,13 +114,16 @@ evaluate' (UnaryOp op e) = do
         UnaryMinus -> return $ -v
         _          -> throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
 evaluate' (VarBinding lhs rhs expr) = do
-    rhsv <- evaluate' rhs
-    modify $ push $ insert lhs rhsv mempty
+    modify $ push $ insert lhs (Expr rhs) mempty
     result <- evaluate' expr
     modify $ snd . pop
     return result
 evaluate' (Var n) = do
     context <- get
     case top context !? n of
-        Just v  -> return v
-        Nothing -> throwError $ Error RuntimeError $ "Variable '" ++ n ++ "' not in scope"
+        Just (Result v) -> return v
+        Just (Expr e)   -> do
+            result <- evaluate' e
+            modify $ mapTop $ insert n $ Result result
+            return result
+        Nothing         -> throwError $ Error RuntimeError $ "Variable '" ++ n ++ "' not in scope"

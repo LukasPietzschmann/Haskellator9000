@@ -14,6 +14,7 @@ module Math.SiConverter.Internal.Expr (
       AstValue
     , Expr (..)
     , Op (..)
+    , Thunk (..)
     , Unit (..)
     , Value (..)
     , convertToBase
@@ -49,6 +50,9 @@ data Expr = Val AstValue
           | UnaryOp Op Expr
           | VarBinding String Expr Expr
           | Var String
+
+data Thunk a = Expr Expr
+             | Result a
 
 -- | Folds an expression tree
 foldExpr :: (AstValue -> a)         -- ^ function that folds a value
