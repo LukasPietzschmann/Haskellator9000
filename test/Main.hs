@@ -8,7 +8,7 @@ import Control.Monad (liftM3, (>=>))
 
 import Data.Either (fromRight)
 
-import Math.SiConverter.Internal.Evaluate (evaluate)
+import Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate)
 import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Unit (..), Value (..))
 import Math.SiConverter.Internal.Lexer (scan)
 import Math.SiConverter.Internal.Parser (parse)

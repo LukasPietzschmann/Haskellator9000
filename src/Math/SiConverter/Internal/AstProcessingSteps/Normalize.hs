@@ -1,4 +1,5 @@
-module Math.SiConverter.Internal.Normalize (normalize) where
+module Math.SiConverter.Internal.AstProcessingSteps.Normalize (normalize) where
+
 import Math.SiConverter.Internal.Expr (Expr (..), convertToBase, foldExpr)
 import Math.SiConverter.Internal.Utils.Error (Error)
 

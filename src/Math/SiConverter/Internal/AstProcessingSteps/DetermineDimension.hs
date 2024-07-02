@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 
-module Math.SiConverter.Internal.DetermineDimension (
+module Math.SiConverter.Internal.AstProcessingSteps.DetermineDimension (
       Dimension
     , determineDimension
     ) where

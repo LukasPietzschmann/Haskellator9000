@@ -20,11 +20,11 @@ extra-source-files:
 library
   exposed-modules:
       Math.SiConverter
-      Math.SiConverter.Internal.DetermineDimension
-      Math.SiConverter.Internal.Evaluate
+      Math.SiConverter.Internal.AstProcessingSteps.DetermineDimension
+      Math.SiConverter.Internal.AstProcessingSteps.Evaluate
+      Math.SiConverter.Internal.AstProcessingSteps.Normalize
       Math.SiConverter.Internal.Expr
       Math.SiConverter.Internal.Lexer
-      Math.SiConverter.Internal.Normalize
       Math.SiConverter.Internal.Parser
       Math.SiConverter.Internal.TH.UnitGeneration
       Math.SiConverter.Internal.Utils.Composition
