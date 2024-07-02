@@ -8,10 +8,10 @@ module Math.SiConverter.Internal.Evaluator (
     , normalize
     ) where
 
-import Control.Monad.State (State, evalState, modify)
+import Control.Monad.State (State, evalState, get, modify)
 
 import Data.List (intercalate)
-import Data.Map (Map, insert)
+import Data.Map (Map, insert, (!?))
 
 import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Unit, Value (..),
            convertToBase, foldExpr, isMultiplier)
@@ -61,6 +61,11 @@ determineDimension' (VarBinding lhs rhs expr) = do
     rhsv <- determineDimension' rhs
     modify $ insert lhs rhsv
     determineDimension' expr
+determineDimension' (Var n) = do
+    context <- get
+    case context !? n of
+        Just d  -> return d
+        Nothing -> error $ "Variable " ++ n ++ " not in scope"
 
 mergeUnits :: Dimension -> Dimension -> Dimension
 mergeUnits [] ys = ys
@@ -77,7 +82,7 @@ subtractUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = DimPart (dimUnit x) (powe
 -- | Normalize all values inside the tree to their base units
 normalize :: Expr              -- ^ the 'Expr' tree to normalize
           -> Either Error Expr -- ^ the normalized 'Expr' tree
-normalize = Right . foldExpr (Val . convertToBase) BinOp UnaryOp VarBinding
+normalize = Right . foldExpr (Val . convertToBase) BinOp UnaryOp VarBinding Var
 
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
 evaluate :: Expr                -- ^ the 'Expr' tree to evaluate
@@ -105,3 +110,8 @@ evaluate' (VarBinding lhs rhs expr) = do
     rhsv <- evaluate' rhs
     modify $ insert lhs rhsv
     evaluate' expr
+evaluate' (Var n) = do
+    context <- get
+    case context !? n of
+        Just v  -> return v
+        Nothing -> error $ "Variable " ++ n ++ " not in scope"

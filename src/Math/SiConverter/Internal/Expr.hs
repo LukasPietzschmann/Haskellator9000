@@ -48,29 +48,33 @@ data Expr = Val AstValue
           | BinOp Expr Op Expr
           | UnaryOp Op Expr
           | VarBinding String Expr Expr
+          | Var String
 
 -- | Folds an expression tree
 foldExpr :: (AstValue -> a)         -- ^ function that folds a value
          -> (a -> Op -> a -> a)     -- ^ function that folds a binary expression
          -> (Op -> a -> a)          -- ^ function that folds a unary expression
          -> (String -> a -> a -> a) -- ^ function that folds a variable binding
+         -> (String -> a)           -- ^ function that folds a variable
          -> Expr                    -- ^ the 'Expr' to fold over
          -> a                       -- ^ the resulting value
-foldExpr fv fb fu fvb = doIt
+foldExpr fv fb fu fvb fvn = doIt
   where
     doIt (Val v)            = fv v
     doIt (BinOp e1 o e2)    = fb (doIt e1) o (doIt e2)
     doIt (UnaryOp o e)      = fu o $ doIt e
     doIt (VarBinding l r e) = fvb l (doIt r) (doIt e)
+    doIt (Var n)            = fvn n
 
 -- | Monadic fold over an expression tree
 foldExprM :: (Monad m) => (AstValue -> m a) -- ^ function that folds a value
          -> (a -> Op -> a -> m a)           -- ^ function that folds a binary expression
          -> (Op -> a -> m a)                -- ^ function that folds a unary expression
          -> (String -> a -> a -> m a)       -- ^ function that folds a variable binding
+         -> (String -> m a)                 -- ^ function that folds a variable
          -> Expr                            -- ^ the 'Expr' to fold over
          -> m a                             -- ^ the resulting value
-foldExprM fv fb fu fvb = doIt
+foldExprM fv fb fu fvb fvn = doIt
   where
     doIt (Val v) = fv v
     doIt (BinOp e1 o e2) = do
@@ -82,12 +86,13 @@ foldExprM fv fb fu fvb = doIt
         r' <- doIt r
         e' <- doIt e
         fvb l r' e'
+    doIt (Var n) = fvn n
 
 instance Eq Expr where
     e1 == e2 = show e1 == show e2
 
 instance Show Expr where
-    show = foldExpr show showBinOp showUnaryOp showVarBind
+    show = foldExpr show showBinOp showUnaryOp showVarBind id
       where
         showBinOp e1 o e2 = "(" ++ e1 ++ " " ++ show o ++ " " ++ e2 ++ ")"
         showUnaryOp o e = "(" ++ show o ++ e ++ ")"

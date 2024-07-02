@@ -209,7 +209,7 @@ parsePrimary :: Parser Expr
 parsePrimary = parseExprInParens <|> parseValue
 
 parseValue :: Parser Expr
-parseValue = liftM2 (Val .: Value) parseNumber parseUnit <|> do
+parseValue = Var <$> parseIdentifier <|> liftM2 (Val .: Value) parseNumber parseUnit <|> do
     isInFactor <- lift get
     if isInFactor
         then Val . Value 1 <$> parseUnit
