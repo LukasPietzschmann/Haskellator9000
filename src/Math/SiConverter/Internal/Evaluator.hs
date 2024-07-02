@@ -16,6 +16,7 @@ import Data.Map (Map, insert, (!?))
 import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Unit, Value (..),
            convertToBase, foldExpr, isMultiplier)
 import Math.SiConverter.Internal.Utils.Error (Error)
+import Math.SiConverter.Internal.Utils.Stack (Stack, pop, push, top)
 
 -- | A single unit constituting a dimension
 data DimensionPart = DimPart { dimUnit :: Unit
@@ -41,7 +42,7 @@ determineDimension :: Expr                   -- ^ the 'Expr' tree to determine t
                    -> Either Error Dimension -- ^ the resulting dimension
 determineDimension = return . (filter (not . isMultiplier . dimUnit) . filter ((/=0) . power)) . flip evalState mempty . determineDimension'
 
-determineDimension' :: Expr -> State (Map String Dimension) Dimension
+determineDimension' :: Expr -> State (Stack (Map String Dimension)) Dimension
 determineDimension' (Val (Value _ u)) = return [DimPart u 1]
 determineDimension' (BinOp lhs op rhs) = do
     l <- determineDimension' lhs
@@ -59,11 +60,13 @@ determineDimension' (UnaryOp op e) = do
         _          -> error $ "Unknown unary operator " ++ show op
 determineDimension' (VarBinding lhs rhs expr) = do
     rhsv <- determineDimension' rhs
-    modify $ insert lhs rhsv
-    determineDimension' expr
+    modify $ push $ insert lhs rhsv mempty
+    result <- determineDimension' expr
+    modify $ snd . pop
+    return result
 determineDimension' (Var n) = do
     context <- get
-    case context !? n of
+    case top context !? n of
         Just d  -> return d
         Nothing -> error $ "Variable " ++ n ++ " not in scope"
 
@@ -87,9 +90,9 @@ normalize = Right . foldExpr (Val . convertToBase) BinOp UnaryOp VarBinding Var
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
 evaluate :: Expr                -- ^ the 'Expr' tree to evaluate
          -> Either Error Double -- ^ the resulting value
-evaluate = return . flip evalState mempty . evaluate'
+evaluate = return . flip evalState (push mempty mempty) . evaluate'
 
-evaluate' :: Expr -> State (Map String Double) Double
+evaluate' :: Expr -> State (Stack (Map String Double)) Double
 evaluate' (Val v) = return $ value v
 evaluate' (BinOp lhs op rhs) = do
     v1 <- evaluate' lhs
@@ -108,10 +111,12 @@ evaluate' (UnaryOp op e) = do
         _          -> error $ "Unknown unary operator " ++ show op
 evaluate' (VarBinding lhs rhs expr) = do
     rhsv <- evaluate' rhs
-    modify $ insert lhs rhsv
-    evaluate' expr
+    modify $ push $ insert lhs rhsv mempty
+    result <- evaluate' expr
+    modify $ snd . pop
+    return result
 evaluate' (Var n) = do
     context <- get
-    case context !? n of
+    case top context !? n of
         Just v  -> return v
         Nothing -> error $ "Variable " ++ n ++ " not in scope"
