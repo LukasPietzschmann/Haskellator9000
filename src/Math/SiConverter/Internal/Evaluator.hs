@@ -8,11 +8,14 @@ module Math.SiConverter.Internal.Evaluator (
     , normalize
     ) where
 
+import Control.Monad.State (State, evalState, modify)
+
 import Data.List (intercalate)
+import Data.Map (Map, insert)
 
 import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Unit, Value (..),
-           convertToBase, foldExpr, foldExprM, isMultiplier)
-import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (ImplementationError))
+           convertToBase, foldExpr, isMultiplier)
+import Math.SiConverter.Internal.Utils.Error (Error)
 
 -- | A single unit constituting a dimension
 data DimensionPart = DimPart { dimUnit :: Unit
@@ -32,22 +35,32 @@ type Dimension = [DimensionPart]
 instance {-# OVERLAPPING #-} Show Dimension where
     show xs = intercalate "*" (show <$> xs)
 
--- TODO: implement custom fold, so we can handle var bindings correctly
 -- | Determines the resulting dimension of an expression tree. If you would evaluate the
--- expression treee, the numerical result has the dimension returned by this function.
+-- expression tree, the numerical result has the dimension returned by this function.
 determineDimension :: Expr                   -- ^ the 'Expr' tree to determine the resulting dimension of
                    -> Either Error Dimension -- ^ the resulting dimension
-determineDimension = fmap (filter (not . isMultiplier . dimUnit) . filter ((/=0) . power)) . foldExprM (\(Value _ u) -> return $ pure $ DimPart u 1) handleBinOp handleUnaryOp handleVarBinding
-  where
-    handleBinOp lhs Mult rhs  = return $ mergeUnits lhs rhs
-    handleBinOp lhs Div rhs   = return $ subtractUnits lhs rhs
-    handleBinOp _   Pow _     = Left $ Error ImplementationError "Exponentiation of units is not supported"
-    handleBinOp lhs Plus rhs  = if lhs == rhs then return lhs else Left $ Error ImplementationError "Addition of different units is not supported"
-    handleBinOp lhs Minus rhs = if lhs == rhs then return lhs else Left $ Error ImplementationError "Subtraction of different units is not supported"
-    handleBinOp _   op _      = Left $ Error ImplementationError $ "Unknown binary operand " ++ show op
-    handleUnaryOp UnaryMinus  = return
-    handleUnaryOp op          = const $ Left $ Error ImplementationError $ "Unknown unary operand " ++ show op
-    handleVarBinding _ _ _    = Left $ Error ImplementationError "Variable bindings are not yet supported"
+determineDimension = return . (filter (not . isMultiplier . dimUnit) . filter ((/=0) . power)) . flip evalState mempty . determineDimension'
+
+determineDimension' :: Expr -> State (Map String Dimension) Dimension
+determineDimension' (Val (Value _ u)) = return [DimPart u 1]
+determineDimension' (BinOp lhs op rhs) = do
+    l <- determineDimension' lhs
+    r <- determineDimension' rhs
+    case op of
+        Mult  -> return $ mergeUnits l r
+        Div   -> return $ subtractUnits l r
+        Plus  -> if l == r then return l else error "Addition of different units is not supported"
+        Minus -> if l == r then return l else error "Subtraction of different units is not supported"
+        _     -> error $ "Unknown binary operator " ++ show op
+determineDimension' (UnaryOp op e) = do
+    d <- determineDimension' e
+    case op of
+        UnaryMinus -> return d
+        _          -> error $ "Unknown unary operator " ++ show op
+determineDimension' (VarBinding lhs rhs expr) = do
+    rhsv <- determineDimension' rhs
+    modify $ insert lhs rhsv
+    determineDimension' expr
 
 mergeUnits :: Dimension -> Dimension -> Dimension
 mergeUnits [] ys = ys
@@ -66,27 +79,29 @@ normalize :: Expr              -- ^ the 'Expr' tree to normalize
           -> Either Error Expr -- ^ the normalized 'Expr' tree
 normalize = Right . foldExpr (Val . convertToBase) BinOp UnaryOp VarBinding
 
--- TODO: implement custom eval fold, so we can handle var bindings correctly
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
 evaluate :: Expr                -- ^ the 'Expr' tree to evaluate
          -> Either Error Double -- ^ the resulting value
-evaluate = foldExprM (Right . value) evaluateBinOp evaluateUnaryOp evaluateVarBinding
+evaluate = return . flip evalState mempty . evaluate'
 
-evaluateBinOp :: Double -> Op -> Double -> Either Error Double
-evaluateBinOp = eval
-  where
-    eval v1 Plus v2 = Right $ v1 + v2
-    eval v1 Minus v2 = Right $ v1 - v2
-    eval v1 Mult v2 = Right $ v1 * v2
-    eval v1 Div v2 = Right $ v1 / v2
-    eval v1 Pow v2 = Right $ v1 ** v2
-    eval _ op _ = Left $ Error ImplementationError $ "Unknown binary operand " ++ show op
-
-evaluateUnaryOp :: Op -> Double -> Either Error Double
-evaluateUnaryOp = eval
-  where
-    eval UnaryMinus v = Right $ -v
-    eval op _ = Left $ Error ImplementationError $ "Unknown unary operand " ++ show op
-
-evaluateVarBinding :: String -> Double -> Double -> Either Error Double
-evaluateVarBinding _ _ = Right
+evaluate' :: Expr -> State (Map String Double) Double
+evaluate' (Val v) = return $ value v
+evaluate' (BinOp lhs op rhs) = do
+    v1 <- evaluate' lhs
+    v2 <- evaluate' rhs
+    case op of
+        Plus  -> return $ v1 + v2
+        Minus -> return $ v1 - v2
+        Mult  -> return $ v1 * v2
+        Div   -> return $ v1 / v2
+        Pow   -> return $ v1 ** v2
+        _     -> error $ "Unknown binary operator " ++ show op
+evaluate' (UnaryOp op e) = do
+    v <- evaluate' e
+    case op of
+        UnaryMinus -> return $ -v
+        _          -> error $ "Unknown unary operator " ++ show op
+evaluate' (VarBinding lhs rhs expr) = do
+    rhsv <- evaluate' rhs
+    modify $ insert lhs rhsv
+    evaluate' expr

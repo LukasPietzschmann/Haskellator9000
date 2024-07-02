@@ -37,6 +37,7 @@ library:
   dependencies:
   - template-haskell
   - mtl
+  - containers
 
 executables:
   si-calculator-exe:
