@@ -50,6 +50,7 @@ executables:
     dependencies:
     - si-calculator
     - haskeline
+    - directory
 
 tests:
   si-calculator-test:

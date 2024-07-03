@@ -8,6 +8,7 @@ module Math.SiConverter.Internal.TH.UnitGeneration (
     , UnitDef (..)
     , generateOperators
     , generateUnits
+    , Value (..)
     ) where
 
 import Language.Haskell.TH
@@ -33,14 +34,16 @@ instance Showable OperatorDef where
     name (OperDef n _) = n
     abbreviation (OperDef _ a) = a
 
-valueADT :: Name
-valueADT = mkName "Value"
+data Value u = Value {value :: Double, unit :: u}
+
+instance Show u => Show (Value u) where
+      show (Value v u) = (++) (show v) (show u)
 
 unitADT :: Name
 unitADT = mkName "Unit"
 
 simpleValue :: Type
-simpleValue = AppT (ConT valueADT) (ConT unitADT)
+simpleValue = AppT (ConT ''Value) (ConT unitADT)
 
 operADT :: Name
 operADT = mkName "Op"
@@ -50,12 +53,6 @@ unitFromStringFun = mkName "unitFromString"
 
 convertToBaseFun :: Name
 convertToBaseFun = mkName "convertToBase"
-
-generateValueAdt :: [Dec]
-generateValueAdt = [dataDec, showInstance]
-  where dataDec = DataD [] valueADT [PlainTV (mkName "u") ()] Nothing [RecC valueADT [(mkName "value", Bang NoSourceUnpackedness NoSourceStrictness, ConT ''Double), (mkName "unit", Bang NoSourceUnpackedness NoSourceStrictness, VarT $ mkName "u")]] []
-        showClauses = [Clause [ConP valueADT [] [VarP $ mkName "v", VarP $ mkName "u"]] (NormalB $ AppE (AppE (VarE '(++)) (AppE (VarE 'show) (VarE $ mkName "v"))) (AppE (VarE 'show) (VarE $ mkName "u"))) []]
-        showInstance = InstanceD Nothing [AppT (ConT ''Show) (VarT $ mkName "u")] (AppT (ConT ''Show) (AppT (ConT valueADT) (VarT $ mkName "u"))) [FunD 'show showClauses]
 
 -- | Generate the unit types and function to work with them. Imagine the following call: @generateUnits [Quantity (UnitDef "Meter" "m" 1) [UnitDef "Kilometer" "km" 1000]]@.
 -- This function will then generate the following code:
@@ -108,7 +105,7 @@ generateUnits unitGroups = do
       convertFunction    = FunD convertToBaseFun convertClauses
       isUnitFuns         = generateIsUnitFuns unitGroups
 
-  return $ [dataDec, showInstance] ++ generateValueAdt  ++ [fromStringSig, fromStringFunction, convertSig, convertFunction] ++ isUnitFuns
+  return $ [dataDec, showInstance] ++ [fromStringSig, fromStringFunction, convertSig, convertFunction] ++ isUnitFuns
 
 generateIsUnitFuns :: [Quantity] -> [Dec]
 generateIsUnitFuns unitGroups = concatMap mkIsUnitFun $ concatMap (\(Quantity b us) -> b:us) unitGroups
@@ -125,8 +122,8 @@ mkIsUnitFun (UnitDef unit _ _) = [SigD funName $ AppT (AppT ArrowT $ ConT unitAD
 -- TODO Consider exponents (e.g. 1km^2 = 1 000 000 m^2 != 1000 m^2)!
 mkConvertClaus :: UnitDef -> UnitDef -> Clause
 mkConvertClaus (UnitDef baseUnit _ _) (UnitDef unit _ factor) =
-  let pattern = ConP valueADT [] [VarP (mkName "v"), ConP (mkName unit) [] [VarP (mkName "e")]]
-      body    = NormalB $ AppE (AppE (ConE valueADT) (InfixE (Just $ InfixE (Just $ VarE $ mkName "v") (VarE '(*)) (Just $ LitE $ RationalL $ toRational factor)) (VarE '(^)) (Just $ VarE $ mkName "e"))) (AppE (ConE $ mkName baseUnit) (VarE $ mkName "e"))
+  let pattern = ConP 'Value [] [VarP (mkName "v"), ConP (mkName unit) [] [VarP (mkName "e")]]
+      body    = NormalB $ AppE (AppE (ConE 'Value) (InfixE (Just $ InfixE (Just $ VarE $ mkName "v") (VarE '(*)) (Just $ LitE $ RationalL $ toRational factor)) (VarE '(^)) (Just $ VarE $ mkName "e"))) (AppE (ConE $ mkName baseUnit) (VarE $ mkName "e"))
   in Clause [pattern] body []
 
 -- | Generate the operator types and function to work with them. Imagine the following call: @generateOperators [OperDef "Plus" "+", OperDef "Minus" "-"]@.

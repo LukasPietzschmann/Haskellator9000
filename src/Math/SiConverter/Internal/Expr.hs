@@ -25,7 +25,7 @@ module Math.SiConverter.Internal.Expr (
     ) where
 
 import Math.SiConverter.Internal.TH.UnitGeneration (OperatorDef (..), Quantity (..),
-           UnitDef (..), generateOperators, generateUnits)
+           UnitDef (..), generateOperators, generateUnits, Value(..))
 
 $(generateUnits [
     Quantity (UnitDef "Multiplier" "" 1) [],

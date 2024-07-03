@@ -28,7 +28,7 @@
 
 - Extensive CI pipeline ([here](https://gitlab.uni-ulm.de/sp/fp-2/ss24/team1/-/pipelines))
 - Deployed documentation ([here](https://haskellator.pietzschmann.org))
-- Rich REPL with temporary history and <CTRL>-R search
+- Rich REPL with persisted history and <CTRL>-R search
 - Implicit multiplication (e.g. `2m(3m+4m)` instead of `2m*(3m+4m)`)
 - Support for variable bindings (e.g. `a = 1+2 -> a + 3`)
     - Of course, they are evaluated lazily
