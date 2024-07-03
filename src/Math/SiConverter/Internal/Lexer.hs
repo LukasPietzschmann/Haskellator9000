@@ -46,6 +46,7 @@ scan ('*':xs)     = (Operator "*" :) <$> scan xs
 scan ('/':xs)     = (Operator "/" :) <$> scan xs
 scan ('^':xs)     = (Operator "^" :) <$> scan xs
 scan ('=':xs)     = (Equal :)        <$> scan xs
+scan (',':xs)     = (Komma :)        <$> scan xs
 scan (x:xs)       = if | elem x [' ', '\t', '\r', '\n'] -> scan xs
                        | isDigit x -> scanNumber (x:xs)
                        | isAlpha x -> scanIdentifier (x:xs)
