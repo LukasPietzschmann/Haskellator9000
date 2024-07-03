@@ -99,6 +99,15 @@ parse tokens = case runParser parseExpr tokens of
     Right (_, ts)      -> Left $ Error ParseError $ "Parser was unable to parse the full input. " ++ show ts ++ " remains in the token stream."
     Left err           -> Left $ Error ParseError err
 
+atLeastOne :: Parser a -> Token -> Parser [a]
+atLeastOne p sep = do
+    x <- p
+    xs <- do {
+        requireToken sep;
+        atLeastOne p sep
+    } <|> return []
+    return $ x:xs
+
 satisfy :: (Token -> Bool) -> Parser Token
 satisfy predicate = ParserT $ \input -> return $ case input of
     (x:xs) | predicate x -> Right (x, xs)
@@ -179,16 +188,23 @@ parseFactorOp = do
         x   -> fail $ "Invalid binary operator " ++ x
 
 parseExpr :: Parser Expr
-parseExpr = parseVarBinding
+parseExpr = parseVarBindings
 
-parseVarBinding :: Parser Expr
-parseVarBinding = do {
+parseVarBindings :: Parser Expr
+parseVarBindings = do {
+    bs <- atLeastOne parseVarBindingHead Komma;
+    requireToken Arrow;
+    expr <- parseExpr;
+    return $ VarBindings bs expr
+  } <|> parseTerm
+
+parseVarBindingHead :: Parser (String, Expr)
+parseVarBindingHead = do {
     lhs <- parseIdentifier;
     requireToken Equal;
     rhs <- parseTerm;
-    requireToken Arrow;
-    VarBinding lhs rhs <$> parseExpr;
-  } <|> parseTerm
+    return (lhs, rhs)
+  }
 
 parseTerm :: Parser Expr
 parseTerm = parseFactor >>= expr'
