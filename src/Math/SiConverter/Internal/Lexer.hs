@@ -22,6 +22,8 @@ data Token = Number Double -- ^ A number (integers are also represented as float
     | Operator String      -- ^ An operator
     | OpenParen            -- ^ Open parenthesis "("
     | CloseParen           -- ^ Close parenthesis ")"
+    | OpenBracket          -- ^ Open bracket "["
+    | CloseBracket         -- ^ Close bracket "]"
     | Identifier String    -- ^ Identifier (e.g. variable and function name) or unit
     deriving (Show, Eq)
 
@@ -34,6 +36,8 @@ scan :: String              -- ^ The input stream
 scan []       = Right []
 scan ('(':xs) = (OpenParen :)    <$> scan xs
 scan (')':xs) = (CloseParen :)   <$> scan xs
+scan ('[':xs) = (OpenBracket :)  <$> scan xs
+scan (']':xs) = (CloseBracket :) <$> scan xs
 scan ('+':xs) = (Operator "+" :) <$> scan xs
 scan ('-':xs) = (Operator "-" :) <$> scan xs
 scan ('*':xs) = (Operator "*" :) <$> scan xs
