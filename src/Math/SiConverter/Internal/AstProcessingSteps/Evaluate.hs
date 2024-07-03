@@ -1,20 +1,20 @@
 -- | Evaluate the expression tree
 module Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate) where
 
-import Control.Monad.Except (runExceptT, throwError)
-import Control.Monad.State (evalState, get, modify)
+import Control.Monad.Except (throwError)
+import Control.Monad.State (get, modify)
 
 import Data.Map (insert, (!?))
 
 import Math.SiConverter.Internal.Expr (AstFold, Expr (..), Op (..), Thunk (..),
-           Value (..), partiallyFoldExprM)
+           Value (..), partiallyFoldExprM, runAstFold)
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
 import Math.SiConverter.Internal.Utils.Stack (mapTop, pop, push, top)
 
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
 evaluate :: Expr                -- ^ the 'Expr' tree to evaluate
          -> Either Error Double -- ^ the resulting value
-evaluate expr = evalState (runExceptT $ evaluate' expr) (push mempty mempty)
+evaluate = runAstFold . evaluate'
 
 evaluate' :: Expr -> AstFold Double
 evaluate' = partiallyFoldExprM (return . value) evalBinOp evalUnaryOp evalVarBind evalVar

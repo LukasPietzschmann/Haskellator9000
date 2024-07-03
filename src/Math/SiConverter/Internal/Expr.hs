@@ -22,18 +22,19 @@ module Math.SiConverter.Internal.Expr (
     , foldExpr
     , isMultiplier
     , partiallyFoldExprM
+    , runAstFold
     , unitFromString
     ) where
 
-import Control.Monad.Except (ExceptT)
-import Control.Monad.State (State)
+import Control.Monad.Except (ExceptT, runExceptT)
+import Control.Monad.State (State, evalState)
 
 import Data.Map (Map)
 
 import Math.SiConverter.Internal.TH.UnitGeneration (OperatorDef (..), Quantity (..),
            UnitDef (..), generateOperators, generateUnits)
 import Math.SiConverter.Internal.Utils.Error (Error)
-import Math.SiConverter.Internal.Utils.Stack (Stack)
+import Math.SiConverter.Internal.Utils.Stack (Stack, push)
 
 $(generateUnits [
     Quantity (UnitDef "Multiplier" "" 1) [],
@@ -81,6 +82,11 @@ foldExpr fv fb fu fvb fvn = doIt
 -- | Encapsulates the result 'a' of folding an expression tree and holds the current
 -- state of variable bindings
 type AstFold a = ExceptT Error (State (Stack (Map String (Thunk a)))) a
+
+-- | Runs an 'AstFold' computation
+runAstFold :: AstFold a      -- ^ the computation to run
+           -> Either Error a -- ^ the result of the computation
+runAstFold = flip evalState (push mempty mempty) . runExceptT
 
 -- | Like 'foldExpr', but does not fold into variable bindings and returns a monadic
 -- result

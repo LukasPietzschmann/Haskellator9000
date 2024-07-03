@@ -5,14 +5,14 @@ module Math.SiConverter.Internal.AstProcessingSteps.DetermineDimension (
     , determineDimension
     ) where
 
-import Control.Monad.Except (MonadError (throwError), runExceptT)
-import Control.Monad.State (evalState, get, modify)
+import Control.Monad.Except (MonadError (throwError))
+import Control.Monad.State (get, modify)
 
 import Data.List (intercalate)
 import Data.Map (insert, (!?))
 
 import Math.SiConverter.Internal.Expr (AstFold, Expr, Op (..), Thunk (..), Unit,
-           Value (unit), isMultiplier, partiallyFoldExprM)
+           Value (unit), isMultiplier, partiallyFoldExprM, runAstFold)
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (..))
 import Math.SiConverter.Internal.Utils.Stack (pop, push, top)
 
@@ -38,7 +38,9 @@ instance {-# OVERLAPPING #-} Show Dimension where
 -- expression tree, the numerical result has the dimension returned by this function.
 determineDimension :: Expr                   -- ^ the 'Expr' tree to determine the resulting dimension of
                    -> Either Error Dimension -- ^ the resulting dimension
-determineDimension expr = filter (not . isMultiplier . dimUnit) . filter ((/=0) . power) <$> evalState (runExceptT $ determineDimension' expr) (push mempty mempty)
+determineDimension = fmap (filterMultiplier . filterZeroPower) . runAstFold . determineDimension'
+    where filterZeroPower = filter ((/=0) . power)
+          filterMultiplier = filter (not . isMultiplier . dimUnit)
 
 determineDimension' :: Expr -> AstFold Dimension
 determineDimension' = partiallyFoldExprM (return . (\v -> [DimPart (unit v) 1])) determineDimensionBinOp determineDimensionUnaryOp determineDimensionVarBind determineDimensionVar
