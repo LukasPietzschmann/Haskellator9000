@@ -35,6 +35,7 @@ module Math.SiConverter.Internal.Expr (
 import Control.Monad.Except (ExceptT, MonadError (throwError), runExceptT)
 import Control.Monad.State (State, evalState, get, modify)
 
+import Data.List (intercalate)
 import Data.Map (Map, insert, (!?))
 
 import Math.SiConverter.Internal.TH.UnitGeneration (OperatorDef (..), Quantity (..),
@@ -154,5 +155,5 @@ instance Show Expr where
       where
         showBinOp e1 o e2 = "(" ++ e1 ++ " " ++ show o ++ " " ++ e2 ++ ")"
         showUnaryOp o e = "(" ++ show o ++ e ++ ")"
-        -- TODO: better show for var binds
-        showVarBinds bs e = "(" ++ show bs ++ " -> " ++ e ++ ")"
+        showVarBinds bs e = "(" ++ intercalate ", " (showVarBind <$> bs) ++ " -> " ++ e ++ ")"
+        showVarBind (n, e) = n ++ " = " ++ e
