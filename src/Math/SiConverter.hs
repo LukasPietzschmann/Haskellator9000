@@ -4,7 +4,9 @@ module Math.SiConverter (calculate) where
 
 import Control.Monad (liftM2, (>=>))
 
-import Math.SiConverter.Internal.Evaluator
+import Math.SiConverter.Internal.AstProcessingSteps.DetermineDimension
+import Math.SiConverter.Internal.AstProcessingSteps.Evaluate
+import Math.SiConverter.Internal.AstProcessingSteps.Normalize
 import Math.SiConverter.Internal.Expr
 import Math.SiConverter.Internal.Lexer
 import Math.SiConverter.Internal.Parser

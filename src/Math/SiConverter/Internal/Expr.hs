@@ -11,21 +11,35 @@
 -- "((1.0m + 2.0m) * 3.0)"
 
 module Math.SiConverter.Internal.Expr (
-      AstValue
+      AstFold
+    , AstValue
     , Expr (..)
     , Op (..)
+    , SimpleAstFold
     , Thunk (..)
     , Unit (..)
     , Value (..)
+    , bindVar
     , convertToBase
     , foldExpr
-    , foldExprM
+    , getVarBinding
     , isMultiplier
+    , partiallyFoldExprM
+    , runAstFold
+    , runInNewScope
     , unitFromString
     ) where
 
+import Control.Monad.Except (ExceptT, MonadError (throwError), runExceptT)
+import Control.Monad.State (State, evalState, get, modify)
+
+import Data.Map (Map, insert, (!?))
+
 import Math.SiConverter.Internal.TH.UnitGeneration (OperatorDef (..), Quantity (..),
-           UnitDef (..), generateOperators, generateUnits, Value(..))
+           UnitDef (..), generateOperators, generateUnits)
+import Math.SiConverter.Internal.Utils.Composition ((.:))
+import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
+import Math.SiConverter.Internal.Utils.Stack (Stack, mapTop, pop, push, top)
 
 $(generateUnits [
     Quantity (UnitDef "Multiplier" "" 1) [],
@@ -70,27 +84,57 @@ foldExpr fv fb fu fvb fvn = doIt
     doIt (VarBinding l r e) = fvb l (doIt r) (doIt e)
     doIt (Var n)            = fvn n
 
--- | Monadic fold over an expression tree
-foldExprM :: (Monad m) => (AstValue -> m a) -- ^ function that folds a value
-         -> (a -> Op -> a -> m a)           -- ^ function that folds a binary expression
-         -> (Op -> a -> m a)                -- ^ function that folds a unary expression
-         -> (String -> a -> a -> m a)       -- ^ function that folds a variable binding
-         -> (String -> m a)                 -- ^ function that folds a variable
-         -> Expr                            -- ^ the 'Expr' to fold over
-         -> m a                             -- ^ the resulting value
-foldExprM fv fb fu fvb fvn = doIt
-  where
-    doIt (Val v) = fv v
-    doIt (BinOp e1 o e2) = do
-        v1 <- doIt e1
-        v2 <- doIt e2
-        fb v1 o v2
-    doIt (UnaryOp o e) = doIt e >>= \v -> fu o v
-    doIt (VarBinding l r e) = do
-        r' <- doIt r
-        e' <- doIt e
-        fvb l r' e'
-    doIt (Var n) = fvn n
+-- | Encapsulates the result 'b' of folding an expression tree and holds the current
+-- state of variable bindings of type 'a'
+type AstFold a b = ExceptT Error (State (Stack (Map String (Thunk a)))) b
+
+-- | Simplified version of 'AstFold' that returns the same type as it binds to variables
+type SimpleAstFold a = AstFold a a
+
+-- | Retrieves the value bound to a variable name
+getVarBinding :: String              -- ^ the variable name
+              -> AstFold a (Thunk a) -- ^ the 'Thunk' bound to the variable
+getVarBinding n = do
+    context <- get
+    case top context !? n of
+        Just v -> return v
+        Nothing -> throwError $ Error RuntimeError $ "Variable '" ++ n ++ "' not in scope"
+
+-- | Binds a 'Thunk' to a variable name
+bindVar :: String       -- ^ the variable name
+        -> Thunk a      -- ^ the value to bind
+        -> AstFold a () -- ^ the value that was bound
+bindVar = modify . mapTop .: insert
+
+-- | Evaluates an 'SimpleAstFold' inside a new scope
+runInNewScope :: SimpleAstFold a -- ^ the computation to run
+              -> SimpleAstFold a -- ^ the computation's result
+runInNewScope f = do
+    modify $ push mempty
+    result <- f
+    modify $ snd . pop
+    return result
+
+-- | Runs an 'SimpleAstFold' computation
+runAstFold :: SimpleAstFold a      -- ^ the computation to run
+           -> Either Error a -- ^ the result of the computation
+runAstFold = flip evalState (push mempty mempty) . runExceptT
+
+-- | Like 'foldExpr', but does not fold into variable bindings and returns a monadic
+-- result
+partiallyFoldExprM :: (AstValue -> SimpleAstFold a) -> (a -> Op -> a -> SimpleAstFold a) -> (Op -> a -> SimpleAstFold a) -> (String -> Expr -> Expr -> SimpleAstFold a) -> (String -> SimpleAstFold a) -> Expr -> SimpleAstFold a
+partiallyFoldExprM fv fb fu fbv fvar = doIt
+    where
+        doIt (Val v) = fv v
+        doIt (BinOp lhs op rhs) = do
+            l <- doIt lhs
+            r <- doIt rhs
+            fb l op r
+        doIt (UnaryOp op e) = do
+            v <- doIt e
+            fu op v
+        doIt (VarBinding lhs rhs expr) = fbv lhs rhs expr
+        doIt (Var n) = fvar n
 
 instance Eq Expr where
     e1 == e2 = show e1 == show e2

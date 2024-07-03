@@ -20,13 +20,16 @@ extra-source-files:
 library
   exposed-modules:
       Math.SiConverter
-      Math.SiConverter.Internal.Evaluator
+      Math.SiConverter.Internal.AstProcessingSteps.DetermineDimension
+      Math.SiConverter.Internal.AstProcessingSteps.Evaluate
+      Math.SiConverter.Internal.AstProcessingSteps.Normalize
       Math.SiConverter.Internal.Expr
       Math.SiConverter.Internal.Lexer
       Math.SiConverter.Internal.Parser
       Math.SiConverter.Internal.TH.UnitGeneration
       Math.SiConverter.Internal.Utils.Composition
       Math.SiConverter.Internal.Utils.Error
+      Math.SiConverter.Internal.Utils.Stack
   other-modules:
       Paths_si_calculator
   autogen-modules:
