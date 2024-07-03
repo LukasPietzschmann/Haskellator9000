@@ -9,9 +9,9 @@ import Control.Monad.Except (MonadError (throwError))
 
 import Data.List (intercalate)
 
-import Math.SiConverter.Internal.Expr (Expr, Op (..), SimpleAstFold, Thunk (..), Unit,
-           Value (unit), bindVar, getVarBinding, isMultiplier, partiallyFoldExprM,
-           runAstFold, runInNewScope)
+import Math.SiConverter.Internal.Expr (Bindings, Expr, Op (..), SimpleAstFold,
+           Thunk (..), Unit, Value (unit), bindVars, getVarBinding, isMultiplier,
+           partiallyFoldExprM, runAstFold, runInNewScope)
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (..))
 
 -- | A single unit constituting a dimension
@@ -57,12 +57,11 @@ determineDimensionUnaryOp :: Op -> Dimension -> SimpleAstFold Dimension
 determineDimensionUnaryOp UnaryMinus d = return d
 determineDimensionUnaryOp op         _ = throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
 
-determineDimensionVarBind :: String -> Expr -> Expr -> SimpleAstFold Dimension
-determineDimensionVarBind lhs rhs expr = do
-    rhsDim <- determineDimension' rhs
-    runInNewScope $ do
-        bindVar lhs $ Result rhsDim
-        determineDimension' expr
+determineDimensionVarBind :: Bindings Expr -> Expr -> SimpleAstFold Dimension
+determineDimensionVarBind bs expr = do
+    rhsDims <- mapM (determineDimension' . snd) bs
+    let thunkBs = zipWith (\(n,_) d -> (n, Result d)) bs rhsDims
+    runInNewScope $ bindVars thunkBs >> determineDimension' expr
 
 determineDimensionVar :: String -> SimpleAstFold Dimension
 determineDimensionVar n = getVarBinding n >>= \case

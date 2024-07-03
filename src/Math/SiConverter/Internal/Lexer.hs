@@ -27,6 +27,7 @@ data Token = Number Double -- ^ A number (integers are also represented as float
            | Identifier String -- ^ Identifier (e.g. variable and function name) or unit
            | Arrow -- ^ Arrow "->"
            | Equal -- ^ Single equal sign "="
+           | Komma -- ^ Komma ","
   deriving (Eq, Show)
 
 -- | A simple alias for the 'Token' stream

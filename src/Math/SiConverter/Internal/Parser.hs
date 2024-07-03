@@ -182,12 +182,12 @@ parseExpr :: Parser Expr
 parseExpr = parseVarBinding
 
 parseVarBinding :: Parser Expr
-parseVarBinding = do {
+parseVarBinding = do { -- TODO: parse multiple bindings
     lhs <- parseIdentifier;
     requireToken Equal;
     rhs <- parseTerm;
     requireToken Arrow;
-    VarBinding lhs rhs <$> parseExpr;
+    VarBindings [(lhs, rhs)] <$> parseExpr;
   } <|> parseTerm
 
 parseTerm :: Parser Expr

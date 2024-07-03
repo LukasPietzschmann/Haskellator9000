@@ -4,9 +4,9 @@ module Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate) where
 
 import Control.Monad.Except (throwError)
 
-import Math.SiConverter.Internal.Expr (Expr (..), Op (..), SimpleAstFold, Thunk (..),
-           Value (..), bindVar, getVarBinding, partiallyFoldExprM, runAstFold,
-           runInNewScope)
+import Math.SiConverter.Internal.Expr (Bindings, Expr (..), Op (..), SimpleAstFold,
+           Thunk (..), Value (..), bindVar, bindVars, getVarBinding, partiallyFoldExprM,
+           runAstFold, runInNewScope)
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
 
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
@@ -15,7 +15,7 @@ evaluate :: Expr                -- ^ the 'Expr' tree to evaluate
 evaluate = runAstFold . evaluate'
 
 evaluate' :: Expr -> SimpleAstFold Double
-evaluate' = partiallyFoldExprM (return . value) evalBinOp evalUnaryOp evalVarBind evalVar
+evaluate' = partiallyFoldExprM (return . value) evalBinOp evalUnaryOp evalVarBinds evalVar
 
 evalBinOp :: Double -> Op -> Double -> SimpleAstFold Double
 evalBinOp lhs Plus  rhs = return $ lhs + rhs
@@ -29,9 +29,9 @@ evalUnaryOp :: Op -> Double -> SimpleAstFold Double
 evalUnaryOp UnaryMinus rhs = return $ -rhs
 evalUnaryOp op         _   = throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
 
-evalVarBind :: String -> Expr -> Expr -> SimpleAstFold Double
-evalVarBind lhs rhs expr = runInNewScope $ do
-    bindVar lhs $ Expr rhs
+evalVarBinds :: Bindings Expr -> Expr -> SimpleAstFold Double
+evalVarBinds bs expr = runInNewScope $ do
+    bindVars $ fmap Expr <$> bs
     evaluate' expr
 
 evalVar :: String -> SimpleAstFold Double

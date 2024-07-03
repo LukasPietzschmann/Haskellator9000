@@ -13,6 +13,7 @@
 module Math.SiConverter.Internal.Expr (
       AstFold
     , AstValue
+    , Bindings
     , Expr (..)
     , Op (..)
     , SimpleAstFold
@@ -20,6 +21,7 @@ module Math.SiConverter.Internal.Expr (
     , Unit (..)
     , Value (..)
     , bindVar
+    , bindVars
     , convertToBase
     , foldExpr
     , getVarBinding
@@ -59,29 +61,32 @@ $(generateOperators [
 
 type AstValue = Value Unit
 
+-- | A list of variable bindings, mapping a name to an arbitrary value
+type Bindings a = [(String, a)]
+
 data Expr = Val AstValue
           | BinOp Expr Op Expr
           | UnaryOp Op Expr
-          | VarBinding String Expr Expr
+          | VarBindings (Bindings Expr) Expr
           | Var String
 
 data Thunk a = Expr Expr
              | Result a
 
 -- | Folds an expression tree
-foldExpr :: (AstValue -> a)         -- ^ function that folds a value
-         -> (a -> Op -> a -> a)     -- ^ function that folds a binary expression
-         -> (Op -> a -> a)          -- ^ function that folds a unary expression
-         -> (String -> a -> a -> a) -- ^ function that folds a variable binding
-         -> (String -> a)           -- ^ function that folds a variable
-         -> Expr                    -- ^ the 'Expr' to fold over
-         -> a                       -- ^ the resulting value
+foldExpr :: (AstValue -> a)        -- ^ function that folds a value
+         -> (a -> Op -> a -> a)    -- ^ function that folds a binary expression
+         -> (Op -> a -> a)         -- ^ function that folds a unary expression
+         -> (Bindings a -> a -> a) -- ^ function that folds variable bindings
+         -> (String -> a)          -- ^ function that folds a variable
+         -> Expr                   -- ^ the 'Expr' to fold over
+         -> a                      -- ^ the resulting value
 foldExpr fv fb fu fvb fvn = doIt
   where
     doIt (Val v)            = fv v
     doIt (BinOp e1 o e2)    = fb (doIt e1) o (doIt e2)
     doIt (UnaryOp o e)      = fu o $ doIt e
-    doIt (VarBinding l r e) = fvb l (doIt r) (doIt e)
+    doIt (VarBindings bs e) = fvb (fmap doIt <$> bs) (doIt e)
     doIt (Var n)            = fvn n
 
 -- | Encapsulates the result 'b' of folding an expression tree and holds the current
@@ -103,8 +108,13 @@ getVarBinding n = do
 -- | Binds a 'Thunk' to a variable name
 bindVar :: String       -- ^ the variable name
         -> Thunk a      -- ^ the value to bind
-        -> AstFold a () -- ^ the value that was bound
+        -> AstFold a ()
 bindVar = modify . mapTop .: insert
+
+-- | Binds multiple variable names
+bindVars :: Bindings (Thunk a) -- ^ the variable names and their values
+         -> AstFold a ()
+bindVars = mapM_ $ uncurry bindVar
 
 -- | Evaluates an 'SimpleAstFold' inside a new scope
 runInNewScope :: SimpleAstFold a -- ^ the computation to run
@@ -122,7 +132,7 @@ runAstFold = flip evalState (push mempty mempty) . runExceptT
 
 -- | Like 'foldExpr', but does not fold into variable bindings and returns a monadic
 -- result
-partiallyFoldExprM :: (AstValue -> SimpleAstFold a) -> (a -> Op -> a -> SimpleAstFold a) -> (Op -> a -> SimpleAstFold a) -> (String -> Expr -> Expr -> SimpleAstFold a) -> (String -> SimpleAstFold a) -> Expr -> SimpleAstFold a
+partiallyFoldExprM :: (AstValue -> SimpleAstFold a) -> (a -> Op -> a -> SimpleAstFold a) -> (Op -> a -> SimpleAstFold a) -> (Bindings Expr -> Expr -> SimpleAstFold a) -> (String -> SimpleAstFold a) -> Expr -> SimpleAstFold a
 partiallyFoldExprM fv fb fu fbv fvar = doIt
     where
         doIt (Val v) = fv v
@@ -133,15 +143,16 @@ partiallyFoldExprM fv fb fu fbv fvar = doIt
         doIt (UnaryOp op e) = do
             v <- doIt e
             fu op v
-        doIt (VarBinding lhs rhs expr) = fbv lhs rhs expr
+        doIt (VarBindings bs expr) = fbv bs expr
         doIt (Var n) = fvar n
 
 instance Eq Expr where
     e1 == e2 = show e1 == show e2
 
 instance Show Expr where
-    show = foldExpr show showBinOp showUnaryOp showVarBind id
+    show = foldExpr show showBinOp showUnaryOp showVarBinds id
       where
         showBinOp e1 o e2 = "(" ++ e1 ++ " " ++ show o ++ " " ++ e2 ++ ")"
         showUnaryOp o e = "(" ++ show o ++ e ++ ")"
-        showVarBind l r e = "(" ++ l ++ " = " ++ r ++ " -> " ++ e ++ ")"
+        -- TODO: better show for var binds
+        showVarBinds bs e = "(" ++ show bs ++ " -> " ++ e ++ ")"
