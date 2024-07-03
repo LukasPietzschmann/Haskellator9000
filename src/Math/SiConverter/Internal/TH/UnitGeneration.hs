@@ -43,7 +43,11 @@ unitADT :: Name
 unitADT = mkName "Unit"
 
 simpleValue :: Type
-simpleValue = AppT (ConT ''Value) (ConT unitADT)
+simpleValue = AppT (ConT ''Value) (ConT $ mkName "UnitExp")
+
+unitExpADT :: Name
+unitExpADT = mkName "UnitExp"
+
 
 operADT :: Name
 operADT = mkName "Op"
@@ -91,8 +95,8 @@ convertToBaseFun = mkName "convertToBase"
 generateUnits :: [Quantity] -> Q [Dec]
 generateUnits unitGroups = do
   let allUnits           = concatMap (\(Quantity b us) -> b:us) unitGroups
-      unitConstructors   = mkConstructorWithInt <$> allUnits
-      showClauses        = mkShowClauseWithInt <$> allUnits
+      unitConstructors   = mkConstructor <$> allUnits
+      showClauses        = mkShowClause <$> allUnits
       fromStringClauses  = (mkFromStringClause <$> allUnits) -- RightCases
         ++ [Clause [VarP $ mkName "x"] (NormalB $ AppE (ConE 'Left) (VarE $ mkName "x")) []] -- Left case
       convertClauses     = concatMap (\(Quantity b us) -> mkConvertClaus b <$> b:us) unitGroups
@@ -105,25 +109,42 @@ generateUnits unitGroups = do
       convertFunction    = FunD convertToBaseFun convertClauses
       isUnitFuns         = generateIsUnitFuns unitGroups
 
-  return $ [dataDec, showInstance] ++ [fromStringSig, fromStringFunction, convertSig, convertFunction] ++ isUnitFuns
+  return $ [dataDec, showInstance] ++ [fromStringSig, fromStringFunction, convertSig, convertFunction] ++ isUnitFuns ++ genUnitExp
+
+genUnitExp :: [Dec]
+genUnitExp = [dataDec, showInstance]
+  where dataDec = DataD [] unitExpADT [] Nothing [NormalC unitExpADT [(Bang NoSourceUnpackedness NoSourceStrictness, ConT unitADT),
+                                                                 (Bang NoSourceUnpackedness NoSourceStrictness, ConT ''Int) ]] []
+        showClauses = [Clause [ConP unitExpADT [] [VarP $ mkName "u", VarP $ mkName "i"]] 
+          (NormalB $ AppE (AppE (VarE '(++)) (AppE (VarE 'show) (VarE $ mkName "u"))) (AppE (VarE 'show) (VarE $ mkName "i"))) []]
+        showInstance = InstanceD Nothing [] (AppT (ConT ''Show) (ConT unitExpADT)) [FunD 'show showClauses]
 
 generateIsUnitFuns :: [Quantity] -> [Dec]
 generateIsUnitFuns unitGroups = concatMap mkIsUnitFun $ concatMap (\(Quantity b us) -> b:us) unitGroups
 
 mkIsUnitFun :: UnitDef -> [Dec]
-mkIsUnitFun (UnitDef unit _ _) = [SigD funName $ AppT (AppT ArrowT $ ConT unitADT) (ConT ''Bool), FunD funName [def, def']]
+mkIsUnitFun (UnitDef unit _ _) = [SigD funName $ AppT (AppT ArrowT $ ConT unitADT) (ConT ''Bool), FunD funName [def]]
   where funName = mkName $ "is" ++ unit
-        pattern = ConP (mkName unit) [] [WildP]
+        pattern = ConP (mkName unit) [] []
         body    = NormalB $ ConE 'True
         def     = Clause [pattern] body []
-        body'   = NormalB $ ConE 'False
-        def'    = Clause [WildP] body' []
 
--- TODO Consider exponents (e.g. 1km^2 = 1 000 000 m^2 != 1000 m^2)!
 mkConvertClaus :: UnitDef -> UnitDef -> Clause
 mkConvertClaus (UnitDef baseUnit _ _) (UnitDef unit _ factor) =
-  let pattern = ConP 'Value [] [VarP (mkName "v"), ConP (mkName unit) [] [VarP (mkName "e")]]
-      body    = NormalB $ AppE (AppE (ConE 'Value) (InfixE (Just $ InfixE (Just $ VarE $ mkName "v") (VarE '(*)) (Just $ LitE $ RationalL $ toRational factor)) (VarE '(^)) (Just $ VarE $ mkName "e"))) (AppE (ConE $ mkName baseUnit) (VarE $ mkName "e"))
+  let pattern = ConP 'Value [] [VarP (mkName "v"), ConP unitExpADT [] [ConP (mkName unit) [] [], VarP (mkName "e")]]
+      body    = NormalB $ AppE 
+        (AppE (ConE 'Value) 
+          (InfixE 
+            (Just $ VarE $ mkName "v") 
+            (VarE '(*)) 
+            (Just $ InfixE 
+              (Just $ LitE $ RationalL $ toRational factor) 
+              (VarE '(^)) 
+              (Just $ VarE $ mkName "e")
+            )
+          )
+        ) 
+        (AppE (AppE (ConE unitExpADT) (ConE $ mkName baseUnit)) (VarE $ mkName "e"))
   in Clause [pattern] body []
 
 -- | Generate the operator types and function to work with them. Imagine the following call: @generateOperators [OperDef "Plus" "+", OperDef "Minus" "-"]@.
@@ -151,23 +172,14 @@ generateOperators operators = do
 mkConstructor :: Showable a => a -> Con
 mkConstructor a = NormalC (mkName $ name a) []
 
-mkConstructorWithInt :: Showable a => a -> Con
-mkConstructorWithInt a = NormalC (mkName $ name a) [(Bang NoSourceUnpackedness NoSourceStrictness, ConT ''Int)]
-
 mkShowClause :: Showable a => a -> Clause
 mkShowClause a =
   let pattern = ConP (mkName $ name a) [] []
       body    = NormalB $ LitE $ StringL $ abbreviation a
   in Clause [pattern] body []
 
-mkShowClauseWithInt :: Showable a => a -> Clause
-mkShowClauseWithInt a =
-  let pattern = ConP (mkName $ name a) [] [WildP]
-      body    = NormalB $ LitE $ StringL $ abbreviation a
-  in Clause [pattern] body []
-
 mkFromStringClause :: Showable a => a -> Clause
 mkFromStringClause a =
   let pattern = LitP $ StringL $ abbreviation a
-      body    = NormalB $ AppE (ConE 'Right) (AppE (ConE $ mkName $ name a) (LitE $ IntegerL 1))
+      body    = NormalB $ AppE (ConE 'Right) (ConE $ mkName $ name a)
   in Clause [pattern] body []
