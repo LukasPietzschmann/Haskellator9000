@@ -6,5 +6,5 @@ data Error = Error Kind String
 instance Show Error where
     show (Error k m) = show k ++ "\n" ++ m
 
-data Kind = ParseError | ScanError | ImplementationError
+data Kind = ParseError | ScanError | RuntimeError | ImplementationError
   deriving (Eq, Show)

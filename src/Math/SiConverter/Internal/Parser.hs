@@ -179,7 +179,16 @@ parseFactorOp = do
         x   -> fail $ "Invalid binary operator " ++ x
 
 parseExpr :: Parser Expr
-parseExpr = parseTerm
+parseExpr = parseVarBinding
+
+parseVarBinding :: Parser Expr
+parseVarBinding = do {
+    lhs <- parseIdentifier;
+    requireToken Equal;
+    rhs <- parseTerm;
+    requireToken Arrow;
+    VarBinding lhs rhs <$> parseExpr;
+  } <|> parseTerm
 
 parseTerm :: Parser Expr
 parseTerm = parseFactor >>= expr'
@@ -200,7 +209,7 @@ parsePrimary :: Parser Expr
 parsePrimary = parseExprInParens <|> parseValue
 
 parseValue :: Parser Expr
-parseValue = liftM2 (Val .: Value) parseNumber parseUnit <|> do
+parseValue = Var <$> parseIdentifier <|> liftM2 (Val .: Value) parseNumber parseUnit <|> do
     isInFactor <- lift get
     if isInFactor
         then Val . Value 1 <$> parseUnit
