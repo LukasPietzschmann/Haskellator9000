@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, LambdaCase #-}
 
 module Math.SiConverter.Internal.AstProcessingSteps.DetermineDimension (
       Dimension
@@ -6,16 +6,13 @@ module Math.SiConverter.Internal.AstProcessingSteps.DetermineDimension (
     ) where
 
 import Control.Monad.Except (MonadError (throwError))
-import Control.Monad.State (get)
 
 import Data.List (intercalate)
-import Data.Map ((!?))
 
 import Math.SiConverter.Internal.Expr (Expr, Op (..), SimpleAstFold, Thunk (..), Unit,
-           Value (unit), bindVar, isMultiplier, partiallyFoldExprM, runAstFold,
-           runInNewScope)
+           Value (unit), bindVar, getVarBinding, isMultiplier, partiallyFoldExprM,
+           runAstFold, runInNewScope)
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (..))
-import Math.SiConverter.Internal.Utils.Stack (top)
 
 -- | A single unit constituting a dimension
 data DimensionPart = DimPart { dimUnit :: Unit
@@ -68,12 +65,9 @@ determineDimensionVarBind lhs rhs expr = do
         determineDimension' expr
 
 determineDimensionVar :: String -> SimpleAstFold Dimension
-determineDimensionVar n = do
-    context <- get
-    case top context !? n of
-        Just (Result d) -> return d
-        Just (Expr _)   -> throwError $ Error ImplementationError $ "Variable '" ++ n ++ "' not evaluated"
-        Nothing         -> throwError $ Error RuntimeError $ "Variable '" ++ n ++ "' not in scope"
+determineDimensionVar n = getVarBinding n >>= \case
+    (Result d) -> return d
+    (Expr _)   -> throwError $ Error ImplementationError $ "Variable '" ++ n ++ "' not evaluated"
 
 mergeUnits :: Dimension -> Dimension -> Dimension
 mergeUnits [] ys = ys

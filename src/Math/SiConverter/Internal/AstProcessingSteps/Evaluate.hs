@@ -1,15 +1,13 @@
+{-# LANGUAGE LambdaCase #-}
 -- | Evaluate the expression tree
 module Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate) where
 
 import Control.Monad.Except (throwError)
-import Control.Monad.State (get, modify)
-
-import Data.Map (insert, (!?))
 
 import Math.SiConverter.Internal.Expr (Expr (..), Op (..), SimpleAstFold, Thunk (..),
-           Value (..), bindVar, partiallyFoldExprM, runAstFold, runInNewScope)
+           Value (..), bindVar, getVarBinding, partiallyFoldExprM, runAstFold,
+           runInNewScope)
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
-import Math.SiConverter.Internal.Utils.Stack (mapTop, top)
 
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
 evaluate :: Expr                -- ^ the 'Expr' tree to evaluate
@@ -37,12 +35,9 @@ evalVarBind lhs rhs expr = runInNewScope $ do
     evaluate' expr
 
 evalVar :: String -> SimpleAstFold Double
-evalVar n = do
-    context <- get
-    case top context !? n of
-        Just (Result v) -> return v
-        Just (Expr e)   -> do
-            result <- evaluate' e
-            modify $ mapTop $ insert n $ Result result
-            return result
-        Nothing         -> throwError $ Error RuntimeError $ "Variable '" ++ n ++ "' not in scope"
+evalVar n = getVarBinding n >>= \case
+    (Result v) -> return v
+    (Expr e)   -> do
+        result <- evaluate' e
+        bindVar n $ Result result
+        return result

@@ -22,6 +22,7 @@ module Math.SiConverter.Internal.Expr (
     , bindVar
     , convertToBase
     , foldExpr
+    , getVarBinding
     , isMultiplier
     , partiallyFoldExprM
     , runAstFold
@@ -29,16 +30,16 @@ module Math.SiConverter.Internal.Expr (
     , unitFromString
     ) where
 
-import Control.Monad.Except (ExceptT, runExceptT)
-import Control.Monad.State (State, evalState, modify)
+import Control.Monad.Except (ExceptT, MonadError (throwError), runExceptT)
+import Control.Monad.State (State, evalState, get, modify)
 
-import Data.Map (Map, insert)
+import Data.Map (Map, insert, (!?))
 
 import Math.SiConverter.Internal.TH.UnitGeneration (OperatorDef (..), Quantity (..),
            UnitDef (..), generateOperators, generateUnits)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
-import Math.SiConverter.Internal.Utils.Error (Error)
-import Math.SiConverter.Internal.Utils.Stack (Stack, mapTop, pop, push)
+import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
+import Math.SiConverter.Internal.Utils.Stack (Stack, mapTop, pop, push, top)
 
 $(generateUnits [
     Quantity (UnitDef "Multiplier" "" 1) [],
@@ -89,6 +90,15 @@ type AstFold a b = ExceptT Error (State (Stack (Map String (Thunk a)))) b
 
 -- | Simplified version of 'AstFold' that returns the same type as it binds to variables
 type SimpleAstFold a = AstFold a a
+
+-- | Retrieves the value bound to a variable name
+getVarBinding :: String              -- ^ the variable name
+              -> AstFold a (Thunk a) -- ^ the 'Thunk' bound to the variable
+getVarBinding n = do
+    context <- get
+    case top context !? n of
+        Just v -> return v
+        Nothing -> throwError $ Error RuntimeError $ "Variable '" ++ n ++ "' not in scope"
 
 -- | Binds a 'Thunk' to a variable name
 bindVar :: String       -- ^ the variable name
