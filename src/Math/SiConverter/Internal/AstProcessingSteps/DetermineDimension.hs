@@ -6,15 +6,16 @@ module Math.SiConverter.Internal.AstProcessingSteps.DetermineDimension (
     ) where
 
 import Control.Monad.Except (MonadError (throwError))
-import Control.Monad.State (get, modify)
+import Control.Monad.State (get)
 
 import Data.List (intercalate)
-import Data.Map (insert, (!?))
+import Data.Map ((!?))
 
-import Math.SiConverter.Internal.Expr (AstFold, Expr, Op (..), Thunk (..), Unit,
-           Value (unit), isMultiplier, partiallyFoldExprM, runAstFold)
+import Math.SiConverter.Internal.Expr (Expr, Op (..), SimpleAstFold, Thunk (..), Unit,
+           Value (unit), bindVar, isMultiplier, partiallyFoldExprM, runAstFold,
+           runInNewScope)
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (..))
-import Math.SiConverter.Internal.Utils.Stack (pop, push, top)
+import Math.SiConverter.Internal.Utils.Stack (top)
 
 -- | A single unit constituting a dimension
 data DimensionPart = DimPart { dimUnit :: Unit
@@ -42,10 +43,10 @@ determineDimension = fmap (filterMultiplier . filterZeroPower) . runAstFold . de
     where filterZeroPower = filter ((/=0) . power)
           filterMultiplier = filter (not . isMultiplier . dimUnit)
 
-determineDimension' :: Expr -> AstFold Dimension
+determineDimension' :: Expr -> SimpleAstFold Dimension
 determineDimension' = partiallyFoldExprM (return . (\v -> [DimPart (unit v) 1])) determineDimensionBinOp determineDimensionUnaryOp determineDimensionVarBind determineDimensionVar
 
-determineDimensionBinOp :: Dimension -> Op -> Dimension -> AstFold Dimension
+determineDimensionBinOp :: Dimension -> Op -> Dimension -> SimpleAstFold Dimension
 determineDimensionBinOp lhs Plus  rhs | lhs == rhs = return lhs
                                       | otherwise  = throwError $ Error RuntimeError "Addition of different units is not supported"
 determineDimensionBinOp lhs Minus rhs | lhs == rhs = return lhs
@@ -55,19 +56,18 @@ determineDimensionBinOp lhs Div   rhs = return $ subtractUnits lhs rhs
 determineDimensionBinOp _   Pow   _   = throwError $ Error RuntimeError "Exponentiation of units is not supported"
 determineDimensionBinOp _   op    _   = throwError $ Error ImplementationError $ "Unknown binary operator " ++ show op
 
-determineDimensionUnaryOp :: Op -> Dimension -> AstFold Dimension
+determineDimensionUnaryOp :: Op -> Dimension -> SimpleAstFold Dimension
 determineDimensionUnaryOp UnaryMinus d = return d
 determineDimensionUnaryOp op         _ = throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
 
-determineDimensionVarBind :: String -> Expr -> Expr -> AstFold Dimension
+determineDimensionVarBind :: String -> Expr -> Expr -> SimpleAstFold Dimension
 determineDimensionVarBind lhs rhs expr = do
     rhsDim <- determineDimension' rhs
-    modify $ push $ insert lhs (Result rhsDim) mempty
-    result <- determineDimension' expr
-    modify $ snd . pop
-    return result
+    runInNewScope $ do
+        bindVar lhs $ Result rhsDim
+        determineDimension' expr
 
-determineDimensionVar :: String -> AstFold Dimension
+determineDimensionVar :: String -> SimpleAstFold Dimension
 determineDimensionVar n = do
     context <- get
     case top context !? n of
