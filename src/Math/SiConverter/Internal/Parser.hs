@@ -42,6 +42,7 @@ import Math.SiConverter.Internal.Expr
 import Math.SiConverter.Internal.Lexer (Token (..), Tokens)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (ParseError))
+import Math.SiConverter.Internal.Evaluator (evaluate)
 
 newtype ParserT m a = ParserT { runParserT :: Tokens -> m (Either String (a, Tokens)) }
 
@@ -146,8 +147,8 @@ parseUnit = do {
     either (\x -> fail $ "Invalid unit " ++ x) (\u -> do {
         requireOperator "^";
         expr <- parsePrimary;
-        -- TODO: eval expr and set it as the exponent of unit u
-        return (UnitExp u 1)
+        -- TODO Rounding is awkward
+        either (\_ -> fail "No") (\i -> return (UnitExp u (round i::Int))) (evaluate expr)
     } <|> return (UnitExp u 1)) $ unitFromString i
   } <|> return (UnitExp Multiplier 1)
 
