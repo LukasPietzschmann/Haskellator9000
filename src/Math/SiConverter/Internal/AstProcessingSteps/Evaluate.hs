@@ -33,8 +33,8 @@ evalUnaryOp op         _   = throwError $ Error ImplementationError $ "Unknown u
 
 evalVarBind :: String -> Expr -> Expr -> SimpleAstFold Double
 evalVarBind lhs rhs expr = runInNewScope $ do
-    bindVar lhs $ Expr expr
-    evaluate' rhs
+    bindVar lhs $ Expr rhs
+    evaluate' expr
 
 evalVar :: String -> SimpleAstFold Double
 evalVar n = do
