@@ -51,8 +51,8 @@ determineDimension' (BinOp lhs op rhs) = do
     case op of
         Mult  -> return $ mergeUnits l r
         Div   -> return $ subtractUnits l r
-        Plus  -> if l == r then return l else error "Addition of different units is not supported"
-        Minus -> if l == r then return l else error "Subtraction of different units is not supported"
+        Plus  -> if l == r then return l else throwError $ Error RuntimeError "Addition of different units is not supported"
+        Minus -> if l == r then return l else throwError $ Error RuntimeError "Subtraction of different units is not supported"
         _     -> throwError $ Error ImplementationError $ "Unknown binary operator " ++ show op
 determineDimension' (UnaryOp op e) = do
     d <- determineDimension' e
