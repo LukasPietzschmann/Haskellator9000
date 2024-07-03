@@ -140,16 +140,16 @@ parseIdentifier = do
     Identifier i <- satisfy isIdentifier
     return i
 
-parseUnit :: Parser Unit
+parseUnit :: Parser UnitExp
 parseUnit = do {
     i <- parseIdentifier;
     either (\x -> fail $ "Invalid unit " ++ x) (\u -> do {
         requireOperator "^";
         expr <- parsePrimary;
         -- TODO: eval expr and set it as the exponent of unit u
-        return u
-    } <|> return u) $ unitFromString i
-  } <|> return (Multiplier 1)
+        return (UnitExp u 1)
+    } <|> return (UnitExp u 1)) $ unitFromString i
+  } <|> return (UnitExp Multiplier 1)
 
 parseExprInParens :: Parser Expr
 parseExprInParens = requireToken OpenParen *> parseExpr <* requireToken CloseParen

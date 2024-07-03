@@ -112,22 +112,34 @@ generateUnits unitGroups = do
   return $ [dataDec, showInstance] ++ [fromStringSig, fromStringFunction, convertSig, convertFunction] ++ isUnitFuns ++ genUnitExp
 
 genUnitExp :: [Dec]
-genUnitExp = [dataDec, showInstance]
-  where dataDec = DataD [] unitExpADT [] Nothing [NormalC unitExpADT [(Bang NoSourceUnpackedness NoSourceStrictness, ConT unitADT),
-                                                                 (Bang NoSourceUnpackedness NoSourceStrictness, ConT ''Int) ]] []
+genUnitExp = [dataDec, showInstance, eqInstance]
+  where dataDec = DataD [] unitExpADT [] Nothing [RecC unitExpADT [(mkName "dimUnit", Bang NoSourceUnpackedness NoSourceStrictness, ConT unitADT),
+                                                                   (mkName "power", Bang NoSourceUnpackedness NoSourceStrictness, ConT ''Int) ]] []
         showClauses = [Clause [ConP unitExpADT [] [VarP $ mkName "u", VarP $ mkName "i"]] 
           (NormalB $ AppE (AppE (VarE '(++)) (AppE (VarE 'show) (VarE $ mkName "u"))) (AppE (VarE 'show) (VarE $ mkName "i"))) []]
+        -- TODO Improve show instance (do not show power of 1)
         showInstance = InstanceD Nothing [] (AppT (ConT ''Show) (ConT unitExpADT)) [FunD 'show showClauses]
+        eqClauses = [Clause [ConP unitExpADT [] [VarP $ mkName "u1", VarP $ mkName "i1"], 
+                            ConP unitExpADT [] [VarP $ mkName "u2", VarP $ mkName "i2"]]
+                      (NormalB $ InfixE 
+                      (Just $ InfixE (Just $ VarE $ mkName "u1") (VarE '(==)) (Just $ VarE $ mkName "u2"))
+                      (VarE '(&&)) 
+                      (Just $ InfixE (Just $ VarE $ mkName "i1") (VarE '(==)) (Just $ VarE $ mkName "i2"))
+                      ) []]
+        eqInstance   = InstanceD Nothing [] (AppT (ConT ''Eq) (ConT unitExpADT)) [FunD '(==) eqClauses]
 
 generateIsUnitFuns :: [Quantity] -> [Dec]
 generateIsUnitFuns unitGroups = concatMap mkIsUnitFun $ concatMap (\(Quantity b us) -> b:us) unitGroups
 
 mkIsUnitFun :: UnitDef -> [Dec]
-mkIsUnitFun (UnitDef unit _ _) = [SigD funName $ AppT (AppT ArrowT $ ConT unitADT) (ConT ''Bool), FunD funName [def]]
+mkIsUnitFun (UnitDef unit _ _) = [SigD funName $ AppT (AppT ArrowT $ ConT unitADT) (ConT ''Bool), FunD funName [def, def']]
   where funName = mkName $ "is" ++ unit
         pattern = ConP (mkName unit) [] []
         body    = NormalB $ ConE 'True
         def     = Clause [pattern] body []
+        body'   = NormalB $ ConE 'False
+        def'    = Clause [WildP] body' []
+
 
 mkConvertClaus :: UnitDef -> UnitDef -> Clause
 mkConvertClaus (UnitDef baseUnit _ _) (UnitDef unit _ factor) =

@@ -15,6 +15,7 @@ module Math.SiConverter.Internal.Expr (
     , Expr (..)
     , Op (..)
     , Unit (..)
+    , UnitExp (..)
     , Value (..)
     , convertToBase
     , foldExpr
@@ -42,7 +43,7 @@ $(generateOperators [
     OperDef "UnaryMinus" "-"
   ])
 
-type AstValue = Value Unit
+type AstValue = Value UnitExp
 
 data Expr = Val AstValue
           | BinOp Expr Op Expr
