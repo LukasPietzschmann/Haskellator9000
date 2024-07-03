@@ -39,7 +39,7 @@ import Data.List (intercalate)
 import Data.Map (Map, insert, (!?))
 
 import Math.SiConverter.Internal.TH.UnitGeneration (OperatorDef (..), Quantity (..),
-           UnitDef (..), generateOperators, generateUnits)
+           UnitDef (..), Value (..), generateOperators, generateUnits)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
 import Math.SiConverter.Internal.Utils.Stack (Stack, mapTop, pop, push, top)
