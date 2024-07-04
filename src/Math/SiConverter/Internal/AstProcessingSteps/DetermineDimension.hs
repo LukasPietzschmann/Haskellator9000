@@ -27,7 +27,8 @@ instance Show DimensionPart where
     show (DimPart u p) = show u ++ (if p == 1 then "" else "^" ++ show p)
 
 instance Eq DimensionPart where
-    (DimPart u1 p1) == (DimPart u2 p2) = u1 == u2 && p1 == p2
+    (DimPart u1 p1) == (DimPart u2 p2) | isMultiplier u1 && isMultiplier u2 = True -- ignore power of multipliers
+                                       | otherwise                          = u1 == u2 && p1 == p2
 
 instance {-# OVERLAPPING #-} Show Dimension where
     show xs = intercalate "*" (show <$> xs)
