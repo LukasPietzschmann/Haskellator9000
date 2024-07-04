@@ -32,6 +32,7 @@ module Math.SiConverter.Internal.Expr (
     , unitFromString
     ) where
 
+import Control.Applicative ((<|>))
 import Control.Monad.Except (ExceptT, MonadError (throwError), runExceptT)
 import Control.Monad.State (State, evalState, get, modify)
 
@@ -42,7 +43,7 @@ import Math.SiConverter.Internal.TH.UnitGeneration (OperatorDef (..), Quantity (
            UnitDef (..), Value (..), generateOperators, generateUnits)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
-import Math.SiConverter.Internal.Utils.Stack (Stack, mapTop, pop, push, top)
+import Math.SiConverter.Internal.Utils.Stack (Stack, mapTop, pop, push)
 
 $(generateUnits [
     Quantity (UnitDef "Multiplier" "" 1) [],
@@ -102,7 +103,8 @@ getVarBinding :: String              -- ^ the variable name
               -> AstFold a (Thunk a) -- ^ the 'Thunk' bound to the variable
 getVarBinding n = do
     context <- get
-    case top context !? n of
+    let maybeValue = foldl (\a m -> a <|> (m !? n)) Nothing context
+    case maybeValue of
         Just v -> return v
         Nothing -> throwError $ Error RuntimeError $ "Variable '" ++ n ++ "' not in scope"
 

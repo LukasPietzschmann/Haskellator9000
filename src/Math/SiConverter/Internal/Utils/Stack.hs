@@ -23,6 +23,9 @@ instance Semigroup (Stack a) where
 instance Monoid (Stack a) where
     mempty = Stack []
 
+instance Foldable Stack where
+    foldr f z (Stack xs) = foldr f z xs
+
 -- | Map a function over the top element of the stack
 mapTop :: (a -> a) -- ^ The function to map
        -> Stack a  -- ^ The stack to map over
