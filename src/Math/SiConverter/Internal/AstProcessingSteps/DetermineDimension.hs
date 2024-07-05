@@ -10,7 +10,7 @@ import Control.Monad.Except (MonadError (throwError))
 import Data.List (intercalate)
 
 import Math.SiConverter.Internal.Expr (Bindings, Expr(..), Op (..), SimpleAstFold,
-           Thunk (..), Unit, Value (unit, Value), bindVars, getVarBinding, isMultiplier,
+           Thunk (..), Unit, Value (Value), bindVars, getVarBinding, isMultiplier,
            partiallyFoldExprM, runAstFold, runInNewScope, UnitExp (UnitExp, dimUnit, power))
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (..))
 
@@ -72,7 +72,7 @@ mergeUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = UnitExp (dimUnit x) (power x
                          | otherwise              = x : mergeUnits xs (y:ys)
 
 subtractUnits :: Dimension -> Dimension -> Dimension
-subtractUnits [] ys = (\(UnitExp u e) -> UnitExp u e*(-1)) <$> ys
+subtractUnits [] ys = (\u -> UnitExp (dimUnit u) $ power u*(-1)) <$> ys
 subtractUnits xs [] = xs
 subtractUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = UnitExp (dimUnit x) (power x - power y) : subtractUnits xs ys
                             | otherwise              = x : subtractUnits xs (y:ys)
