@@ -9,26 +9,14 @@ import Control.Monad.Except (MonadError (throwError))
 
 import Data.List (intercalate)
 
-import Math.SiConverter.Internal.Expr (Bindings, Expr, Op (..), SimpleAstFold,
-           Thunk (..), Unit, Value (unit), bindVars, getVarBinding, isMultiplier,
-           partiallyFoldExprM, runAstFold, runInNewScope)
+import Math.SiConverter.Internal.Expr (Bindings, Expr(..), Op (..), SimpleAstFold,
+           Thunk (..), Unit, Value (unit, Value), bindVars, getVarBinding, isMultiplier,
+           partiallyFoldExprM, runAstFold, runInNewScope, UnitExp (UnitExp, dimUnit, power))
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (..))
-
--- | A single unit constituting a dimension
-data DimensionPart = DimPart { dimUnit :: Unit
-                             , power   :: Int
-                             }
 
 -- | The dimension of a quantity is given by a set of units raised to a power. Those
 -- units are implicitly connected by multiplication.
-type Dimension = [DimensionPart]
-
-instance Show DimensionPart where
-    show (DimPart u p) = show u ++ (if p == 1 then "" else "^" ++ show p)
-
-instance Eq DimensionPart where
-    (DimPart u1 p1) == (DimPart u2 p2) | isMultiplier u1 && isMultiplier u2 = True -- ignore power of multipliers
-                                       | otherwise                          = u1 == u2 && p1 == p2
+type Dimension = [UnitExp]
 
 instance {-# OVERLAPPING #-} Show Dimension where
     show xs = intercalate "*" (show <$> xs)
@@ -42,7 +30,12 @@ determineDimension = fmap (filterMultiplier . filterZeroPower) . runAstFold . de
           filterMultiplier = filter (not . isMultiplier . dimUnit)
 
 determineDimension' :: Expr -> SimpleAstFold Dimension
-determineDimension' = partiallyFoldExprM (return . (\v -> [DimPart (unit v) 1])) determineDimensionBinOp determineDimensionUnaryOp determineDimensionVarBind determineDimensionVar
+determineDimension' = partiallyFoldExprM (return . \(Value _ u) -> [UnitExp (dimUnit u) 1])
+    determineDimensionBinOp
+    determineDimensionUnaryOp
+    determineDimensionConversion
+    determineDimensionVarBind
+    determineDimensionVar
 
 determineDimensionBinOp :: Dimension -> Op -> Dimension -> SimpleAstFold Dimension
 determineDimensionBinOp lhs Plus  rhs | lhs == rhs = return lhs
@@ -58,6 +51,9 @@ determineDimensionUnaryOp :: Op -> Dimension -> SimpleAstFold Dimension
 determineDimensionUnaryOp UnaryMinus d = return d
 determineDimensionUnaryOp op         _ = throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
 
+determineDimensionConversion :: Dimension -> Unit -> SimpleAstFold Dimension
+determineDimensionConversion d _ = return d
+
 determineDimensionVarBind :: Bindings Expr -> Expr -> SimpleAstFold Dimension
 determineDimensionVarBind bs expr = do
     rhsDims <- mapM (determineDimension' . snd) bs
@@ -72,11 +68,11 @@ determineDimensionVar n = getVarBinding n >>= \case
 mergeUnits :: Dimension -> Dimension -> Dimension
 mergeUnits [] ys = ys
 mergeUnits xs [] = xs
-mergeUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = DimPart (dimUnit x) (power x + power y) : mergeUnits xs ys
+mergeUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = UnitExp (dimUnit x) (power x + power y) : mergeUnits xs ys
                          | otherwise              = x : mergeUnits xs (y:ys)
 
 subtractUnits :: Dimension -> Dimension -> Dimension
-subtractUnits [] ys = (\d -> d{power = (-1) * power d}) <$> ys
+subtractUnits [] ys = (\(UnitExp u e) -> UnitExp u e*(-1)) <$> ys
 subtractUnits xs [] = xs
-subtractUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = DimPart (dimUnit x) (power x - power y) : subtractUnits xs ys
+subtractUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = UnitExp (dimUnit x) (power x - power y) : subtractUnits xs ys
                             | otherwise              = x : subtractUnits xs (y:ys)

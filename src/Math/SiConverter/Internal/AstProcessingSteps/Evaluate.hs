@@ -6,7 +6,7 @@ import Control.Monad.Except (throwError)
 
 import Math.SiConverter.Internal.Expr (Bindings, Expr (..), Op (..), SimpleAstFold,
            Thunk (..), Value (..), bindVar, bindVars, getVarBinding, partiallyFoldExprM,
-           runAstFold, runInNewScope)
+           runAstFold, runInNewScope, Unit)
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
 
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
@@ -15,7 +15,7 @@ evaluate :: Expr                -- ^ the 'Expr' tree to evaluate
 evaluate = runAstFold . evaluate'
 
 evaluate' :: Expr -> SimpleAstFold Double
-evaluate' = partiallyFoldExprM (return . value) evalBinOp evalUnaryOp evalVarBinds evalVar
+evaluate' = partiallyFoldExprM (return . value) evalBinOp evalUnaryOp evalConversion evalVarBinds evalVar
 
 evalBinOp :: Double -> Op -> Double -> SimpleAstFold Double
 evalBinOp lhs Plus  rhs = return $ lhs + rhs
@@ -28,6 +28,9 @@ evalBinOp _   op    _   = throwError $ Error ImplementationError $ "Unknown bina
 evalUnaryOp :: Op -> Double -> SimpleAstFold Double
 evalUnaryOp UnaryMinus rhs = return $ -rhs
 evalUnaryOp op         _   = throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
+
+evalConversion :: Double -> Unit -> SimpleAstFold Double
+evalConversion d _ = return d
 
 evalVarBinds :: Bindings Expr -> Expr -> SimpleAstFold Double
 evalVarBinds bs expr = runInNewScope $ do

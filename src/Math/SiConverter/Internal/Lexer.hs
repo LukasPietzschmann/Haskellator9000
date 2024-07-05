@@ -24,6 +24,8 @@ data Token = Number Double -- ^ A number (integers are also represented as float
            | Operator String -- ^ An operator
            | OpenParen -- ^ Open parenthesis "("
            | CloseParen -- ^ Close parenthesis ")"
+           | OpenBracket          -- ^ Open bracket "["
+           | CloseBracket         -- ^ Close bracket "]"
            | Identifier String -- ^ Identifier (e.g. variable and function name) or unit
            | Arrow -- ^ Arrow "->"
            | Equal -- ^ Single equal sign "="
@@ -36,9 +38,11 @@ type Tokens = [Token]
 -- | Tokenizes an input stream to a list of 'Token's
 scan :: String              -- ^ The input stream
      -> Either Error Tokens -- ^ Error message or the list of tokens
-scan []       = Right []
+scan []           = Right []
 scan ('(':xs)     = (OpenParen :)    <$> scan xs
 scan (')':xs)     = (CloseParen :)   <$> scan xs
+scan ('[':xs)     = (OpenBracket :)  <$> scan xs
+scan (']':xs)     = (CloseBracket :) <$> scan xs
 scan ('-':'>':xs) = (Arrow :)        <$> scan xs
 scan ('+':xs)     = (Operator "+" :) <$> scan xs
 scan ('-':xs)     = (Operator "-" :) <$> scan xs
