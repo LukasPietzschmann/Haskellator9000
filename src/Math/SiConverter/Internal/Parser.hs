@@ -141,8 +141,8 @@ parseIdentifier = do
     Identifier i <- satisfy isIdentifier
     return i
 
-parseUnit :: Parser UnitExp
-parseUnit = do {
+parseUnitExp :: Parser UnitExp
+parseUnitExp = do {
     i <- parseIdentifier;
     either (\x -> fail $ "Invalid unit " ++ x) (\u -> do {
         requireOperator "^";
@@ -151,6 +151,14 @@ parseUnit = do {
         either (\_ -> fail "No") (\i -> return (UnitExp u (round i::Int))) (evaluate expr)
     } <|> return (UnitExp u 1)) $ unitFromString i
   } <|> return (UnitExp Multiplier 1)
+
+parseUnit :: Parser Unit
+parseUnit = do
+    i <- parseIdentifier
+    either (\x -> fail $ "Invalid unit " ++ x) return (unitFromString i)
+
+parseConversion :: Parser Unit
+parseConversion = requireToken OpenBracket *> parseUnit <* requireToken CloseBracket
 
 parseExprInParens :: Parser Expr
 parseExprInParens = requireToken OpenParen *> parseExpr <* requireToken CloseParen
@@ -180,7 +188,10 @@ parseFactorOp = do
         x   -> fail $ "Invalid binary operator " ++ x
 
 parseExpr :: Parser Expr
-parseExpr = parseTerm
+parseExpr = do
+    term <- parseTerm 
+    conv <- parseConversion
+    return $ Conversion term conv
 
 parseTerm :: Parser Expr
 parseTerm = parseFactor >>= expr'
@@ -201,8 +212,8 @@ parsePrimary :: Parser Expr
 parsePrimary = parseExprInParens <|> parseValue
 
 parseValue :: Parser Expr
-parseValue = liftM2 (Val .: Value) parseNumber parseUnit <|> do
+parseValue = liftM2 (Val .: Value) parseNumber parseUnitExp <|> do
     isInFactor <- lift get
     if isInFactor
-        then Val . Value 1 <$> parseUnit
+        then Val . Value 1 <$> parseUnitExp
         else fail "Value-less units are only allowed in factors"

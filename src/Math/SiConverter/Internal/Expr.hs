@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 -- | Models an expression tree
 --
@@ -18,6 +19,7 @@ module Math.SiConverter.Internal.Expr (
     , UnitExp (..)
     , Value (..)
     , convertToBase
+    , convertTo
     , foldExpr
     , foldExprM
     , isMultiplier
@@ -81,26 +83,30 @@ type AstValue = Value UnitExp
 data Expr = Val AstValue
           | BinOp Expr Op Expr
           | UnaryOp Op Expr
+          | Conversion Expr Unit
 
 -- | Folds an expression tree
 foldExpr :: (AstValue -> a)     -- ^ function that folds a value
          -> (a -> Op -> a -> a) -- ^ function that folds a binary expression
          -> (Op -> a -> a)      -- ^ function that folds a unary expression
+         -> (a -> Unit -> a)    -- ^ function that folds a conversion expression
          -> Expr                -- ^ the 'Expr' to fold over
          -> a                   -- ^ the resulting value
-foldExpr fv fb fu = doIt
+foldExpr fv fb fu fc = doIt
   where
     doIt (Val v)         = fv v
     doIt (BinOp e1 o e2) = fb (doIt e1) o (doIt e2)
     doIt (UnaryOp o e)   = fu o $ doIt e
+    doIt (Conversion e u) = fc (doIt e) u
 
 -- | Monadic fold over an expression tree
 foldExprM :: (Monad m) => (AstValue -> m a) -- ^ function that folds a value
          -> (a -> Op -> a -> m a)           -- ^ function that folds a binary expression
          -> (Op -> a -> m a)                -- ^ function that folds a unary expression
+         -> (a -> Unit -> m a)              -- ^ function that folds a conversion expression
          -> Expr                            -- ^ the 'Expr' to fold over
          -> m a                             -- ^ the resulting value
-foldExprM fv fb fu = doIt
+foldExprM fv fb fu fc = doIt
   where
     doIt (Val v) = fv v
     doIt (BinOp e1 o e2) = do
@@ -108,12 +114,14 @@ foldExprM fv fb fu = doIt
         v2 <- doIt e2
         fb v1 o v2
     doIt (UnaryOp o e) = doIt e >>= \v -> fu o v
+    doIt (Conversion e u) = doIt e >>= \v -> fc v u
 
 instance Eq Expr where
     e1 == e2 = show e1 == show e2
 
 instance Show Expr where
-    show = foldExpr show showBinOp showUnaryOp
+    show = foldExpr show showBinOp showUnaryOp showConversion
       where
-        showBinOp e1 o e2 = "(" ++ e1 ++ " " ++ show o ++ " " ++ e2 ++ ")"
-        showUnaryOp o e = "(" ++ show o ++ e ++ ")"
+        showBinOp e1 o e2  = "(" ++ e1 ++ " " ++ show o ++ " " ++ e2 ++ ")"
+        showUnaryOp o e    = "(" ++ show o ++ e ++ ")"
+        showConversion e u = e ++ "[" ++ show u ++ "]"

@@ -11,7 +11,7 @@ module Math.SiConverter.Internal.Evaluator (
 import Data.List (intercalate)
 
 import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Value (..),
-           convertToBase, foldExpr, foldExprM, isMultiplier, UnitExp(..))
+           convertTo, convertToBase, foldExpr, foldExprM, isMultiplier, UnitExp(..), Unit)
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (ImplementationError))
 
 type Dimension = [UnitExp]
@@ -23,7 +23,7 @@ instance {-# OVERLAPPING #-} Show Dimension where
 -- expression tree, the numerical result has the dimension returned by this function.
 determineDimension :: Expr                   -- ^ the 'Expr' tree to determine the resulting dimension of
                    -> Either Error Dimension -- ^ the resulting dimension
-determineDimension = fmap (filter (not . isMultiplier . dimUnit) . filter ((/=0) . power)) . foldExprM (\(Value _ u) -> return $ pure u ) handleBinOp handleUnaryOp
+determineDimension = fmap (filter (not . isMultiplier . dimUnit) . filter ((/=0) . power)) . foldExprM (\(Value _ u) -> return $ pure u ) handleBinOp handleUnaryOp handleConv
   where
     handleBinOp lhs Mult rhs  = return $ mergeUnits lhs rhs
     handleBinOp lhs Div rhs   = return $ subtractUnits lhs rhs
@@ -31,8 +31,11 @@ determineDimension = fmap (filter (not . isMultiplier . dimUnit) . filter ((/=0)
     handleBinOp lhs Plus rhs  = if lhs == rhs then return lhs else Left $ Error ImplementationError "Addition of different units is not supported"
     handleBinOp lhs Minus rhs = if lhs == rhs then return lhs else Left $ Error ImplementationError "Subtraction of different units is not supported"
     handleBinOp _   op _      = Left $ Error ImplementationError $ "Unknown binary operand " ++ show op
+
     handleUnaryOp UnaryMinus  = return
     handleUnaryOp op          = const $ Left $ Error ImplementationError $ "Unknown unary operand " ++ show op
+
+    handleConv    e _         = return e
 
 mergeUnits :: Dimension -> Dimension -> Dimension
 mergeUnits [] ys = ys
@@ -49,12 +52,12 @@ subtractUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = UnitExp (dimUnit x) (powe
 -- | Normalize all values inside the tree to their base units
 normalize :: Expr              -- ^ the 'Expr' tree to normalize
           -> Either Error Expr -- ^ the normalized 'Expr' tree
-normalize = Right . foldExpr (Val . convertToBase) BinOp UnaryOp
+normalize = Right . foldExpr (Val . convertToBase) BinOp UnaryOp Conversion
 
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
 evaluate :: Expr                -- ^ the 'Expr' tree to evaluate
          -> Either Error Double -- ^ the resulting value
-evaluate = foldExprM (Right . value) evaluateBinOp evaluateUnaryOp
+evaluate = foldExprM (Right . value) evaluateBinOp evaluateUnaryOp evaluateConversion
 
 evaluateBinOp :: Double -> Op -> Double -> Either Error Double
 evaluateBinOp = eval
@@ -71,3 +74,7 @@ evaluateUnaryOp = eval
   where
     eval UnaryMinus v = Right $ -v
     eval op _ = Left $ Error ImplementationError $ "Unknown unary operand " ++ show op
+
+-- TODO Fix conversion
+evaluateConversion :: Double -> Unit -> Either Error Double
+evaluateConversion d _ = Right $ d * 1000
