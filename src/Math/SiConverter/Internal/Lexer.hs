@@ -24,8 +24,8 @@ data Token = Number Double -- ^ A number (integers are also represented as float
            | Operator String -- ^ An operator
            | OpenParen -- ^ Open parenthesis "("
            | CloseParen -- ^ Close parenthesis ")"
-           | OpenBracket          -- ^ Open bracket "["
-           | CloseBracket         -- ^ Close bracket "]"
+           | OpenBracket -- ^ Open bracket "["
+           | CloseBracket -- ^ Close bracket "]"
            | Identifier String -- ^ Identifier (e.g. variable and function name) or unit
            | Arrow -- ^ Arrow "->"
            | Equal -- ^ Single equal sign "="

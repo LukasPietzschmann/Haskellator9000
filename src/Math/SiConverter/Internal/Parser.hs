@@ -38,11 +38,11 @@ import Data.Bifunctor (first)
 
 import GHC.Base (Alternative (empty))
 
+import Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate)
 import Math.SiConverter.Internal.Expr
 import Math.SiConverter.Internal.Lexer (Token (..), Tokens)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (ParseError))
-import Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate)
 
 newtype ParserT m a = ParserT { runParserT :: Tokens -> m (Either String (a, Tokens)) }
 
@@ -157,7 +157,7 @@ parseUnitExp = do {
         requireOperator "^";
         expr <- parsePrimary;
         -- TODO Rounding is awkward
-        either (\_ -> fail "No") (\i -> return (UnitExp u (round i::Int))) (evaluate expr)
+        either (const $ fail "Could not evaluate a units power") (\p -> return (UnitExp u (round p::Int))) (evaluate expr)
     } <|> return (UnitExp u 1)) $ unitFromString i
   } <|> return (UnitExp Multiplier 1)
 

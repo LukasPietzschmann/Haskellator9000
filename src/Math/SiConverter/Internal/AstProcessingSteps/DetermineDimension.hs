@@ -9,9 +9,9 @@ import Control.Monad.Except (MonadError (throwError))
 
 import Data.List (intercalate)
 
-import Math.SiConverter.Internal.Expr (Bindings, Expr(..), Op (..), SimpleAstFold,
-           Thunk (..), Unit, Value (Value), bindVars, getVarBinding, isMultiplier,
-           partiallyFoldExprM, runAstFold, runInNewScope, UnitExp (UnitExp, dimUnit, power))
+import Math.SiConverter.Internal.Expr (Bindings, Expr (..), Op (..), SimpleAstFold,
+           Thunk (..), Unit, UnitExp (UnitExp, dimUnit, power), Value (Value), bindVars,
+           getVarBinding, isMultiplier, partiallyFoldExprM, runAstFold, runInNewScope)
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (..))
 
 -- | The dimension of a quantity is given by a set of units raised to a power. Those
@@ -72,7 +72,7 @@ mergeUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = UnitExp (dimUnit x) (power x
                          | otherwise              = x : mergeUnits xs (y:ys)
 
 subtractUnits :: Dimension -> Dimension -> Dimension
-subtractUnits [] ys = (\u -> UnitExp (dimUnit u) $ power u*(-1)) <$> ys
+subtractUnits [] ys = (\(UnitExp u e) -> UnitExp u $ e * (-1)) <$> ys
 subtractUnits xs [] = xs
 subtractUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = UnitExp (dimUnit x) (power x - power y) : subtractUnits xs ys
                             | otherwise              = x : subtractUnits xs (y:ys)

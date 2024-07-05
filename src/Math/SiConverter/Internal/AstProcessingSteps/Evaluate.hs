@@ -5,8 +5,8 @@ module Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate) where
 import Control.Monad.Except (throwError)
 
 import Math.SiConverter.Internal.Expr (Bindings, Expr (..), Op (..), SimpleAstFold,
-           Thunk (..), Value (..), bindVar, bindVars, getVarBinding, partiallyFoldExprM,
-           runAstFold, runInNewScope, Unit)
+           Thunk (..), Unit, Value (..), bindVar, bindVars, getVarBinding,
+           partiallyFoldExprM, runAstFold, runInNewScope)
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
 
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.

@@ -24,8 +24,8 @@ module Math.SiConverter.Internal.Expr (
     , Value (..)
     , bindVar
     , bindVars
-    , convertToBase
     , convertTo
+    , convertToBase
     , foldExpr
     , getVarBinding
     , isMultiplier
@@ -127,7 +127,7 @@ foldExpr fv fb fu fc fvb fvn = doIt
     doIt (Val v)            = fv v
     doIt (BinOp e1 o e2)    = fb (doIt e1) o (doIt e2)
     doIt (UnaryOp o e)      = fu o $ doIt e
-    doIt (Conversion e u) = fc (doIt e) u
+    doIt (Conversion e u)   = fc (doIt e) u
     doIt (VarBindings bs e) = fvb (fmap doIt <$> bs) (doIt e)
     doIt (Var n)            = fvn n
 

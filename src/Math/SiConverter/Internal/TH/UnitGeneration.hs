@@ -6,9 +6,9 @@ module Math.SiConverter.Internal.TH.UnitGeneration (
       OperatorDef (..)
     , Quantity (..)
     , UnitDef (..)
+    , Value (..)
     , generateOperators
     , generateUnits
-    , Value (..)
     ) where
 
 import Language.Haskell.TH
@@ -34,7 +34,9 @@ instance Showable OperatorDef where
     name (OperDef n _) = n
     abbreviation (OperDef _ a) = a
 
-data Value u = Value {value :: Double, unit :: u}
+data Value u = Value { value :: Double
+                     , unit  :: u
+                     }
 
 instance Show u => Show (Value u) where
       show (Value v u) = (++) (show v) (show u)
@@ -121,15 +123,15 @@ genUnitExp :: [Dec]
 genUnitExp = [dataDec, showInstance, eqInstance]
   where dataDec = DataD [] unitExpADT [] Nothing [RecC unitExpADT [(mkName "dimUnit", Bang NoSourceUnpackedness NoSourceStrictness, ConT unitADT),
                                                                    (mkName "power", Bang NoSourceUnpackedness NoSourceStrictness, ConT ''Int) ]] []
-        showClauses = [Clause [ConP unitExpADT [] [VarP $ mkName "u", VarP $ mkName "i"]] 
+        showClauses = [Clause [ConP unitExpADT [] [VarP $ mkName "u", VarP $ mkName "i"]]
           (NormalB $ AppE (AppE (VarE '(++)) (AppE (VarE 'show) (VarE $ mkName "u"))) (AppE (VarE 'show) (VarE $ mkName "i"))) []]
         -- TODO Improve show instance (do not show power of 1)
         showInstance = InstanceD Nothing [] (AppT (ConT ''Show) (ConT unitExpADT)) [FunD 'show showClauses]
-        eqClauses = [Clause [ConP unitExpADT [] [VarP $ mkName "u1", VarP $ mkName "i1"], 
+        eqClauses = [Clause [ConP unitExpADT [] [VarP $ mkName "u1", VarP $ mkName "i1"],
                             ConP unitExpADT [] [VarP $ mkName "u2", VarP $ mkName "i2"]]
-                      (NormalB $ InfixE 
+                      (NormalB $ InfixE
                       (Just $ InfixE (Just $ VarE $ mkName "u1") (VarE '(==)) (Just $ VarE $ mkName "u2"))
-                      (VarE '(&&)) 
+                      (VarE '(&&))
                       (Just $ InfixE (Just $ VarE $ mkName "i1") (VarE '(==)) (Just $ VarE $ mkName "i2"))
                       ) []]
         eqInstance   = InstanceD Nothing [] (AppT (ConT ''Eq) (ConT unitExpADT)) [FunD '(==) eqClauses]
@@ -150,18 +152,18 @@ mkIsUnitFun (UnitDef unit _ _) = [SigD funName $ AppT (AppT ArrowT $ ConT unitAD
 mkConvertBaseClaus :: UnitDef -> UnitDef -> Clause
 mkConvertBaseClaus (UnitDef baseUnit _ _) (UnitDef unit _ factor) =
   let pattern = ConP 'Value [] [VarP (mkName "v"), ConP unitExpADT [] [ConP (mkName unit) [] [], VarP (mkName "e")]]
-      body    = NormalB $ AppE 
-        (AppE (ConE 'Value) 
-          (InfixE 
-            (Just $ VarE $ mkName "v") 
-            (VarE '(*)) 
-            (Just $ InfixE 
-              (Just $ LitE $ RationalL $ toRational factor) 
-              (VarE '(^)) 
+      body    = NormalB $ AppE
+        (AppE (ConE 'Value)
+          (InfixE
+            (Just $ VarE $ mkName "v")
+            (VarE '(*))
+            (Just $ InfixE
+              (Just $ LitE $ RationalL $ toRational factor)
+              (VarE '(^))
               (Just $ VarE $ mkName "e")
             )
           )
-        ) 
+        )
         (AppE (AppE (ConE unitExpADT) (ConE $ mkName baseUnit)) (VarE $ mkName "e"))
   in Clause [pattern] body []
 
@@ -169,18 +171,18 @@ mkConvertToClaus :: UnitDef -> UnitDef -> Clause
 mkConvertToClaus (UnitDef baseUnit _ _) (UnitDef unit _ factor) =
   let patVal = ConP 'Value [] [VarP (mkName "v"), ConP unitExpADT [] [ConP (mkName baseUnit) [] [], VarP (mkName "e")]]
       patUnit = ConP (mkName unit) [] []
-      body    = NormalB $ AppE 
-        (AppE (ConE 'Value) 
-          (InfixE 
-            (Just $ VarE $ mkName "v") 
-            (VarE '(/)) 
-            (Just $ InfixE 
-              (Just $ LitE $ RationalL $ toRational factor) 
-              (VarE '(^)) 
+      body    = NormalB $ AppE
+        (AppE (ConE 'Value)
+          (InfixE
+            (Just $ VarE $ mkName "v")
+            (VarE '(/))
+            (Just $ InfixE
+              (Just $ LitE $ RationalL $ toRational factor)
+              (VarE '(^))
               (Just $ VarE $ mkName "e")
             )
           )
-        ) 
+        )
         (AppE (AppE (ConE unitExpADT) (ConE $ mkName unit)) (VarE $ mkName "e"))
   in Clause [patVal, patUnit] body []
 
