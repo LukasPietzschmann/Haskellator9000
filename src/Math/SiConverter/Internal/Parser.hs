@@ -197,12 +197,11 @@ parseFactorOp = do
         x   -> fail $ "Invalid binary operator " ++ x
 
 parseExpr :: Parser Expr
-parseExpr = parseVarBindings
--- TODO Parse Conversion
---parseExpr = do
---    term <- parseVarBindings 
---    conv <- parseConversion
---    return $ Conversion term conv
+parseExpr = do {
+    term <- parseVarBindings;
+    conv <- parseConversion;
+    return $ Conversion term conv 
+  } <|> parseVarBindings
 
 parseVarBindings :: Parser Expr
 parseVarBindings = do {
