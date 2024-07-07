@@ -11,23 +11,6 @@
 --
 -- >>> parse [Number 9001.0,Operator "*",Number 29.12]
 -- Right (9001.0 * 29.12)
---
--- We parse the following grammar:
---
--- > <expr> ::= <term> <expr'>
--- > <expr'> ::= "+" <term> <expr'>
--- >           | "-" <term> <expr'>
--- >           | ε
--- > <term> ::= <factor> <term'>
--- > <term'> ::= "*" <factor> <term'>
--- >           | "/" <factor> <term'>
--- >           | ε
--- > <factor> ::= "-" <primary>
--- >            | <primary>
--- > <primary> ::= <number>
--- >             | "(" <expr> ")"
--- > <number> ::= <value> <unit>
--- > <unit> ::= "m" | "s" | "kg" | ε
 module Math.SiConverter.Internal.Parser (parse) where
 
 import Control.Applicative ((<|>))
