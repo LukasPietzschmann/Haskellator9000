@@ -2,7 +2,7 @@
 
 module Math.SiConverter (calculate) where
 
-import Control.Monad (liftM2, (>=>))
+import Control.Monad ((>=>))
 
 import Math.SiConverter.Internal.AstProcessingSteps.DetermineDimension
 import Math.SiConverter.Internal.AstProcessingSteps.Evaluate
@@ -22,4 +22,13 @@ calculate :: String                 -- ^ The expression to evaluate
           -> Either Error EvalValue -- ^ The result of the expression
 calculate input = do
     ast <- getAst input
-    liftM2 Value (evaluate ast) (determineDimension ast)
+    dim <- determineDimension ast
+    
+    evaluateWithConv ast dim
+
+evaluateWithConv :: Expr -> Dimension -> Either Error EvalValue
+evaluateWithConv = ev where
+    ev (Conversion expr newUnit) ((UnitExp oldUnit e):_)  = evaluate expr >>= \r -> return $ Value (value (result r)) [unit (result r)]
+        where
+            result r = convertTo (Value r (UnitExp oldUnit e)) newUnit
+    ev expr dim                               = evaluate expr >>= \r -> return $ Value r dim
