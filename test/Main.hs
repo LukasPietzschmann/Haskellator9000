@@ -9,8 +9,8 @@ import Control.Monad (liftM3, (>=>))
 import Data.Either (fromRight)
 
 import Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate)
-import Math.SiConverter.Internal.Expr
-    ( Expr(..), Op(..), Unit(..), Value(..), UnitExp(UnitExp) )
+import Math.SiConverter.Internal.Expr (Expr (..), Op (..), Unit (..), UnitExp (..),
+           Value (..))
 import Math.SiConverter.Internal.Lexer (scan)
 import Math.SiConverter.Internal.Parser (parse)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
@@ -51,10 +51,10 @@ tests = testGroup "Tests" [simpleExprParseTests, simpleEvalTests, propertyTests]
 simpleExprParseTests :: TestTree
 simpleExprParseTests = testGroup "Simple expression parsing" [
     testCase "Simple integer multiplier" $ parseString "1" @?= Right (Val (Value 1 $ UnitExp Multiplier 1)),
-    testCase "Simple floating multiplier" $ parseString "1.5" @?= Right (Val (Value 1.5 $ UnitExp  Multiplier 1)),
+    testCase "Simple floating multiplier" $ parseString "1.5" @?= Right (Val (Value 1.5 $ UnitExp Multiplier 1)),
     testCase "Simple addition" $ parseString "1 + 2" @?= Right (BinOp (Val $ Value 1 $ UnitExp Multiplier 1) Plus (Val $ Value 2 $ UnitExp Multiplier 1)),
     testCase "Precedence (* before +)" $ parseString "1 + 2 * 3" @?= Right (BinOp (Val $ Value 1 $ UnitExp Multiplier 1) Plus (BinOp (Val $ Value 2 $ UnitExp Multiplier 1) Mult (Val $ Value 3 $ UnitExp Multiplier 1))),
-    testCase "Precedence (^ before *)" $ parseString "2 ^ 3 * 4" @?= Right (BinOp (BinOp (Val $ Value 2 $ UnitExp Multiplier 1) Pow (Val $ Value 3 $ UnitExp Multiplier 1)) Mult (Val $ Value 4 $ UnitExp  Multiplier 1)),
+    testCase "Precedence (^ before *)" $ parseString "2 ^ 3 * 4" @?= Right (BinOp (BinOp (Val $ Value 2 $ UnitExp Multiplier 1) Pow (Val $ Value 3 $ UnitExp Multiplier 1)) Mult (Val $ Value 4 $ UnitExp Multiplier 1)),
     testCase "Changed precedence (parentheses)" $ parseString "(1 + 2) * 3" @?= Right (BinOp (BinOp (Val $ Value 1 $ UnitExp Multiplier 1) Plus (Val $ Value 2 $ UnitExp Multiplier 1)) Mult (Val $ Value 3 $ UnitExp Multiplier 1)),
     testCase "Minus and unary minus" $ parseString "1--2" @?= Right (BinOp (Val $ Value 1 $ UnitExp Multiplier 1) Minus (UnaryOp Minus (Val $ Value 2 $ UnitExp Multiplier 1))),
     testCase "Mult oper can be omitted" $ parseString "2(3+1)" @?= Right (BinOp (Val $ Value 2 $ UnitExp Multiplier 1) Mult (BinOp (Val $ Value 3 $ UnitExp Multiplier 1) Plus (Val $ Value 1 $ UnitExp Multiplier 1)))
