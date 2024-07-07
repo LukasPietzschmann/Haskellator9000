@@ -123,9 +123,10 @@ genUnitExp :: [Dec]
 genUnitExp = [dataDec, showInstance, eqInstance]
   where dataDec = DataD [] unitExpADT [] Nothing [RecC unitExpADT [(mkName "dimUnit", Bang NoSourceUnpackedness NoSourceStrictness, ConT unitADT),
                                                                    (mkName "power", Bang NoSourceUnpackedness NoSourceStrictness, ConT ''Int) ]] []
-        showClauses = [Clause [ConP unitExpADT [] [VarP $ mkName "u", VarP $ mkName "i"]]
-          (NormalB $ AppE (AppE (VarE '(++)) (AppE (VarE 'show) (VarE $ mkName "u"))) (AppE (VarE 'show) (VarE $ mkName "i"))) []]
-        -- TODO Improve show instance (do not show power of 1)
+        showClauses = [Clause [ConP unitExpADT [] [VarP $ mkName "u", LitP $ IntegerL 1]]
+          (NormalB $ AppE (VarE 'show) (VarE $ mkName "u")) [],
+                      Clause [ConP unitExpADT [] [VarP $ mkName "u", VarP $ mkName "i"]]
+          (NormalB $ AppE (AppE (VarE '(++)) (AppE (VarE 'show) (VarE $ mkName "u"))) (AppE (AppE (VarE '(++)) (LitE $ StringL "^")) (AppE (VarE 'show) (VarE $ mkName "i")))) []]
         showInstance = InstanceD Nothing [] (AppT (ConT ''Show) (ConT unitExpADT)) [FunD 'show showClauses]
         eqClauses = [Clause [ConP unitExpADT [] [VarP $ mkName "u1", VarP $ mkName "i1"],
                             ConP unitExpADT [] [VarP $ mkName "u2", VarP $ mkName "i2"]]
