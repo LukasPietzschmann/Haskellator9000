@@ -10,9 +10,9 @@
     - [x] Unary negation
     - [ ] Explicit unit conversion
 - SI base units
-    - [ ] Time (ns, ms, s, min, h, d)
-    - [ ] Length (nm, mm, cm, m, km)
-    - [ ] Mass (mg, g, kg, t)
+    - [x] Time (ns, µs, ms, s, min, h, d)
+    - [x] Length (nm, µm, mm, cm, m, km)
+    - [x] Mass (ng, µg, mg, g, kg, t)
 - SI derived units
     - [ ] Area (m², dm², cm², mm², a, ha, km²)
     - [ ] Volume (m³, dm³, cm³, mm³, l, ml, cl, dl, km³)

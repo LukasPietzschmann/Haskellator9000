@@ -76,7 +76,8 @@ $(generateUnits
     --, UnitDef "Yoctosecond" "ys" 1e-24
     ]
   , Quantity (UnitDef "Kilogram" "kg" 1) -- Mass
-    [ UnitDef "Gram" "g" 1e-3
+    [ UnitDef "Tonne" "t" 1000,
+      UnitDef "Gram" "g" 1e-3
     , UnitDef "Milligram" "mg" 1e-6
     , UnitDef "Microgram" "µg" 1e-9
     , UnitDef "Nanogram" "ng" 1e-12
