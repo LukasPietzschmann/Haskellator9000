@@ -134,15 +134,14 @@ parseIdentifier = do
     return i
 
 parseUnitExp :: Parser UnitExp
-parseUnitExp = do {
-    i <- parseIdentifier;
+parseUnitExp = do
+    i <- parseIdentifier
     either (\x -> fail $ "Invalid unit " ++ x) (\u -> do {
         requireOperator "^";
         expr <- parsePrimary;
         -- TODO Rounding is awkward
         either (const $ fail "Could not evaluate a units power") (\p -> return (UnitExp u (round p::Int))) (evaluate expr)
     } <|> return (UnitExp u 1)) $ unitFromString i
-  } <|> return (UnitExp Multiplier 1)
 
 parseUnit :: Parser Unit
 parseUnit = do
@@ -220,7 +219,10 @@ parsePrimary :: Parser Expr
 parsePrimary = parseExprInParens <|> parseValue
 
 parseValue :: Parser Expr
-parseValue = Var <$> parseIdentifier <|> liftM2 (Val .: Value) parseNumber parseUnitExp <|> do
+parseValue = liftM2 (Val .: Value) parseNumber (parseUnitExp <|> return (UnitExp Multiplier 1)) <|> parseValuelessUnit <|> Var <$> parseIdentifier
+
+parseValuelessUnit :: Parser Expr
+parseValuelessUnit = do
     isInFactor <- lift get
     if isInFactor
         then Val . Value 1 <$> parseUnitExp
