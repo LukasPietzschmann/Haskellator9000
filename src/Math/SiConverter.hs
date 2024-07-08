@@ -23,7 +23,6 @@ calculate :: String                 -- ^ The expression to evaluate
 calculate input = do
     ast <- getAst input
     dim <- determineDimension ast
-    
     evaluateWithConv ast dim
 
 evaluateWithConv :: Expr -> Dimension -> Either Error EvalValue

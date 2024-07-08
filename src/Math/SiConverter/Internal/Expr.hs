@@ -29,7 +29,7 @@ import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
 import Math.SiConverter.Internal.Utils.Stack (Stack, mapTop, pop, push)
 
-$(generateUnits 
+$(generateUnits
   [ Quantity (UnitDef "Multiplier" "" 1) [], -- Unitless unit
     Quantity (UnitDef "Meter" "m" 1) -- Length
     [ UnitDef "Kilometer" "km" 1000
@@ -156,11 +156,11 @@ runAstFold = flip evalState (push mempty mempty) . runExceptT
 
 -- | Like 'foldExpr', but does not fold into variable bindings and returns a monadic
 -- result
-partiallyFoldExprM :: (AstValue -> SimpleAstFold a) 
- -> (a -> Op -> a -> SimpleAstFold a) 
- -> (Op -> a -> SimpleAstFold a) 
+partiallyFoldExprM :: (AstValue -> SimpleAstFold a)
+ -> (a -> Op -> a -> SimpleAstFold a)
+ -> (Op -> a -> SimpleAstFold a)
  -> (a -> Unit -> SimpleAstFold a)              -- ^ function that folds a conversion expression
- -> (Bindings Expr -> Expr -> SimpleAstFold a) 
+ -> (Bindings Expr -> Expr -> SimpleAstFold a)
  -> (String -> SimpleAstFold a) -> Expr -> SimpleAstFold a
 partiallyFoldExprM fv fb fu fc fbv fvar = doIt
     where
