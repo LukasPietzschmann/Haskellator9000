@@ -11,6 +11,8 @@ module Math.SiConverter.Internal.TH.UnitGeneration (
     , generateUnits
     ) where
 
+import Data.Char (toLower)
+
 import Language.Haskell.TH
 
 class Showable a where
@@ -85,7 +87,7 @@ convertToFun = mkName "convertTo"
 --
 --     * A function to convert a value to the base unit
 --
--- > convertToBase :: Value -> Value
+-- > convertToBase :: Value UnitExp -> Value UnitExp
 -- > convertToBase (Value v (Meter e)) = Value ((v * 1.0) ^ e) (Meter e)
 -- > convertToBase (Value v (KiloMeter e)) = Value ((v * 0.0001) ^ e) (Meter e)
 --
@@ -97,6 +99,13 @@ convertToFun = mkName "convertTo"
 -- > isKilometer :: Unit -> Bool
 -- > isKilometer (Kilometer _) = True
 -- > isKilometer _ = False
+--
+--     * A function that creates a UnitExp
+--
+-- > meter :: Int -> UnitExp
+-- > meter e = UnitExp $ Meter e
+-- > kilometers :: Int -> UnitExp
+-- > kilometers e = UnitExp $ Kilometer e
 generateUnits :: [Quantity] -> Q [Dec]
 generateUnits unitGroups = do
   let allUnits           = concatMap (\(Quantity b us) -> b:us) unitGroups
@@ -116,8 +125,9 @@ generateUnits unitGroups = do
       convertToSig       = SigD convertToFun (AppT (AppT ArrowT simpleValue) (AppT (AppT ArrowT (ConT unitADT)) simpleValue))
       convertToFunc      = FunD convertToFun convertToClauses
       isUnitFuns         = generateIsUnitFuns unitGroups
+      mkUnitFuns         = generateMkUnitFuns unitGroups
 
-  return $ [dataDec, showInstance] ++ [fromStringSig, fromStringFunction, convertBaseSig, convertBaseFunc, convertToSig, convertToFunc] ++ isUnitFuns ++ genUnitExp
+  return $ [dataDec, showInstance] ++ [fromStringSig, fromStringFunction, convertBaseSig, convertBaseFunc, convertToSig, convertToFunc] ++ isUnitFuns ++ genUnitExp ++ mkUnitFuns
 
 genUnitExp :: [Dec]
 genUnitExp = [dataDec, showInstance, eqInstance]
@@ -148,6 +158,16 @@ mkIsUnitFun (UnitDef unit _ _) = [SigD funName $ AppT (AppT ArrowT $ ConT unitAD
         def     = Clause [pattern] body []
         body'   = NormalB $ ConE 'False
         def'    = Clause [WildP] body' []
+
+generateMkUnitFuns :: [Quantity] -> [Dec]
+generateMkUnitFuns unitGroups = concatMap mkMkUnitFun $ concatMap (\(Quantity b us) -> b:us) unitGroups
+
+mkMkUnitFun :: UnitDef -> [Dec]
+mkMkUnitFun (UnitDef unit _ _) = [SigD funName $ AppT (AppT ArrowT $ ConT ''Int) (ConT unitExpADT), FunD funName [def]]
+  where funName = mkName $ toLower <$> unit
+        pattern = VarP $ mkName "e"
+        body    = NormalB $ RecConE unitExpADT [(mkName "dimUnit", ConE $ mkName unit), (mkName "power", VarE $ mkName "e")]
+        def     = Clause [pattern] body []
 
 
 mkConvertBaseClaus :: UnitDef -> UnitDef -> Clause

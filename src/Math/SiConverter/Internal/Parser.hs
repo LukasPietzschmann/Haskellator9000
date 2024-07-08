@@ -219,7 +219,7 @@ parsePrimary :: Parser Expr
 parsePrimary = parseExprInParens <|> parseValue
 
 parseValue :: Parser Expr
-parseValue = liftM2 (Val .: Value) parseNumber (parseUnitExp <|> return (UnitExp Multiplier 1)) <|> parseValuelessUnit <|> Var <$> parseIdentifier
+parseValue = liftM2 (Val .: Value) parseNumber (parseUnitExp <|> return (multiplier 1)) <|> parseValuelessUnit <|> Var <$> parseIdentifier
 
 parseValuelessUnit :: Parser Expr
 parseValuelessUnit = do
