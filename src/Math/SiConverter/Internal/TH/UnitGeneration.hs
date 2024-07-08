@@ -122,7 +122,7 @@ generateUnits unitGroups = do
       fromStringFunction = FunD unitFromStringFun fromStringClauses
       convertBaseSig     = SigD convertToBaseFun (AppT (AppT ArrowT simpleValue) simpleValue)
       convertBaseFunc    = FunD convertToBaseFun convertBaseClauses
-      convertToSig       = SigD convertToFun (AppT (AppT ArrowT simpleValue) (AppT (AppT ArrowT (ConT unitADT)) simpleValue))
+      convertToSig       = SigD convertToFun (AppT (AppT ArrowT $ AppT (ConT ''Value) (ConT unitADT)) (AppT (AppT ArrowT (ConT unitADT)) (AppT (AppT ArrowT (ConT ''Int)) simpleValue)))
       convertToFunc      = FunD convertToFun convertToClauses
       isUnitFuns         = generateIsUnitFuns unitGroups
       mkUnitFuns         = generateMkUnitFuns unitGroups
@@ -190,8 +190,9 @@ mkConvertBaseClaus (UnitDef baseUnit _ _) (UnitDef unit _ factor) =
 
 mkConvertToClaus :: UnitDef -> UnitDef -> Clause
 mkConvertToClaus (UnitDef baseUnit _ _) (UnitDef unit _ factor) =
-  let patVal = ConP 'Value [] [VarP (mkName "v"), ConP unitExpADT [] [ConP (mkName baseUnit) [] [], VarP (mkName "e")]]
+  let patVal  = ConP 'Value [] [VarP (mkName "v"), ConP (mkName baseUnit) [] []]
       patUnit = ConP (mkName unit) [] []
+      patExp  = VarP $ mkName "e"
       body    = NormalB $ AppE
         (AppE (ConE 'Value)
           (InfixE
@@ -205,7 +206,7 @@ mkConvertToClaus (UnitDef baseUnit _ _) (UnitDef unit _ factor) =
           )
         )
         (AppE (AppE (ConE unitExpADT) (ConE $ mkName unit)) (VarE $ mkName "e"))
-  in Clause [patVal, patUnit] body []
+  in Clause [patVal, patUnit, patExp] body []
 
 -- | Generate the operator types and function to work with them. Imagine the following call: @generateOperators [OperDef "Plus" "+", OperDef "Minus" "-"]@.
 -- This function will then generate the following code:

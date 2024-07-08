@@ -87,7 +87,7 @@ type Bindings a = [(String, a)]
 data Expr = Val AstValue
           | BinOp Expr Op Expr
           | UnaryOp Op Expr
-          | Conversion Expr Unit
+          | Conversion Expr UnitExp
           | VarBindings (Bindings Expr) Expr
           | Var String
 
@@ -98,7 +98,7 @@ data Thunk a = Expr Expr
 foldExpr :: (AstValue -> a)        -- ^ function that folds a value
          -> (a -> Op -> a -> a)    -- ^ function that folds a binary expression
          -> (Op -> a -> a)         -- ^ function that folds a unary expression
-         -> (a -> Unit -> a)       -- ^ function that folds a conversion expression
+         -> (a -> UnitExp -> a)    -- ^ function that folds a conversion expression
          -> (Bindings a -> a -> a) -- ^ function that folds variable bindings
          -> (String -> a)          -- ^ function that folds a variable
          -> Expr                   -- ^ the 'Expr' to fold over
@@ -159,7 +159,7 @@ runAstFold = flip evalState (push mempty mempty) . runExceptT
 partiallyFoldExprM :: (AstValue -> SimpleAstFold a)
  -> (a -> Op -> a -> SimpleAstFold a)
  -> (Op -> a -> SimpleAstFold a)
- -> (a -> Unit -> SimpleAstFold a)              -- ^ function that folds a conversion expression
+ -> (a -> UnitExp -> SimpleAstFold a)
  -> (Bindings Expr -> Expr -> SimpleAstFold a)
  -> (String -> SimpleAstFold a) -> Expr -> SimpleAstFold a
 partiallyFoldExprM fv fb fu fc fbv fvar = doIt

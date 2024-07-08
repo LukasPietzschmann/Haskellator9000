@@ -27,7 +27,6 @@ calculate input = do
 
 evaluateWithConv :: Expr -> Dimension -> Either Error EvalValue
 evaluateWithConv = ev where
-    ev (Conversion expr newUnit) ((UnitExp oldUnit e):_)  = evaluate expr >>= \r -> return $ Value (value (result r)) [unit (result r)]
-        where
-            result r = convertTo (Value r (UnitExp oldUnit e)) newUnit
-    ev expr dim                               = evaluate expr >>= \r -> return $ Value r dim
+    ev (Conversion expr (UnitExp newUnit _)) [UnitExp oldUnit e] = evaluate expr >>= \r -> return $ Value (value $ doConversion r) [unit $ doConversion r]
+        where doConversion r = convertTo (Value r oldUnit) newUnit e
+    ev expr dim                                                  = evaluate expr >>= \r -> return $ Value r dim

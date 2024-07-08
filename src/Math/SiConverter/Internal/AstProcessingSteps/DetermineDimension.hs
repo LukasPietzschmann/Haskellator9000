@@ -10,8 +10,9 @@ import Control.Monad.Except (MonadError (throwError))
 import Data.List (intercalate)
 
 import Math.SiConverter.Internal.Expr (Bindings, Expr (..), Op (..), SimpleAstFold,
-           Thunk (..), Unit, UnitExp (UnitExp, dimUnit, power), Value (Value), bindVars,
+           Thunk (..), UnitExp (UnitExp, dimUnit, power), Value (Value), bindVars,
            getVarBinding, isMultiplier, partiallyFoldExprM, runAstFold, runInNewScope)
+import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (..))
 
 -- | The dimension of a quantity is given by a set of units raised to a power. Those
@@ -51,8 +52,10 @@ determineDimensionUnaryOp :: Op -> Dimension -> SimpleAstFold Dimension
 determineDimensionUnaryOp UnaryMinus d = return d
 determineDimensionUnaryOp op         _ = throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
 
-determineDimensionConversion :: Dimension -> Unit -> SimpleAstFold Dimension
-determineDimensionConversion d _ = return d
+determineDimensionConversion :: Dimension -> UnitExp -> SimpleAstFold Dimension
+determineDimensionConversion [UnitExp u e] (UnitExp _ e') | e == e'   = return [UnitExp u e]
+                                                          | otherwise = throwError $ Error RuntimeError "Conversion of different units is not supported"
+determineDimensionConversion _ _ = throwError $ Error RuntimeError "Conversion of different units is not supported"
 
 determineDimensionVarBind :: Bindings Expr -> Expr -> SimpleAstFold Dimension
 determineDimensionVarBind bs expr = do

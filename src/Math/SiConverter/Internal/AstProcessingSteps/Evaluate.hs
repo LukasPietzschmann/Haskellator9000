@@ -5,8 +5,9 @@ module Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate) where
 import Control.Monad.Except (throwError)
 
 import Math.SiConverter.Internal.Expr (Bindings, Expr (..), Op (..), SimpleAstFold,
-           Thunk (..), Unit, Value (..), bindVar, bindVars, getVarBinding,
+           Thunk (..), Unit, UnitExp, Value (..), bindVar, bindVars, getVarBinding,
            partiallyFoldExprM, runAstFold, runInNewScope)
+import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
 
 -- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
@@ -29,8 +30,8 @@ evalUnaryOp :: Op -> Double -> SimpleAstFold Double
 evalUnaryOp UnaryMinus rhs = return $ -rhs
 evalUnaryOp op         _   = throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
 
-evalConversion :: Double -> Unit -> SimpleAstFold Double
-evalConversion d _ = return d
+evalConversion :: Double -> UnitExp -> SimpleAstFold Double
+evalConversion = return .: const
 
 evalVarBinds :: Bindings Expr -> Expr -> SimpleAstFold Double
 evalVarBinds bs expr = runInNewScope $ do

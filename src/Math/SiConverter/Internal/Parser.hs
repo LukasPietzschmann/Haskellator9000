@@ -143,13 +143,8 @@ parseUnitExp = do
         either (const $ fail "Could not evaluate a units power") (\p -> return (UnitExp u (round p::Int))) (evaluate expr)
     } <|> return (UnitExp u 1)) $ unitFromString i
 
-parseUnit :: Parser Unit
-parseUnit = do
-    i <- parseIdentifier
-    either (\x -> fail $ "Invalid unit " ++ x) return (unitFromString i)
-
-parseConversion :: Parser Unit
-parseConversion = requireToken OpenBracket *> parseUnit <* requireToken CloseBracket
+parseConversion :: Parser UnitExp
+parseConversion = requireToken OpenBracket *> parseUnitExp <* requireToken CloseBracket
 
 parseExprInParens :: Parser Expr
 parseExprInParens = requireToken OpenParen *> parseExpr <* requireToken CloseParen
