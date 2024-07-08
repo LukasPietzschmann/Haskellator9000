@@ -30,7 +30,7 @@ determineDimension = fmap (filterMultiplier . filterZeroPower) . runAstFold . de
           filterMultiplier = filter (not . isMultiplier . dimUnit)
 
 determineDimension' :: Expr -> SimpleAstFold Dimension
-determineDimension' = partiallyFoldExprM (return . \(Value _ u) -> [UnitExp (dimUnit u) 1])
+determineDimension' = partiallyFoldExprM (return . \(Value _ u) -> [UnitExp (dimUnit u) (power u)])
     determineDimensionBinOp
     determineDimensionUnaryOp
     determineDimensionConversion
