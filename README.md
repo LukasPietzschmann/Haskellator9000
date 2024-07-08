@@ -32,6 +32,7 @@
 - Implicit multiplication (e.g. `2m(3m+4m)` instead of `2m*(3m+4m)`)
 - Support for variable bindings (e.g. `a = 1+2 -> a + 3`)
     - Of course, they are evaluated lazily
+    - And one can bind multiple variables in one scope (e.g. `a = 1, b = 2 -> a + b`)
 
 ## Usage
 
