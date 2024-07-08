@@ -98,7 +98,7 @@ data Thunk a = Expr Expr
 foldExpr :: (AstValue -> a)        -- ^ function that folds a value
          -> (a -> Op -> a -> a)    -- ^ function that folds a binary expression
          -> (Op -> a -> a)         -- ^ function that folds a unary expression
-         -> (a -> Unit -> a)    -- ^ function that folds a conversion expression
+         -> (a -> Unit -> a)       -- ^ function that folds a conversion expression
          -> (Bindings a -> a -> a) -- ^ function that folds variable bindings
          -> (String -> a)          -- ^ function that folds a variable
          -> Expr                   -- ^ the 'Expr' to fold over
