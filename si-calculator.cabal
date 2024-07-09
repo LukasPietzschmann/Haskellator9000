@@ -64,6 +64,8 @@ test-suite si-calculator-test
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
+      Evaluation
+      Parser
       Paths_si_calculator
   autogen-modules:
       Paths_si_calculator
