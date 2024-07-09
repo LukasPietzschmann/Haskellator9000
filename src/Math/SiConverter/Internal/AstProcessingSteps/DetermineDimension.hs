@@ -23,14 +23,6 @@ instance {-# OVERLAPPING #-} Show Dimension where
 
 -- | Determines the resulting dimension of an expression tree. If you would evaluate the
 -- expression tree, the numerical result has the dimension returned by this function.
---
--- Examples:
--- 
--- >>> determineDimension (Conversion (Val 2.0 Kilometer) m)
--- WAS Variable not in scope: km
--- NOW Data constructor not in scope: Kilometer
--- Variable not in scope: m :: UnitExp
--- 
 determineDimension :: Expr                   -- ^ the 'Expr' tree to determine the resulting dimension of
                    -> Either Error Dimension -- ^ the resulting dimension
 determineDimension = fmap (filterMultiplier . filterZeroPower) . runAstFold . determineDimension'
