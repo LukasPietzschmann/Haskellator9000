@@ -29,7 +29,7 @@ data Token = Number Double -- ^ A number (integers are also represented as float
            | Identifier String -- ^ Identifier (e.g. variable and function name) or unit
            | Arrow -- ^ Arrow "->"
            | Equal -- ^ Single equal sign "="
-           | Komma -- ^ Komma ","
+           | Comma -- ^ Comma ","
   deriving (Eq, Show)
 
 -- | A simple alias for the 'Token' stream
@@ -50,7 +50,7 @@ scan ('*':xs)     = (Operator "*" :) <$> scan xs
 scan ('/':xs)     = (Operator "/" :) <$> scan xs
 scan ('^':xs)     = (Operator "^" :) <$> scan xs
 scan ('=':xs)     = (Equal :)        <$> scan xs
-scan (',':xs)     = (Komma :)        <$> scan xs
+scan (',':xs)     = (Comma :)        <$> scan xs
 scan (x:xs)       = if | elem x [' ', '\t', '\r', '\n'] -> scan xs
                        | isDigit x -> scanNumber (x:xs)
                        | isAlpha x -> scanIdentifier (x:xs)

@@ -181,7 +181,7 @@ parseExpr = do
 
 parseVarBindings :: Parser Expr
 parseVarBindings = do {
-    bs <- atLeastOne parseVarBindingHead Komma;
+    bs <- atLeastOne parseVarBindingHead Comma;
     requireToken Arrow;
     expr <- parseExpr;
     return $ VarBindings bs expr
