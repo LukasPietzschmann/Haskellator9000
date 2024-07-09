@@ -2,7 +2,7 @@
 
 -- | Tokenizes an input stream to a list of 'Token's
 --
--- Examples:
+-- Arithmetic examples:
 --
 -- >>> scan "1+2"
 -- Right [Number 1.0,Operator "+",Number 2.0]
@@ -12,6 +12,17 @@
 --
 -- >>> scan "9001*29.12"
 -- Right [Number 9001.0,Operator "*",Number 29.12]
+-- 
+-- Examples with units:
+--
+-- >>> scan "2km [m]"
+-- Right [Number 2.0,Identifier "km",OpenBracket,Identifier "m",CloseBracket]
+--
+-- Examples with variables:
+--
+-- >>> scan "a = 3, b = 2 -> a + b"
+-- Right [Identifier "a",Equal,Number 3.0,Comma,Identifier "b",Equal,Number 2.0,Arrow,Identifier "a",Operator "+",Identifier "b"]
+--
 module Math.SiConverter.Internal.Lexer (Token (..), Tokens, scan) where
 
 import Data.Char (isDigit)

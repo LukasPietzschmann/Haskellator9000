@@ -26,6 +26,7 @@
 
 ### Optional
 
+- Doctests, unit tests and property tests
 - Extensive CI pipeline ([here](https://gitlab.uni-ulm.de/sp/fp-2/ss24/team1/-/pipelines))
 - Deployed documentation ([here](https://haskellator.pietzschmann.org))
 - Rich REPL with persisted history and <CTRL>-R search

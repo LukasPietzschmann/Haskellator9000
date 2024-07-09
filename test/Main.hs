@@ -1,11 +1,19 @@
 module Main (main) where
 
-import Evaluation ( simpleEvalTests )
-import Parser ( simpleExprParseTests, properties )
-import Test.Tasty (TestTree, testGroup, defaultMain)
+import End2End
+
+import Evaluation
+
+import Parser
+
+import Test.Tasty (TestTree, defaultMain, testGroup)
 
 main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "Tests" [simpleExprParseTests, properties, simpleEvalTests ]
+tests = testGroup "Tests" [
+        parserTests,
+        evaluationTests,
+        end2endTests
+    ]
