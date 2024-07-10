@@ -218,7 +218,7 @@ parseFactor :: Parser Expr
 parseFactor = parseUnary >>= term'
     where term' parsedLhs = do {
         liftM2 (BinOp parsedLhs) parseFactorOp parseUnary >>= term'
-    } <|> BinOp parsedLhs Mult <$> parseExprInParens <|> return parsedLhs
+    } <|> (BinOp parsedLhs Mult <$> parseExprInParens >>= term') <|> return parsedLhs
 
 parseUnary :: Parser Expr
 parseUnary = liftM2 UnaryOp parseUnaryOp parsePrimary <|> parsePrimary
