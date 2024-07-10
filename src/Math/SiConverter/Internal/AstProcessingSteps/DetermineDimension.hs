@@ -10,8 +10,9 @@ import Control.Monad.Except (MonadError (throwError))
 import Data.List (intercalate)
 
 import Math.SiConverter.Internal.Expr (Bindings, Expr (..), Op (..), SimpleAstFold,
-           Thunk (..), UnitExp (UnitExp, dimUnit, power), Value (Value), bindVars,
-           getVarBinding, isMultiplier, partiallyFoldExprM, runAstFold, runInNewScope)
+           Thunk (..), Unit (..), UnitExp (UnitExp, dimUnit, power), Value (Value),
+           bindVars, getVarBinding, isMultiplier, partiallyFoldExprM, runAstFold,
+           runInNewScope)
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (..))
 
 -- | The dimension of a quantity is given by a set of units raised to a power. Those
@@ -44,7 +45,10 @@ determineDimensionBinOp lhs Minus rhs | lhs == rhs = return lhs
                                       | otherwise  = throwError $ Error RuntimeError "Subtraction of different units is not supported"
 determineDimensionBinOp lhs Mult  rhs = return $ mergeUnits lhs rhs
 determineDimensionBinOp lhs Div   rhs = return $ subtractUnits lhs rhs
-determineDimensionBinOp _   Pow   _   = throwError $ Error RuntimeError "Exponentiation of units is not supported"
+determineDimensionBinOp lhs Pow   rhs | rhs == [UnitExp Multiplier 1] = return $ fmap (\u -> u {
+    power = power u * 1 -- TODO: evaluate rhs and use the result as the multiplier
+  }) lhs
+                                      | otherwise                     = throwError $ Error RuntimeError "Exponentiation of units is not supported"
 determineDimensionBinOp _   op    _   = throwError $ Error ImplementationError $ "Unknown binary operator " ++ show op
 
 determineDimensionUnaryOp :: Op -> Dimension -> SimpleAstFold Dimension
