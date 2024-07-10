@@ -118,15 +118,15 @@ generateUnits unitGroups = do
 
       dataDec            = DataD [] unitADT [] Nothing unitConstructors [DerivClause Nothing [ConT ''Eq]]
       showInstance       = InstanceD Nothing [] (AppT (ConT ''Show) (ConT unitADT)) [FunD 'show showClauses]
-      fromStringSig      = SigD unitFromStringFun (AppT (AppT ArrowT (ConT ''String)) (AppT (AppT (ConT ''Either) (ConT ''String)) (ConT unitADT)))
       fromStringFunction = FunD unitFromStringFun fromStringClauses
-      convertBaseSig     = SigD convertToBaseFun (AppT (AppT ArrowT simpleValue) simpleValue)
-      convertToSig       = SigD convertToFun (AppT (AppT ArrowT $ AppT (ConT ''Value) (ConT unitADT)) (AppT (AppT ArrowT (ConT unitADT)) (AppT (AppT ArrowT (ConT ''Int)) simpleValue)))
-      isUnitFuns         = generateIsUnitFuns unitGroups
 
-  mkUnitFuns      <- generateMkUnitFuns unitGroups
+  fromStringSig   <- sigD unitFromStringFun [t|String -> Either String $(conT unitADT)|]
+  convertToSig    <- sigD convertToFun [t|Value $(conT unitADT) -> $(conT unitADT) -> Int -> Value $(conT unitExpADT)|]
   convertToFunc   <- funD convertToFun convertToClauses
+  convertBaseSig  <- sigD convertToBaseFun [t|Value $(conT unitExpADT) -> Value $(conT unitExpADT)|]
   convertBaseFunc <- funD convertToBaseFun convertBaseClauses
+  mkUnitFuns      <- generateMkUnitFuns unitGroups
+  isUnitFuns      <- generateIsUnitFuns unitGroups
 
   return $ [dataDec, showInstance] ++ [fromStringSig, fromStringFunction, convertBaseSig, convertBaseFunc, convertToSig, convertToFunc] ++ isUnitFuns ++ genUnitExp ++ mkUnitFuns
 
@@ -148,17 +148,19 @@ genUnitExp = [dataDec, showInstance, eqInstance]
                       ) []]
         eqInstance   = InstanceD Nothing [] (AppT (ConT ''Eq) (ConT unitExpADT)) [FunD '(==) eqClauses]
 
-generateIsUnitFuns :: [Quantity] -> [Dec]
-generateIsUnitFuns unitGroups = concatMap mkIsUnitFun $ concatMap (\(Quantity b us) -> b:us) unitGroups
+generateIsUnitFuns :: [Quantity] -> Q [Dec]
+generateIsUnitFuns unitGroups = concat <$> mapM mkIsUnitFun (concatMap (\(Quantity b us) -> b:us) unitGroups)
 
-mkIsUnitFun :: UnitDef -> [Dec]
-mkIsUnitFun (UnitDef unit _ _) = [SigD funName $ AppT (AppT ArrowT $ ConT unitADT) (ConT ''Bool), FunD funName [def, def']]
-  where funName = mkName $ "is" ++ unit
+mkIsUnitFun :: UnitDef -> Q [Dec]
+mkIsUnitFun (UnitDef unit _ _) = do
+    let funName = mkName $ "is" ++ unit
         pattern = ConP (mkName unit) [] []
         body    = NormalB $ ConE 'True
         def     = Clause [pattern] body []
         body'   = NormalB $ ConE 'False
         def'    = Clause [WildP] body' []
+    sig <- sigD funName [t|$(conT unitADT) -> Bool|]
+    return [sig, FunD funName [def, def']]
 
 generateMkUnitFuns :: [Quantity] -> Q [Dec]
 generateMkUnitFuns unitGroups = concat <$> mapM mkMkUnitFun (concatMap (\(Quantity b us) -> b:us) unitGroups)
