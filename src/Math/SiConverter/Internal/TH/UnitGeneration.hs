@@ -46,12 +46,8 @@ instance Show u => Show (Value u) where
 unitADT :: Name
 unitADT = mkName "Unit"
 
-simpleValue :: Type
-simpleValue = AppT (ConT ''Value) (ConT unitExpADT)
-
 unitExpADT :: Name
 unitExpADT = mkName "UnitExp"
-
 
 operADT :: Name
 operADT = mkName "Op"
@@ -127,34 +123,30 @@ generateUnits unitGroups = do
   convertBaseFunc <- funD convertToBaseFun convertBaseClauses
   mkUnitFuns      <- generateMkUnitFuns unitGroups
   isUnitFuns      <- generateIsUnitFuns unitGroups
+  unitExpDec      <- genUnitExp
 
-  return $ [dataDec, showInstance] ++ [fromStringSig, fromStringFunction, convertBaseSig, convertBaseFunc, convertToSig, convertToFunc] ++ isUnitFuns ++ genUnitExp ++ mkUnitFuns
+  return $ [dataDec, showInstance] ++ [fromStringSig, fromStringFunction, convertBaseSig, convertBaseFunc, convertToSig, convertToFunc] ++ isUnitFuns ++ unitExpDec ++ mkUnitFuns
 
-genUnitExp :: [Dec]
-genUnitExp = [dataDec, showInstance, eqInstance]
-  where dataDec = DataD [] unitExpADT [] Nothing [RecC unitExpADT [(mkName "dimUnit", Bang NoSourceUnpackedness NoSourceStrictness, ConT unitADT),
-                                                                   (mkName "power", Bang NoSourceUnpackedness NoSourceStrictness, ConT ''Int) ]] []
-        showClauses = [Clause [ConP unitExpADT [] [VarP $ mkName "u", LitP $ IntegerL 1]]
-          (NormalB $ AppE (VarE 'show) (VarE $ mkName "u")) [],
-                      Clause [ConP unitExpADT [] [VarP $ mkName "u", VarP $ mkName "i"]]
-          (NormalB $ AppE (AppE (VarE '(++)) (AppE (VarE 'show) (VarE $ mkName "u"))) (AppE (AppE (VarE '(++)) (LitE $ StringL "^")) (AppE (VarE 'show) (VarE $ mkName "i")))) []]
-        showInstance = InstanceD Nothing [] (AppT (ConT ''Show) (ConT unitExpADT)) [FunD 'show showClauses]
-        eqClauses = [Clause [ConP unitExpADT [] [VarP $ mkName "u1", VarP $ mkName "i1"],
-                            ConP unitExpADT [] [VarP $ mkName "u2", VarP $ mkName "i2"]]
-                      (NormalB $ InfixE
-                      (Just $ InfixE (Just $ VarE $ mkName "u1") (VarE '(==)) (Just $ VarE $ mkName "u2"))
-                      (VarE '(&&))
-                      (Just $ InfixE (Just $ VarE $ mkName "i1") (VarE '(==)) (Just $ VarE $ mkName "i2"))
-                      ) []]
-        eqInstance   = InstanceD Nothing [] (AppT (ConT ''Eq) (ConT unitExpADT)) [FunD '(==) eqClauses]
+genUnitExp :: Q [Dec]
+genUnitExp = [d|
+  data UnitExp = UnitExp { dimUnit :: $(conT unitADT), power :: Int }
+
+  instance Show UnitExp where
+    show (UnitExp u 1) = show u
+    show (UnitExp u i) = show u ++ "^" ++ show i
+
+  instance Eq UnitExp where
+    (UnitExp u1 i1) == (UnitExp u2 i2) = u1 == u2 && i1 == i2
+  |]
+
 
 generateIsUnitFuns :: [Quantity] -> Q [Dec]
 generateIsUnitFuns unitGroups = concat <$> mapM mkIsUnitFun (concatMap (\(Quantity b us) -> b:us) unitGroups)
 
 mkIsUnitFun :: UnitDef -> Q [Dec]
-mkIsUnitFun (UnitDef unit _ _) = do
-    let funName = mkName $ "is" ++ unit
-        pattern = ConP (mkName unit) [] []
+mkIsUnitFun (UnitDef u _ _) = do
+    let funName = mkName $ "is" ++ u
+        pattern = ConP (mkName u) [] []
         body    = NormalB $ ConE 'True
         def     = Clause [pattern] body []
         body'   = NormalB $ ConE 'False
@@ -166,24 +158,24 @@ generateMkUnitFuns :: [Quantity] -> Q [Dec]
 generateMkUnitFuns unitGroups = concat <$> mapM mkMkUnitFun (concatMap (\(Quantity b us) -> b:us) unitGroups)
 
 mkMkUnitFun :: UnitDef -> Q [Dec]
-mkMkUnitFun (UnitDef unit _ _) = do
-    let funName = mkName $ toLower <$> unit
+mkMkUnitFun (UnitDef u _ _) = do
+    let funName = mkName $ toLower <$> u
         pattern = VarP $ mkName "e"
-    body <- normalB [|UnitExp $(conE $ mkName unit) e|]
+    body <- normalB [|UnitExp $(conE $ mkName u) e|]
     return [SigD funName $ AppT (AppT ArrowT $ ConT ''Int) (ConT unitExpADT), FunD funName [Clause [pattern] body []]]
 
 mkConvertBaseClaus :: UnitDef -> UnitDef -> Q Clause
-mkConvertBaseClaus (UnitDef baseUnit _ _) (UnitDef unit _ factor) = do
-    let pattern = ConP 'Value [] [VarP (mkName "v"), ConP unitExpADT [] [ConP (mkName unit) [] [], VarP (mkName "e")]]
-    body <- normalB [|Value (v * ($(litE $ RationalL $ toRational factor) ^ e)) (UnitExp $(conE $ mkName baseUnit) e)|]
+mkConvertBaseClaus (UnitDef baseUnit _ _) (UnitDef u _ f) = do
+    let pattern = ConP 'Value [] [VarP (mkName "v"), ConP unitExpADT [] [ConP (mkName u) [] [], VarP (mkName "e")]]
+    body <- normalB [|Value (v * ($(litE $ RationalL $ toRational f) ^ e)) (UnitExp $(conE $ mkName baseUnit) e)|]
     return $ Clause [pattern] body []
 
 mkConvertToClaus :: UnitDef -> UnitDef -> Q Clause
-mkConvertToClaus (UnitDef baseUnit _ _) (UnitDef unit _ factor) = do
+mkConvertToClaus (UnitDef baseUnit _ _) (UnitDef u _ f) = do
     let patVal  = ConP 'Value [] [VarP (mkName "v"), ConP (mkName baseUnit) [] []]
-    let patUnit = ConP (mkName unit) [] []
-    let patExp  = VarP $ mkName "e"
-    body <- normalB [|Value (v / ($(litE $ RationalL $ toRational factor) ^ e)) (UnitExp $(conE $ mkName unit) e)|]
+        patUnit = ConP (mkName u) [] []
+        patExp  = VarP $ mkName "e"
+    body <- normalB [|Value (v / ($(litE $ RationalL $ toRational f) ^ e)) (UnitExp $(conE $ mkName u) e)|]
     return $ Clause [patVal, patUnit, patExp] body []
 
 -- | Generate the operator types and function to work with them. Imagine the following call: @generateOperators [OperDef "Plus" "+", OperDef "Minus" "-"]@.
