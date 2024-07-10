@@ -26,9 +26,7 @@ instance {-# OVERLAPPING #-} Show Dimension where
 -- expression tree, the numerical result has the dimension returned by this function.
 determineDimension :: Expr                   -- ^ the 'Expr' tree to determine the resulting dimension of
                    -> Either Error Dimension -- ^ the resulting dimension
-determineDimension = fmap (filterMultiplier . filterZeroPower) . runAstFold . determineDimension'
-    where filterZeroPower = filter ((/=0) . power)
-          filterMultiplier = filter (not . isMultiplier . dimUnit)
+determineDimension = fmap filterUnwanted . runAstFold . determineDimension'
 
 determineDimension' :: Expr -> SimpleAstFold Dimension
 determineDimension' = partiallyFoldExprM (return . \(Value _ u) -> [UnitExp (dimUnit u) (power u)])
@@ -56,9 +54,10 @@ determineDimensionUnaryOp UnaryMinus d = return d
 determineDimensionUnaryOp op         _ = throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
 
 determineDimensionConversion :: Dimension -> UnitExp -> SimpleAstFold Dimension
-determineDimensionConversion [UnitExp u e] (UnitExp _ e') | e == e'   = return [UnitExp u e]
-                                                          | otherwise = throwError $ Error RuntimeError "Conversion of different units is not supported"
-determineDimensionConversion _ _ = throwError $ Error RuntimeError "Conversion of different units is not supported"
+determineDimensionConversion src (UnitExp _ e') = case filterUnwanted src of
+    [UnitExp u e] | e == e'   -> return $ pure $ UnitExp u e'
+                  | otherwise -> throwError $ Error RuntimeError "Conversion of different units is not supported"
+    _                         -> throwError $ Error RuntimeError "Conversion of different units is not supported"
 
 determineDimensionVarBind :: Bindings Expr -> Expr -> SimpleAstFold Dimension
 determineDimensionVarBind bs expr = do
@@ -82,3 +81,12 @@ subtractUnits [] ys = (\(UnitExp u e) -> UnitExp u $ e * (-1)) <$> ys
 subtractUnits xs [] = xs
 subtractUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = UnitExp (dimUnit x) (power x - power y) : subtractUnits xs ys
                             | otherwise              = x : subtractUnits xs (y:ys)
+
+filterUnwanted :: Dimension -> Dimension
+filterUnwanted = filterZeroPower . filterMultiplier
+
+filterZeroPower :: Dimension -> Dimension
+filterZeroPower = filter ((/=0) . power)
+
+filterMultiplier :: Dimension -> Dimension
+filterMultiplier = filter (not . isMultiplier . dimUnit)
