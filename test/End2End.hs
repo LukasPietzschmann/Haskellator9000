@@ -44,7 +44,7 @@ calculations = testGroup "Misc Tests" [
         $ calc "2 * (3 + 4) / 7" @?= "2.0",
     testCase "Power!"                                         -- TODO See issue #32
         $ calc "2^3" @?= "8.0",
-    testCase "Fractional Power!"            
+    testCase "Fractional Power!"
         $ calc "2^3.5" @?= "11.313708498984761",
     testCase "Arithmetic expression with implicit multiplier" -- TODO See issue #30
         $ calc "2(3 + 4)/7" @?= "2.0",
@@ -69,7 +69,21 @@ calculations = testGroup "Misc Tests" [
     testCase "Conversion after calculation II"
         $ calc "(30km) / (2km/h) [h]" @?= "15.0h",
     testCase "Conversion after calculation III"
-        $ calc "30km / 2km/h [h]" @?= "15.0h"
+        $ calc "30km / 2km/h [h]" @?= "15.0h",
+
+    -- Variables
+    testCase "Simple assignment"
+        $ calc "m = 800 -> m" @?= "800.0",
+    testCase "Assignment with unit"
+        $ calc "m = 800kg -> m" @?= "800.0kg",
+    testCase "Multi assignment"
+        $ calc "M = 800, v=100 -> M * v" @?= "80000.0",
+    testCase "Multi assignment with units"
+        $ calc "M = 800kg, v=100km/h -> 0.5*M*v^2" @?= "308641.97530864197kg*m^2*s^-2",
+    testCase "Nested assignment"
+        $ calc "M = 60 -> M * (v = 3 -> v)" @?= "180.0",
+    testCase "Nested assignment with units"
+        $ calc "M = 60kg -> M * (a = 3m/s^2 -> a)" @?= "180.0kg*m*s^-2"
     ]
 
 calc::String->String
