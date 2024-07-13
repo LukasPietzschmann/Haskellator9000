@@ -9,15 +9,14 @@ import Math.SiConverter.Internal.Expr (Expr (BinOp, UnaryOp, Val), Value (Value)
 import Math.SiConverter.Internal.Lexer (scan)
 import Math.SiConverter.Internal.Operators (Op (Minus, Mult, Plus, Pow))
 import Math.SiConverter.Internal.Parser (parse)
-import Math.SiConverter.Internal.Units (multiplier)
+import Math.SiConverter.Internal.Units (Unit (..), UnitExp (..), multiplier)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error)
 
 import Test.Tasty
 import Test.Tasty.HUnit (testCase, (@?=))
 import Test.Tasty.QuickCheck (Arbitrary (arbitrary), Gen, arbitraryBoundedEnum, choose,
-           frequency, testProperty, suchThat)
-import Math.SiConverter.Internal.Expr (Unit(Multiplier))
+           frequency, suchThat, testProperty)
 
 parserTests :: TestTree
 parserTests = testGroup "ParserTests" [expressionParsing, parserProperties]
