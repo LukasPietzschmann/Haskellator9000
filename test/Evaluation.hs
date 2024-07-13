@@ -34,10 +34,10 @@ normalization = testGroup "Normalization" [
     testCase "Kilometer -> Meter" $ normalizeString "1km" @?= Right (Val $ Value 1000 $ meter 1),
     testCase "Gram -> Kilogram" $ normalizeString "1000g" @?= Right (Val $ Value 1 $ kilogram 1),
     testCase "Day -> Seconds" $ normalizeString "1d" @?= Right (Val $ Value 86400 $ second 1),
-    testCase "km/h -> m/s" $ normalizeString "1km/h" 
+    testCase "km/h -> m/s" $ normalizeString "1km/h"
       @?= Right (BinOp (Val $ Value 1000 $ meter 1) Div (Val $ Value 3600 $ second 1)),
-    testCase "Does not change exponents" $ normalizeString "1m^42 / 1s^33" 
-      @?= Right (BinOp (Val $ Value 1 $ meter 42) Div (Val $ Value 1 $ second 33)) 
+    testCase "Does not change exponents" $ normalizeString "1m^42 / 1s^33"
+      @?= Right (BinOp (Val $ Value 1 $ meter 42) Div (Val $ Value 1 $ second 33))
   ]
 
 evalString :: String -> Either Error Double

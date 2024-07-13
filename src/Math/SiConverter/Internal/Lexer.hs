@@ -12,7 +12,7 @@
 --
 -- >>> scan "9001*29.12"
 -- Right [Number 9001.0,Operator "*",Number 29.12]
--- 
+--
 -- Examples with units:
 --
 -- >>> scan "2km [m]"
