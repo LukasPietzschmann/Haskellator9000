@@ -10,7 +10,7 @@ import Control.Monad.Except (MonadError (throwError))
 import Data.List (intercalate)
 
 import Math.SiConverter.Internal.Expr (Bindings, Expr (..), SimpleAstFold, Thunk (..),
-           Value (Value), bindVars, getVarBinding, partiallyFoldExprM, runAstFold,
+           Value (..), bindVars, getVarBinding, partiallyFoldExprM, runAstFold,
            runInNewScope)
 import Math.SiConverter.Internal.Operators (Op (..))
 import Math.SiConverter.Internal.Units (Unit (..), UnitExp (..), isMultiplier)
@@ -30,7 +30,7 @@ determineDimension :: Expr                   -- ^ the 'Expr' tree to determine t
 determineDimension = fmap filterUnwanted . runAstFold . determineDimension'
 
 determineDimension' :: Expr -> SimpleAstFold Dimension
-determineDimension' = partiallyFoldExprM (return . \(Value _ u) -> [UnitExp (dimUnit u) (power u)])
+determineDimension' = partiallyFoldExprM (return . unit)
     determineDimensionBinOp
     determineDimensionUnaryOp
     determineDimensionConversion
@@ -54,11 +54,8 @@ determineDimensionUnaryOp :: Op -> Dimension -> SimpleAstFold Dimension
 determineDimensionUnaryOp UnaryMinus d = return d
 determineDimensionUnaryOp op         _ = throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
 
-determineDimensionConversion :: Dimension -> UnitExp -> SimpleAstFold Dimension
-determineDimensionConversion src (UnitExp _ e') = case filterUnwanted src of
-    [UnitExp u e] | e == e'   -> return $ pure $ UnitExp u e'
-                  | otherwise -> throwError $ Error RuntimeError "Conversion of different units is not supported"
-    _                         -> throwError $ Error RuntimeError "Conversion of different units is not supported"
+determineDimensionConversion :: Dimension -> Dimension -> SimpleAstFold Dimension
+determineDimensionConversion _ dst = return dst -- TODO: do check if conversion is possible
 
 determineDimensionVarBind :: Bindings Expr -> Expr -> SimpleAstFold Dimension
 determineDimensionVarBind bs expr = do

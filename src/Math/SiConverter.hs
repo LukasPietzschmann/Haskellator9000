@@ -27,7 +27,7 @@ calculate input = do
     evaluateWithConv ast dim
 
 evaluateWithConv :: Expr -> Dimension -> Either Error EvalValue
-evaluateWithConv = ev where
-    ev (Conversion expr (UnitExp newUnit _)) [UnitExp oldUnit e] = evaluate expr >>= \r -> return $ Value (value $ doConversion r) [unit $ doConversion r]
-        where doConversion r = convertTo (Value r oldUnit) newUnit e
+evaluateWithConv = ev where -- TODO: to conversion (we can reuse code from normalize)
+    -- ev (Conversion expr (UnitExp newUnit _)) [UnitExp oldUnit e] = evaluate expr >>= \r -> return $ Value (value $ doConversion r) [unit $ doConversion r]
+    --     where doConversion r = convertTo (Value r oldUnit) newUnit e
     ev expr dim                                                  = evaluate expr >>= \r -> return $ Value r dim

@@ -148,17 +148,17 @@ parseIdentifier = do
     Identifier i <- satisfy isIdentifier
     return i
 
-parseUnitExp :: Parser UnitExp
+parseUnitExp :: Parser [UnitExp]
 parseUnitExp = do
     i <- parseIdentifier
     either (\x -> fail $ "Invalid unit " ++ x) (\u -> do {
         requireOperator "^";
         expr <- parsePrimary;
         -- TODO Rounding is awkward
-        either (const $ fail "Could not evaluate a units power") (\p -> return (UnitExp u (round p::Int))) (evaluate expr)
-    } <|> return (UnitExp u 1)) $ unitFromString i
+        either (const $ fail "Could not evaluate a units power") (\p -> return $ pure $ UnitExp u (round p :: Int)) (evaluate expr)
+    } <|> return (pure $ UnitExp u 1)) $ unitFromString i
 
-parseConversion :: Parser UnitExp
+parseConversion :: Parser [UnitExp]
 parseConversion = requireToken OpenBracket *> parseUnitExp <* requireToken CloseBracket
 
 parseExprInParens :: Parser Expr

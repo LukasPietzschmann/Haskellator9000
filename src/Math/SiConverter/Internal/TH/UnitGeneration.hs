@@ -12,6 +12,7 @@ module Math.SiConverter.Internal.TH.UnitGeneration (
 import Data.Char (toLower)
 
 import Language.Haskell.TH
+import Language.Haskell.TH.Syntax
 
 -- | Definition of a Unit
 data UnitDef = UnitDef String String Double
@@ -96,7 +97,7 @@ generateUnits unitGroups = do
       convertBaseClauses = concatMap (\(Quantity b us) -> mkConvertBaseClaus b <$> b:us) unitGroups
       convertToClauses   = concatMap (\(Quantity b us) -> mkConvertToClaus b <$> b:us) unitGroups
 
-      dataDec            = DataD [] unitADT [] Nothing unitConstructors [DerivClause Nothing [ConT ''Eq, ConT ''Bounded, ConT ''Enum]]
+      dataDec            = DataD [] unitADT [] Nothing unitConstructors [DerivClause Nothing [ConT ''Lift, ConT ''Eq, ConT ''Bounded, ConT ''Enum]]
       showInstance       = InstanceD Nothing [] (AppT (ConT ''Show) (ConT unitADT)) [FunD 'show showClauses]
       fromStringFunction = FunD unitFromStringFun fromStringClauses
 
@@ -114,6 +115,7 @@ generateUnits unitGroups = do
 genUnitExp :: Q [Dec]
 genUnitExp = [d|
   data UnitExp = UnitExp { dimUnit :: $(conT unitADT), power :: Int }
+    deriving Lift
 
   instance Show UnitExp where
     show (UnitExp u 1) = show u
@@ -144,8 +146,9 @@ mkMkUnitFun :: UnitDef -> Q [Dec]
 mkMkUnitFun (UnitDef u _ _) = do
     let funName = mkName $ toLower <$> u
         pattern = VarP $ mkName "e"
-    body <- normalB [|UnitExp $(conE $ mkName u) e|]
-    return [SigD funName $ AppT (AppT ArrowT $ ConT ''Int) (ConT unitExpADT), FunD funName [Clause [pattern] body []]]
+    body <- normalB [|[UnitExp $(conE $ mkName u) e]|]
+    sig  <- sigD funName [t|Int -> [$(conT unitExpADT)]|]
+    return [sig, FunD funName [Clause [pattern] body []]]
 
 mkConvertBaseClaus :: UnitDef -> UnitDef -> Q Clause
 mkConvertBaseClaus (UnitDef baseUnit _ _) (UnitDef u _ f) = do

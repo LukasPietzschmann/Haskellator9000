@@ -32,7 +32,7 @@ evalUnaryOp :: Op -> Double -> SimpleAstFold Double
 evalUnaryOp UnaryMinus rhs = return $ -rhs
 evalUnaryOp op         _   = throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
 
-evalConversion :: Double -> UnitExp -> SimpleAstFold Double
+evalConversion :: Double -> [UnitExp] -> SimpleAstFold Double
 evalConversion = return .: const
 
 evalVarBinds :: Bindings Expr -> Expr -> SimpleAstFold Double

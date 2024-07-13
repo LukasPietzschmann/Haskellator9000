@@ -73,7 +73,7 @@ instance Arbitrary Expr where
      val <- genNumber;
      ex <- genInt;
      unit <- arbitrary;
-     return $ Val $ Value val (UnitExp unit ex)
+     return $ Val $ Value val [UnitExp unit ex]
    }
     in frequency [
       (10, randomValue),
