@@ -17,7 +17,7 @@ testsFromSpec = testGroup "Tests from the Project description" [
     testCase "(12 * 13m) [km] = 0.156 km" $ calc "(12 * 13m) [km]" @?= "0.156km",
     testCase "1 = 1" $ calc "1" @?= "1.0",
     testCase "1m + 2 m = 3m" $ calc "1m + 2 m" @?= "3.0m",
-    testCase "1000m/5s + 3m/s" $ calc "1000m/5s + 3m/s" @?= "203.0m/s"
+    testCase "1000m/5s + 3m/s" $ calc "1000m/5s + 3m/s" @?= "203.0m*s^-1"
     ]
 
 arithmetic :: TestTree
@@ -35,7 +35,7 @@ arithmetic = testGroup "Arithmetic" [
     ]
 
 units :: TestTree
-units = testGroup "Arithmetic" [
+units = testGroup "Units" [
     testCase "Simple unit calculation"
         $ calc "(30km) / (2km/h)" @?= "54000.0s",
     testCase "Simple unit calculation without parenthesis"    -- TODO See issue #31
