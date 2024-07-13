@@ -35,6 +35,7 @@ import Data.Bifunctor (first)
 import GHC.Base (Alternative (empty))
 
 import Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate)
+import Math.SiConverter.Internal.DerivedUnits (derivedUnitFromString)
 import Math.SiConverter.Internal.Expr
 import Math.SiConverter.Internal.Lexer (Token (..), Tokens)
 import Math.SiConverter.Internal.Operators (Op (..))
@@ -151,12 +152,18 @@ parseIdentifier = do
 parseUnitExp :: Parser [UnitExp]
 parseUnitExp = do
     i <- parseIdentifier
-    either (\x -> fail $ "Invalid unit " ++ x) (\u -> do {
+    either (\x -> fail $ "Invalid unit " ++ x) (\dim -> do {
         requireOperator "^";
         expr <- parsePrimary;
         -- TODO Rounding is awkward
-        either (const $ fail "Could not evaluate a units power") (\p -> return $ pure $ UnitExp u (round p :: Int)) (evaluate expr)
-    } <|> return (pure $ UnitExp u 1)) $ unitFromString i
+        either (const $ fail "Could not evaluate a units power") (\p -> let e = round p :: Int in return ((\(UnitExp u e') -> UnitExp u $ e' * e) <$> dim)) (evaluate expr)
+    } <|> return dim) $ parseUnitSymbol i
+
+parseUnitSymbol :: String -> Either String [UnitExp]
+parseUnitSymbol i = do {
+    simpleUnit <- unitFromString i;
+    return [UnitExp simpleUnit 1]
+  } <> derivedUnitFromString i
 
 parseConversion :: Parser [UnitExp]
 parseConversion = requireToken OpenBracket *> parseUnitExp <* requireToken CloseBracket

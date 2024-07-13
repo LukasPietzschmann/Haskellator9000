@@ -17,8 +17,8 @@ dunitFromStringFun = mkName "derivedUnitFromString"
 
 generateDerivedUnits :: [DQuantity] -> Q [Dec]
 generateDerivedUnits dunitGroups = do
-    let allUnits = concatMap (\(DQuantity base units derived) -> (units,) <$> derived) dunitGroups
-        fromStringClauses = (mkFromStringClause  <$> allUnits) ++ [return $ Clause [VarP $ mkName "x"] (NormalB $ AppE (ConE 'Left) (VarE $ mkName "x")) []]
+    let allUnits = concatMap (\(DQuantity base units derived) -> (units,) <$> base:derived) dunitGroups
+        fromStringClauses = (mkFromStringClause <$> allUnits) ++ [return $ Clause [VarP $ mkName "x"] (NormalB $ AppE (ConE 'Left) (VarE $ mkName "x")) []]
     fromStringSig     <- sigD dunitFromStringFun [t|String -> Either String [UnitExp]|]
     fromStringFun     <- funD dunitFromStringFun fromStringClauses
     return [fromStringSig, fromStringFun]

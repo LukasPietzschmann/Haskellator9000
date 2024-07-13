@@ -153,7 +153,7 @@ mkMkUnitFun (UnitDef u _ _) = do
 mkConvertBaseClaus :: UnitDef -> UnitDef -> Q Clause
 mkConvertBaseClaus (UnitDef baseUnit _ _) (UnitDef u _ f) = do
     let pattern = ConP 'Value [] [VarP (mkName "v"), ConP unitExpADT [] [ConP (mkName u) [] [], VarP (mkName "e")]]
-    body <- normalB [|Value (v * ($(litE $ RationalL $ toRational f) ^ e)) (UnitExp $(conE $ mkName baseUnit) e)|]
+    body <- normalB [|Value (v * ($(litE $ RationalL $ toRational f) ** fromIntegral e)) (UnitExp $(conE $ mkName baseUnit) e)|]
     return $ Clause [pattern] body []
 
 mkConvertToClaus :: UnitDef -> UnitDef -> Q Clause
@@ -161,7 +161,7 @@ mkConvertToClaus (UnitDef baseUnit _ _) (UnitDef u _ f) = do
     let patVal  = ConP 'Value [] [VarP (mkName "v"), ConP (mkName baseUnit) [] []]
         patUnit = ConP (mkName u) [] []
         patExp  = VarP $ mkName "e"
-    body <- normalB [|Value (v / ($(litE $ RationalL $ toRational f) ^ e)) (UnitExp $(conE $ mkName u) e)|]
+    body <- normalB [|Value (v / ($(litE $ RationalL $ toRational f) ** fromIntegral e)) (UnitExp $(conE $ mkName u) e)|]
     return $ Clause [patVal, patUnit, patExp] body []
 
 mkConstructor :: UnitDef -> Con
