@@ -190,7 +190,6 @@ parseFactorOp = do
     op <- parseOperator
     lift $ put True
     case op of
-        "^" -> return Pow
         "*" -> return Mult
         "/" -> return Div
         x   -> fail $ "Invalid binary operator " ++ x
@@ -224,10 +223,18 @@ parseTerm = parseFactor >>= expr'
     } <|> return parsedLhs
 
 parseFactor :: Parser Expr
-parseFactor = parseUnary >>= factor'
+parseFactor = parsePower >>= factor'
     where factor' parsedLhs = do {
-        liftM2 (BinOp parsedLhs) parseFactorOp parseUnary >>= factor'
+        liftM2 (BinOp parsedLhs) parseFactorOp parsePower >>= factor'
     } <|> (BinOp parsedLhs Mult <$> parseExprInParens >>= factor') <|> return parsedLhs
+
+parsePower :: Parser Expr
+parsePower = parseUnary >>= power'
+    where power' parsedLhs = do {
+        requireOperator "^";
+        parsedRhs <- parseUnary;
+        power' $ BinOp parsedLhs Pow parsedRhs
+    } <|> return parsedLhs
 
 parseUnary :: Parser Expr
 parseUnary = liftM2 UnaryOp parseUnaryOp parsePrimary <|> parsePrimary
