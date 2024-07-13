@@ -23,10 +23,15 @@ library
       Math.SiConverter.Internal.AstProcessingSteps.DetermineDimension
       Math.SiConverter.Internal.AstProcessingSteps.Evaluate
       Math.SiConverter.Internal.AstProcessingSteps.Normalize
+      Math.SiConverter.Internal.DerivedUnits
       Math.SiConverter.Internal.Expr
       Math.SiConverter.Internal.Lexer
+      Math.SiConverter.Internal.Operators
       Math.SiConverter.Internal.Parser
+      Math.SiConverter.Internal.TH.DerivedUnitGeneration
+      Math.SiConverter.Internal.TH.OperGeneration
       Math.SiConverter.Internal.TH.UnitGeneration
+      Math.SiConverter.Internal.Units
       Math.SiConverter.Internal.Utils.Composition
       Math.SiConverter.Internal.Utils.Error
       Math.SiConverter.Internal.Utils.Stack

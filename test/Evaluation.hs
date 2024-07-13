@@ -5,7 +5,9 @@ import Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate)
 import Math.SiConverter.Internal.AstProcessingSteps.Normalize (normalize)
 import Math.SiConverter.Internal.Expr
 import Math.SiConverter.Internal.Lexer (scan)
+import Math.SiConverter.Internal.Operators
 import Math.SiConverter.Internal.Parser (parse)
+import Math.SiConverter.Internal.Units
 import Math.SiConverter.Internal.Utils.Error
 
 import Test.Tasty

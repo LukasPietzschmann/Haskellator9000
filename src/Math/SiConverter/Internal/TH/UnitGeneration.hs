@@ -3,11 +3,9 @@
 -- | Generate the unit types and function to work with them
 
 module Math.SiConverter.Internal.TH.UnitGeneration (
-      OperatorDef (..)
-    , Quantity (..)
+      Quantity (..)
     , UnitDef (..)
     , Value (..)
-    , generateOperators
     , generateUnits
     ) where
 
@@ -15,26 +13,15 @@ import Data.Char (toLower)
 
 import Language.Haskell.TH
 
-class Showable a where
-    name :: a -> String
-    abbreviation :: a -> String
-
 -- | Definition of a Unit
 data UnitDef = UnitDef String String Double
-
-instance Showable UnitDef where
-    name (UnitDef n _ _) = n
-    abbreviation (UnitDef _ a _) = a
 
 -- | A quantity made of a base unit and other related units
 data Quantity = Quantity UnitDef [UnitDef]
 
--- | Definition of a operator
-data OperatorDef = OperDef String String
-
-instance Showable OperatorDef where
-    name (OperDef n _) = n
-    abbreviation (OperDef _ a) = a
+-- | A derived quantity. Works in the same way as 'Quantity', but with an additional
+-- dimension representing it.
+-- data DQuantity = DQuantity UnitDef [UnitExp] [UnitDef]
 
 data Value u = Value { value :: Double
                      , unit  :: u
@@ -48,9 +35,6 @@ unitADT = mkName "Unit"
 
 unitExpADT :: Name
 unitExpADT = mkName "UnitExp"
-
-operADT :: Name
-operADT = mkName "Op"
 
 unitFromStringFun :: Name
 unitFromStringFun = mkName "unitFromString"
@@ -177,39 +161,17 @@ mkConvertToClaus (UnitDef baseUnit _ _) (UnitDef u _ f) = do
     body <- normalB [|Value (v / ($(litE $ RationalL $ toRational f) ^ e)) (UnitExp $(conE $ mkName u) e)|]
     return $ Clause [patVal, patUnit, patExp] body []
 
--- | Generate the operator types and function to work with them. Imagine the following call: @generateOperators [OperDef "Plus" "+", OperDef "Minus" "-"]@.
--- This function will then generate the following code:
---
---     * A data type with all the operators
---
--- > data Op = Plus | Minus
---
---     * An instance of Show for the data type
---
--- > instance Show Op where
--- >   show Plus = "+"
--- >   show Minus = "-"
-generateOperators :: [OperatorDef] -> Q [Dec]
-generateOperators operators = do
-  let operatorConstructors = mkConstructor <$> operators
-      showClauses          = mkShowClause <$> operators
+mkConstructor :: UnitDef -> Con
+mkConstructor (UnitDef n _ _) = NormalC (mkName n) []
 
-      dataDec              = DataD [] operADT [] Nothing operatorConstructors [DerivClause Nothing [ConT ''Enum, ConT ''Bounded]]
-      showInstance         = InstanceD Nothing [] (AppT (ConT ''Show) (ConT operADT)) [FunD 'show showClauses]
-
-  return [dataDec, showInstance]
-
-mkConstructor :: Showable a => a -> Con
-mkConstructor a = NormalC (mkName $ name a) []
-
-mkShowClause :: Showable a => a -> Clause
-mkShowClause a =
-  let pattern = ConP (mkName $ name a) [] []
-      body    = NormalB $ LitE $ StringL $ abbreviation a
+mkShowClause :: UnitDef -> Clause
+mkShowClause (UnitDef n a _) =
+  let pattern = ConP (mkName n) [] []
+      body    = NormalB $ LitE $ StringL a
   in Clause [pattern] body []
 
-mkFromStringClause :: Showable a => a -> Clause
-mkFromStringClause a =
-  let pattern = LitP $ StringL $ abbreviation a
-      body    = NormalB $ AppE (ConE 'Right) (ConE $ mkName $ name a)
+mkFromStringClause :: UnitDef -> Clause
+mkFromStringClause (UnitDef n a _) =
+  let pattern = LitP $ StringL a
+      body    = NormalB $ AppE (ConE 'Right) (ConE $ mkName n)
   in Clause [pattern] body []

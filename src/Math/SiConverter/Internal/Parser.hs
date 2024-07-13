@@ -37,6 +37,8 @@ import GHC.Base (Alternative (empty))
 import Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate)
 import Math.SiConverter.Internal.Expr
 import Math.SiConverter.Internal.Lexer (Token (..), Tokens)
+import Math.SiConverter.Internal.Operators (Op (..))
+import Math.SiConverter.Internal.Units (UnitExp (..), multiplier, unitFromString)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (ParseError))
 

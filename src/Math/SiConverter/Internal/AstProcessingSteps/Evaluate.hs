@@ -4,9 +4,11 @@ module Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate) where
 
 import Control.Monad.Except (throwError)
 
-import Math.SiConverter.Internal.Expr (Bindings, Expr (..), Op (..), SimpleAstFold,
-           Thunk (..), UnitExp, Value (..), bindVar, bindVars, getVarBinding,
-           partiallyFoldExprM, runAstFold, runInNewScope)
+import Math.SiConverter.Internal.Expr (Bindings, Expr (..), SimpleAstFold, Thunk (..),
+           Value (..), bindVar, bindVars, getVarBinding, partiallyFoldExprM, runAstFold,
+           runInNewScope)
+import Math.SiConverter.Internal.Operators (Op (..))
+import Math.SiConverter.Internal.Units (UnitExp)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
 

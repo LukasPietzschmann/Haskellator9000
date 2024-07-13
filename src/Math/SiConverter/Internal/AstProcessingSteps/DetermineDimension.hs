@@ -9,10 +9,11 @@ import Control.Monad.Except (MonadError (throwError))
 
 import Data.List (intercalate)
 
-import Math.SiConverter.Internal.Expr (Bindings, Expr (..), Op (..), SimpleAstFold,
-           Thunk (..), Unit (..), UnitExp (UnitExp, dimUnit, power), Value (Value),
-           bindVars, getVarBinding, isMultiplier, partiallyFoldExprM, runAstFold,
+import Math.SiConverter.Internal.Expr (Bindings, Expr (..), SimpleAstFold, Thunk (..),
+           Value (Value), bindVars, getVarBinding, partiallyFoldExprM, runAstFold,
            runInNewScope)
+import Math.SiConverter.Internal.Operators (Op (..))
+import Math.SiConverter.Internal.Units (Unit (..), UnitExp (..), isMultiplier)
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (..))
 
 -- | The dimension of a quantity is given by a set of units raised to a power. Those

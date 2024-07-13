@@ -10,6 +10,7 @@ import Math.SiConverter.Internal.AstProcessingSteps.Normalize
 import Math.SiConverter.Internal.Expr
 import Math.SiConverter.Internal.Lexer
 import Math.SiConverter.Internal.Parser
+import Math.SiConverter.Internal.Units
 import Math.SiConverter.Internal.Utils.Error
 
 type EvalValue = Value Dimension

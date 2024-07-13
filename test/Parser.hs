@@ -5,15 +5,12 @@ import Control.Monad (liftM3, (>=>))
 
 import Data.Either (fromRight)
 
-import Math.SiConverter.Internal.Expr
-    ( Expr(BinOp, UnaryOp, Val),
-      Op(Minus, Mult, Plus, Pow),
-      Value(Value),
-      multiplier,
-      Unit,
-      UnitExp(..) )
+import Math.SiConverter.Internal.Expr (Expr (BinOp, UnaryOp, Val), Value (Value))
 import Math.SiConverter.Internal.Lexer (scan)
+import Math.SiConverter.Internal.Operators (Op (Minus, Mult, Plus, Pow))
 import Math.SiConverter.Internal.Parser (parse)
+import Math.SiConverter.Internal.Units (multiplier)
+import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error)
 
 import Test.Tasty
