@@ -88,7 +88,9 @@ variables = testGroup "Variables" [
     testCase "Nested assignment"
         $ calc "M = 60 -> M * (v = 3 -> v)" @?= "180.0",
     testCase "Nested assignment with units"
-        $ calc "M = 60kg -> M * (a = 3m/s^2 -> a)" @?= "180.0kg*m*s^-2"
+        $ calc "M = 60kg -> M * (a = 3m/s^2 -> a)" @?= "180.0kg*m*s^-2",
+    testCase "Assignment with expression"
+        $ calc "F = 1t * 2m/s^2, d = 10m -> F * d" @?= "20000.0kg*m^2*s^-2"
     ]
 
 calc::String->String
