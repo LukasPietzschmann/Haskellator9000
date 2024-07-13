@@ -5,38 +5,43 @@ import Control.Monad (liftM3, (>=>))
 
 import Data.Either (fromRight)
 
-import Math.SiConverter.Internal.Expr (Expr (BinOp, UnaryOp, Val),
-           Op (Minus, Mult, Plus, Pow), Value (Value), multiplier)
+import Math.SiConverter.Internal.Expr
+    ( Expr(BinOp, UnaryOp, Val),
+      Op(Minus, Mult, Plus, Pow),
+      Value(Value),
+      multiplier,
+      Unit,
+      UnitExp(..) )
 import Math.SiConverter.Internal.Lexer (scan)
 import Math.SiConverter.Internal.Parser (parse)
-import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error)
 
 import Test.Tasty
 import Test.Tasty.HUnit (testCase, (@?=))
 import Test.Tasty.QuickCheck (Arbitrary (arbitrary), Gen, arbitraryBoundedEnum, choose,
-           frequency, testProperty)
+           frequency, testProperty, suchThat)
+import Math.SiConverter.Internal.Expr (Unit(Multiplier))
 
 parserTests :: TestTree
 parserTests = testGroup "ParserTests" [expressionParsing, parserProperties]
 
 expressionParsing :: TestTree
 expressionParsing = testGroup "Simple expression parsing" [
-    testCase "Integer multiplier" 
+    testCase "Integer multiplier"
       $ parseString "1" @?= Right (Val (Value 1 $ multiplier 1)),
-    testCase "Floating-point multiplier" 
+    testCase "Floating-point multiplier"
       $ parseString "1.5" @?= Right (Val (Value 1.5 $ multiplier 1)),
-    testCase "Addition" 
+    testCase "Addition"
       $ parseString "1 + 2" @?= Right (BinOp (Val $ Value 1 $ multiplier 1) Plus (Val $ Value 2 $ multiplier 1)),
-    testCase "Precedence (* before +)" 
+    testCase "Precedence (* before +)"
       $ parseString "1 + 2 * 3" @?= Right (BinOp (Val $ Value 1 $ multiplier 1) Plus (BinOp (Val $ Value 2 $ multiplier 1) Mult (Val $ Value 3 $ multiplier 1))),
-    testCase "Precedence (^ before *)" 
+    testCase "Precedence (^ before *)"
       $ parseString "2 ^ 3 * 4" @?= Right (BinOp (BinOp (Val $ Value 2 $ multiplier 1) Pow (Val $ Value 3 $ multiplier 1)) Mult (Val $ Value 4 $ multiplier 1)),
-    testCase "Changed precedence (parentheses)" 
+    testCase "Changed precedence (parentheses)"
       $ parseString "(1 + 2) * 3" @?= Right (BinOp (BinOp (Val $ Value 1 $ multiplier 1) Plus (Val $ Value 2 $ multiplier 1)) Mult (Val $ Value 3 $ multiplier 1)),
-    testCase "Minus and unary minus" 
+    testCase "Minus and unary minus"
       $ parseString "1--2" @?= Right (BinOp (Val $ Value 1 $ multiplier 1) Minus (UnaryOp Minus (Val $ Value 2 $ multiplier 1))),
-    testCase "Multiplication operand can be omitted" 
+    testCase "Multiplication operand can be omitted"
       $ parseString "2(3+1)" @?= Right (BinOp (Val $ Value 2 $ multiplier 1) Mult (BinOp (Val $ Value 3 $ multiplier 1) Plus (Val $ Value 1 $ multiplier 1)))
   ]
 
@@ -57,9 +62,23 @@ genNumber = do
     n <- choose (0, 999999)
     return $ fromInteger n / 1000.0
 
+genInt :: Gen Int
+genInt = do
+    n <- choose (0, 99)
+    return $ fromInteger n
+
+instance Arbitrary Unit where
+    arbitrary = arbitraryBoundedEnum `suchThat` (/= Multiplier)
+
 instance Arbitrary Expr where
-  arbitrary = let randomNumber = flip (Val .: Value) (multiplier 1) <$> genNumber in frequency [
-      (10, randomNumber),
+  arbitrary = let randomValue = do {
+     val <- genNumber;
+     ex <- genInt;
+     unit <- arbitrary;
+     return $ Val $ Value val (UnitExp unit ex)
+   }
+    in frequency [
+      (10, randomValue),
       (6, liftM3 BinOp arbitrary arbitrary arbitrary),
-      (1, UnaryOp Minus <$> randomNumber)
+      (1, UnaryOp Minus <$> randomValue)
     ]

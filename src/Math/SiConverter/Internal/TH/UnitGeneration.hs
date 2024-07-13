@@ -112,7 +112,7 @@ generateUnits unitGroups = do
       convertBaseClauses = concatMap (\(Quantity b us) -> mkConvertBaseClaus b <$> b:us) unitGroups
       convertToClauses   = concatMap (\(Quantity b us) -> mkConvertToClaus b <$> b:us) unitGroups
 
-      dataDec            = DataD [] unitADT [] Nothing unitConstructors [DerivClause Nothing [ConT ''Eq]]
+      dataDec            = DataD [] unitADT [] Nothing unitConstructors [DerivClause Nothing [ConT ''Eq, ConT ''Bounded, ConT ''Enum]]
       showInstance       = InstanceD Nothing [] (AppT (ConT ''Show) (ConT unitADT)) [FunD 'show showClauses]
       fromStringFunction = FunD unitFromStringFun fromStringClauses
 
@@ -138,7 +138,6 @@ genUnitExp = [d|
   instance Eq UnitExp where
     (UnitExp u1 i1) == (UnitExp u2 i2) = u1 == u2 && i1 == i2
   |]
-
 
 generateIsUnitFuns :: [Quantity] -> Q [Dec]
 generateIsUnitFuns unitGroups = concat <$> mapM mkIsUnitFun (concatMap (\(Quantity b us) -> b:us) unitGroups)
