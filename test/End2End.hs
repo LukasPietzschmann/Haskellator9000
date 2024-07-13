@@ -7,7 +7,7 @@ import Test.Tasty.HUnit
 
 -- TODO Add examples using derived units!
 end2endTests :: TestTree
-end2endTests = testGroup "End-to-End Tests" [testsFromSpec, physics, calculations]
+end2endTests = testGroup "End-to-End Tests" [testsFromSpec, arithmetic, units, physics, unitConversion, variables]
 
 -- | Test cases based on the project description
 -- Decimal places are allowed (discussed in our meeting on 2024-07-09)
@@ -18,6 +18,28 @@ testsFromSpec = testGroup "Tests from the Project description" [
     testCase "1 = 1" $ calc "1" @?= "1.0",
     testCase "1m + 2 m = 3m" $ calc "1m + 2 m" @?= "3.0m",
     testCase "1000m/5s + 3m/s" $ calc "1000m/5s + 3m/s" @?= "203.0m/s"
+    ]
+
+arithmetic :: TestTree
+arithmetic = testGroup "Arithmetic" [
+    testCase "Arithmetic expression"
+        $ calc "2 * (3 + 4) / 7" @?= "2.0",
+    testCase "Arithmetic expression"
+        $ calc "2 * (3 + 4) / 7" @?= "2.0",
+    testCase "Power!"                                         -- TODO See issue #32
+        $ calc "2^3" @?= "8.0",
+    testCase "Fractional Power!"
+        $ calc "2^3.5" @?= "11.313708498984761",
+    testCase "Arithmetic expression with implicit multiplier" -- TODO See issue #30
+        $ calc "2(3 + 4)/7" @?= "2.0"
+    ]
+
+units :: TestTree
+units = testGroup "Arithmetic" [
+    testCase "Simple unit calculation"
+        $ calc "(30km) / (2km/h)" @?= "54000.0s",
+    testCase "Simple unit calculation without parenthesis"    -- TODO See issue #31
+        $ calc "30km / 2km/h" @?= "54000.0s"
     ]
 
 physics :: TestTree
@@ -35,27 +57,8 @@ physics = testGroup "Some classics from physics class" [
         $ calc "50kg*m*s^-2 * 10m" @?= "500kg*m^2*s^-2"
     ]
 
-calculations :: TestTree
-calculations = testGroup "Misc Tests" [
-    -- Arithmetic
-    testCase "Arithmetic expression"
-        $ calc "2 * (3 + 4) / 7" @?= "2.0",
-    testCase "Arithmetic expression"
-        $ calc "2 * (3 + 4) / 7" @?= "2.0",
-    testCase "Power!"                                         -- TODO See issue #32
-        $ calc "2^3" @?= "8.0",
-    testCase "Fractional Power!"
-        $ calc "2^3.5" @?= "11.313708498984761",
-    testCase "Arithmetic expression with implicit multiplier" -- TODO See issue #30
-        $ calc "2(3 + 4)/7" @?= "2.0",
-
-    -- Calculations with units
-    testCase "Simple unit calculation"
-        $ calc "(30km) / (2km/h)" @?= "54000.0s",
-    testCase "Simple unit calculation without parenthesis"    -- TODO See issue #31
-        $ calc "30km / 2km/h" @?= "54000.0s",
-
-    -- Unit conversion
+unitConversion :: TestTree
+unitConversion = testGroup "Unit Conversion" [
     testCase "Simple unit conversion I"
         $ calc "2000m [km]" @?= "2.0km",
     testCase "Simple unit conversion II"
@@ -69,9 +72,11 @@ calculations = testGroup "Misc Tests" [
     testCase "Conversion after calculation II"
         $ calc "(30km) / (2km/h) [h]" @?= "15.0h",
     testCase "Conversion after calculation III"
-        $ calc "30km / 2km/h [h]" @?= "15.0h",
+        $ calc "30km / 2km/h [h]" @?= "15.0h"
+    ]
 
-    -- Variables
+variables :: TestTree
+variables = testGroup "Variables" [
     testCase "Simple assignment"
         $ calc "m = 800 -> m" @?= "800.0",
     testCase "Assignment with unit"
