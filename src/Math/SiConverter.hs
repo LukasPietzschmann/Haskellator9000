@@ -10,7 +10,6 @@ import Math.SiConverter.Internal.AstProcessingSteps.Normalize
 import Math.SiConverter.Internal.Expr
 import Math.SiConverter.Internal.Lexer
 import Math.SiConverter.Internal.Parser
-import Math.SiConverter.Internal.Units
 import Math.SiConverter.Internal.Utils.Error
 
 type EvalValue = Value Dimension
@@ -23,11 +22,16 @@ calculate :: String                 -- ^ The expression to evaluate
           -> Either Error EvalValue -- ^ The result of the expression
 calculate input = do
     ast <- getAst input
-    dim <- determineDimension ast
-    evaluateWithConv ast dim
+    evaluateWithConv ast
 
-evaluateWithConv :: Expr -> Dimension -> Either Error EvalValue
-evaluateWithConv = ev where -- TODO: to conversion (we can reuse code from normalize)
-    -- ev (Conversion expr (UnitExp newUnit _)) [UnitExp oldUnit e] = evaluate expr >>= \r -> return $ Value (value $ doConversion r) [unit $ doConversion r]
-    --     where doConversion r = convertTo (Value r oldUnit) newUnit e
-    ev expr dim                                                  = evaluate expr >>= \r -> return $ Value r dim
+evaluateWithConv :: Expr -> Either Error EvalValue
+evaluateWithConv = ev where
+    ev (Conversion expr target) = do
+        r <- evaluate expr
+        d <- determineDimension expr
+        let baseV = convertDimensionToBase $ Value r d
+        return $ convertDimensionTo baseV target
+    ev expr                     = do
+        r <- evaluate expr
+        d <- determineDimension expr
+        return $ Value r d
