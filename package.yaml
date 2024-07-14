@@ -32,7 +32,9 @@ ghc-options:
 - -Wpartial-fields
 - -Wredundant-constraints
 - -ddump-splices
-- -XDeriveLift
+
+default-extensions:
+- DeriveLift
 
 library:
   source-dirs: src
