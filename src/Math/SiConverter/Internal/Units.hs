@@ -9,6 +9,7 @@ $(generateUnits
   [ Quantity (UnitDef "Multiplier" "" 1) [], -- Unitless unit
     Quantity (UnitDef "Meter" "m" 1) -- Length
     [ UnitDef "Kilometer" "km" 1000
+    , UnitDef "Decimeter" "dm" 0.1
     , UnitDef "Centimeter" "cm" 0.01
     , UnitDef "Millimeter" "mm" 0.001
     , UnitDef "Micrometer" "µm" 1e-6
