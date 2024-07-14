@@ -1,11 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Math.SiConverter.Internal.DerivedUnits where
+module Math.SiConverter.Internal.DerivedUnits(derivedUnitFromString) where
 
 import Math.SiConverter.Internal.TH.DerivedUnitGeneration (DQuantity (..),
            generateDerivedUnits)
 import Math.SiConverter.Internal.TH.UnitGeneration (UnitDef (..))
-import Math.SiConverter.Internal.Units (second, meter, kilogram)
+import Math.SiConverter.Internal.Units (second)
+--import Math.SiConverter.Internal.Units (second, meter, kilogram)
 
 $(generateDerivedUnits
   [ DQuantity (UnitDef "Hertz" "Hz" 1) (second (-1))

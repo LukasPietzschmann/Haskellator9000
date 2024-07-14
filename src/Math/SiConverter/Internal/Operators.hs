@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Math.SiConverter.Internal.Operators where
+module Math.SiConverter.Internal.Operators(Op (..)) where
 
 import Math.SiConverter.Internal.TH.OperGeneration (OperatorDef (..), generateOperators)
 
