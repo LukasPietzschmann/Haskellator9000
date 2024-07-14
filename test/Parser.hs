@@ -10,7 +10,6 @@ import Math.SiConverter.Internal.Lexer (scan)
 import Math.SiConverter.Internal.Operators (Op (Minus, Mult, Plus, Pow))
 import Math.SiConverter.Internal.Parser (parse)
 import Math.SiConverter.Internal.Units (Unit (..), UnitExp (..), multiplier)
-import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error)
 
 import Test.Tasty

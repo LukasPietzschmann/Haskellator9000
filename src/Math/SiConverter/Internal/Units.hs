@@ -1,7 +1,18 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
-module Math.SiConverter.Internal.Units (Unit (..), UnitExp (..), convertToBase, isMultiplier, multiplier, meter, second, kilogram, unitFromString) where
+module Math.SiConverter.Internal.Units (
+      Unit (..)
+    , UnitExp (..)
+    , convertTo
+    , convertToBase
+    , isMultiplier
+    , kilogram
+    , meter
+    , multiplier
+    , second
+    , unitFromString
+    ) where
 
 import Math.SiConverter.Internal.TH.UnitGeneration (Quantity (..), UnitDef (..),
            generateUnits)
