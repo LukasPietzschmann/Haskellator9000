@@ -19,7 +19,7 @@ $(generateDerivedUnits
 --    [ UnitDef "Kilonewton" "kN" 1000,
 --      UnitDef "Meganewton" "MN" 1e6,
 --      UnitDef "Giganewton" "GN" 1e9,
---      UnitDef "Teranewton" "GN" 1e12
+--      UnitDef "Teranewton" "TN" 1e12
 --    ],
 --    DQuantity (UnitDef "Pascal" "Pa" 1) (kilogram 1 * meter (-1) * second (-2))
 --    [ UnitDef "Hectopascal" "hPa" 100,
