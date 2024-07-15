@@ -69,7 +69,7 @@ physics = testGroup "Some classics from physics class" [
 physicsDerived :: TestTree
 physicsDerived = testGroup "Physics equations using derived units" [
     testCase "Pressure is force applied over an area: P = F / A"
-        $ calc "F = 0.2 kN, A = 0.5m^2 -> F/A" @?= "400.0kg*m^-1*s^-2",
+        $ calc "F = 0.2 kN, A = 0.5m^2 -> F/A" @?= "0.4kg*m^-1*s^-2",
     testCase "Power as energy over time: P = E / t"
         $ calc "E = 1000J, t=50s -> E / t"     @?= "20.0kg*m^2*s^-3",
     testCase "Mechanical power: P = F / v"

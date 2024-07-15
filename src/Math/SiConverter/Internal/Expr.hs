@@ -20,7 +20,6 @@ import Control.Applicative ((<|>))
 import Control.Monad.Except (ExceptT, MonadError (throwError), runExceptT)
 import Control.Monad.State (State, evalState, get, modify)
 
-import Data.List (intercalate)
 import Data.Map (Map, insert, (!?))
 
 import Math.SiConverter.Internal.Operators
