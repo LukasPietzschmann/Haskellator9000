@@ -48,7 +48,7 @@ units = testGroup "Units" [
     testCase "Base units are left as-is I"
         $ calc "5s^2" @?= "5.0s^2",
     testCase "Base units are left as-is II"
-        $ calc "5s^-2" @?= "5.0s^-2",
+        $ calc "5s^(-2)" @?= "5.0s^-2",
     testCase "Units get normalized I"
         $ calc "5min^2" @?= "18000.0s^2",
     testCase "Units get normalized II"
@@ -73,7 +73,7 @@ physics = testGroup "Some classics from physics class" [
     testCase "Kinetic Energy: KE=1/2mv^2"
         $ calc "1/2*800kg*(10m/s)^2"  @?= "40000.0kg*m^2*s^-2",
     testCase "Work done: W = Fd"
-        $ calc "50kg*m*s^-2 * 10m"    @?= "500.0kg*m^2*s^-2"
+        $ calc "50kg*m*s^(-2) * 10m"    @?= "500.0kg*m^2*s^-2"
     ]
 
 physicsDerived :: TestTree
