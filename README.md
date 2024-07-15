@@ -8,19 +8,19 @@
     - [x] Multiplication, Division
     - [x] Power
     - [x] Unary negation
-    - [ ] Explicit unit conversion
+    - [x] Explicit unit conversion
 - SI base units
     - [x] Time (ns, µs, ms, s, min, h, d)
     - [x] Length (nm, µm, mm, cm, m, km)
     - [x] Mass (ng, µg, mg, g, kg, t)
 - SI derived units
-    - [ ] Area (m², dm², cm², mm², a, ha, km²)
-    - [ ] Volume (m³, dm³, cm³, mm³, l, ml, cl, dl, km³)
-    - [ ] Velocity (combination of length and time)
-    - [ ] Acceleration (combination of length and time²)
-    - [ ] Force (N, m/s², kN)
-    - [ ] Pressure (Pa, hPa)
-    - [ ] Frequency (Hz, kHz, MHz, GHz)
+    - [x] Area (m², dm², cm², mm², a, ha, km²)
+    - [x] Volume (m³, dm³, cm³, mm³, l, ml, cl, dl, km³)
+    - [x] Velocity (combination of length and time)
+    - [x] Acceleration (combination of length and time²)
+    - [x] Force (N, m/s², kN)
+    - [x] Pressure (Pa, hPa)
+    - [x] Frequency (Hz, kHz, MHz, GHz)
     - [ ] Energy (J, kJ, MJ, Wh, KWh, MWh, GWh, TWh)
     - [ ] Power (W, mW, kW, MW, GW, TW)
 
