@@ -92,8 +92,8 @@ unitConversion = testGroup "Unit Conversion" [
         $ calc "2000m [km]"             @?= "2.0km",
     testCase "Simple unit conversion II"
         $ calc "54000s [h]"             @?= "15.0h",
-    testCase "Compound unit conversion"                       -- TODO Should this be possible?
-        $ calc "2m/s [km/h]"            @?= "7.2km/h",
+    testCase "Compound unit conversion"
+        $ calc "2m/s [km/h]"            @?= "7.2km*h^-1",
     testCase "Unit conversion with exponent"
         $ calc "2km^2 [m^2]"            @?= "2000000.0m^2",
     testCase "Conversion after calculation I"
