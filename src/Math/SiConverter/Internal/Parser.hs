@@ -34,12 +34,14 @@ import Data.Bifunctor (first)
 
 import GHC.Base (Alternative (empty))
 
-import Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate)
+import Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate, mergeUnits,
+           subtractUnits)
 import Math.SiConverter.Internal.DerivedUnits (derivedUnitFromString)
 import Math.SiConverter.Internal.Expr
 import Math.SiConverter.Internal.Lexer (Token (..), Tokens)
 import Math.SiConverter.Internal.Operators (Op (..))
-import Math.SiConverter.Internal.Units (UnitExp (..), multiplier, unitFromString)
+import Math.SiConverter.Internal.Units (Dimension, UnitExp (..), multiplier,
+           unitFromString)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (ParseError))
 
@@ -149,7 +151,24 @@ parseIdentifier = do
     Identifier i <- satisfy isIdentifier
     return i
 
-parseUnitExp :: Parser [UnitExp]
+parseDimension :: Parser Dimension
+parseDimension = parseUnitExp >>= dim'
+    where dim' parsedLhs = do {
+        op <- parseFactorOp;
+        case op of
+            Mult -> do
+                parsedRhs <- parseUnitExp
+                let newDim = mergeUnits parsedLhs parsedRhs
+                dim' newDim
+            Div -> do
+                parsedRhs <- parseUnitExp
+                let newDim = subtractUnits parsedLhs parsedRhs
+                dim' newDim
+            _ -> fail "Invalid factor operator"
+    } <|> return parsedLhs
+
+
+parseUnitExp :: Parser Dimension
 parseUnitExp = do
     i <- parseIdentifier
     either (\x -> fail $ "Invalid unit " ++ x) (\dim -> do {
@@ -159,14 +178,14 @@ parseUnitExp = do
         either (const $ fail "Could not evaluate a units power") (\p -> let e = round p :: Int in return ((\(UnitExp u e') -> UnitExp u $ e' * e) <$> dim)) (evaluate expr)
     } <|> return dim) $ parseUnitSymbol i
 
-parseUnitSymbol :: String -> Either String [UnitExp]
+parseUnitSymbol :: String -> Either String Dimension
 parseUnitSymbol i = do {
     simpleUnit <- unitFromString i;
     return [UnitExp simpleUnit 1]
   } <> derivedUnitFromString i
 
-parseConversion :: Parser [UnitExp]
-parseConversion = requireToken OpenBracket *> parseUnitExp <* requireToken CloseBracket
+parseConversion :: Parser Dimension
+parseConversion = requireToken OpenBracket *> parseDimension <* requireToken CloseBracket
 
 parseExprInParens :: Parser Expr
 parseExprInParens = requireToken OpenParen *> parseExpr <* requireToken CloseParen
@@ -243,11 +262,4 @@ parsePrimary :: Parser Expr
 parsePrimary = parseExprInParens <|> parseValue
 
 parseValue :: Parser Expr
-parseValue = liftM2 (Val .: Value) parseNumber (parseUnitExp <|> return (multiplier 1)) <|> parseValuelessUnit <|> Var <$> parseIdentifier
-
-parseValuelessUnit :: Parser Expr
-parseValuelessUnit = do
-    isInFactor <- lift get
-    if isInFactor
-        then Val . Value 1 <$> parseUnitExp
-        else fail "Value-less units are only allowed in factors"
+parseValue = liftM2 (Val .: Value) parseNumber (parseDimension <|> return (multiplier 1)) <|> Var <$> parseIdentifier

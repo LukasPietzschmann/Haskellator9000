@@ -1,7 +1,12 @@
 {-# LANGUAGE LambdaCase #-}
 
 -- | Evaluate the expression tree
-module Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate, execute) where
+module Math.SiConverter.Internal.AstProcessingSteps.Evaluate (
+      evaluate
+    , execute
+    , mergeUnits
+    , subtractUnits
+    ) where
 
 import Control.Monad.Except (throwError)
 

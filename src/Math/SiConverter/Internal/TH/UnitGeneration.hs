@@ -22,7 +22,7 @@ data Quantity = Quantity UnitDef [UnitDef]
 
 -- | A derived quantity. Works in the same way as 'Quantity', but with an additional
 -- dimension representing it.
--- data DQuantity = DQuantity UnitDef [UnitExp] [UnitDef]
+-- data DQuantity = DQuantity UnitDef Dimension [UnitDef]
 
 data Value u = Value { value :: Double
                      , unit  :: u
