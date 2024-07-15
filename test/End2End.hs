@@ -45,6 +45,16 @@ arithmetic = testGroup "Arithmetic" [
 
 units :: TestTree
 units = testGroup "Units" [
+    testCase "Base units are left as-is I"
+        $ calc "5s^2" @?= "5.0s^2",
+    testCase "Base units are left as-is II"
+        $ calc "5s^-2" @?= "5.0s^-2",
+    testCase "Units get normalized I"
+        $ calc "5min^2" @?= "18000.0s^2",
+    testCase "Units get normalized II"
+        $ calc "5km^3" @?= "5.0e9m^3",
+    testCase "Units get normalized III"
+        $ calc "1ns^3" @?= "1.0000000000000002e-27s^3",
     testCase "Simple unit calculation"
         $ calc "(30km) / (2km/h)" @?= "54000.0s",
     testCase "Simple unit calculation without parenthesis"
