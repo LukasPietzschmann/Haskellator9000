@@ -1,8 +1,9 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleInstances, TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 module Math.SiConverter.Internal.Units (
-      Unit (..)
+      Dimension
+    , Unit (..)
     , UnitExp (..)
     , combineValues
     , convertTo
@@ -14,6 +15,7 @@ module Math.SiConverter.Internal.Units (
     , multiplier
     , second
     , unitFromString
+    , (=~=)
     ) where
 
 import Math.SiConverter.Internal.TH.UnitGeneration (Quantity (..), UnitDef (..),
@@ -64,6 +66,14 @@ $(generateUnits
 mapValue :: (Double -> Double) -> Value u -> Value u
 mapValue f (Value v u) = Value (f v) u
 
-combineValues :: Eq u => (Double -> Double -> Double) -> Value u -> Value u -> Value u
-combineValues f (Value v1 u1) (Value v2 u2) | u1 == u2  = Value (v1 `f` v2) u1
+combineValues :: SetEq u => (Double -> Double -> Double) -> Value u -> Value u -> Value u
+combineValues f (Value v1 u1) (Value v2 u2) | u1 =~= u2  = Value (v1 `f` v2) u1
                                             | otherwise = error "Cannot map values with different units"
+
+class SetEq a where
+    (=~=) :: a -> a -> Bool
+
+type Dimension = [UnitExp]
+
+instance SetEq Dimension where
+    (=~=) a b = all (`elem` b) a && all (`elem` a) b

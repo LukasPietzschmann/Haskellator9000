@@ -12,7 +12,7 @@ import Math.SiConverter.Internal.Parser
 import Math.SiConverter.Internal.Units
 import Math.SiConverter.Internal.Utils.Error
 
-type EvalValue = Value [UnitExp]
+type EvalValue = Value Dimension
 
 getAst :: String -> Either Error Expr
 getAst = scan >=> parse >=> normalize
