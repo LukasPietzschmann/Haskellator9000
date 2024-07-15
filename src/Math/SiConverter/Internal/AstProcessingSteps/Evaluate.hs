@@ -1,49 +1,79 @@
 {-# LANGUAGE LambdaCase #-}
+
 -- | Evaluate the expression tree
-module Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate) where
+module Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate, execute) where
 
 import Control.Monad.Except (throwError)
+
+import Data.Functor ((<&>))
 
 import Math.SiConverter.Internal.Expr (Bindings, Expr (..), SimpleAstFold, Thunk (..),
            Value (..), bindVar, bindVars, getVarBinding, partiallyFoldExprM, runAstFold,
            runInNewScope)
 import Math.SiConverter.Internal.Operators (Op (..))
-import Math.SiConverter.Internal.Units (UnitExp)
-import Math.SiConverter.Internal.Utils.Composition ((.:))
+import Math.SiConverter.Internal.Units (Unit (..), UnitExp (..), combineValues,
+           mapValue)
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
 
--- | Evaluate the expression tree. This requires all the units in the tree to be converted to their respective base units.
-evaluate :: Expr                -- ^ the 'Expr' tree to evaluate
-         -> Either Error Double -- ^ the resulting value
-evaluate = runAstFold . evaluate'
+evaluate :: Expr -> Either Error Double
+evaluate expr = execute expr <&> value
 
-evaluate' :: Expr -> SimpleAstFold Double
-evaluate' = partiallyFoldExprM (return . value) evalBinOp evalUnaryOp evalConversion evalVarBinds evalVar
+execute :: Expr -> Either Error (Value [UnitExp])
+execute = runAstFold . execute'
 
-evalBinOp :: Double -> Op -> Double -> SimpleAstFold Double
-evalBinOp lhs Plus  rhs = return $ lhs + rhs
-evalBinOp lhs Minus rhs = return $ lhs - rhs
-evalBinOp lhs Mult  rhs = return $ lhs * rhs
-evalBinOp lhs Div   rhs = return $ lhs / rhs
-evalBinOp lhs Pow   rhs = return $ lhs ** rhs
-evalBinOp _   op    _   = throwError $ Error ImplementationError $ "Unknown binary operator " ++ show op
+execute' :: Expr -> SimpleAstFold (Value [UnitExp])
+execute' = partiallyFoldExprM execVal execBinOp execUnaryOp execConversion execVarBinds execVar
 
-evalUnaryOp :: Op -> Double -> SimpleAstFold Double
-evalUnaryOp UnaryMinus rhs = return $ -rhs
-evalUnaryOp op         _   = throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
+execVal :: Value [UnitExp] -> SimpleAstFold (Value [UnitExp])
+execVal = return
 
-evalConversion :: Double -> [UnitExp] -> SimpleAstFold Double
-evalConversion = return .: const
+execBinOp :: Value [UnitExp] -> Op -> Value [UnitExp] -> SimpleAstFold (Value [UnitExp])
+execBinOp lhs Plus  rhs | unit lhs == unit rhs = return $ combineValues (+) lhs rhs
+                        | otherwise  = throwError $ Error RuntimeError $ "Cannot add units " ++ show lhs ++ " and " ++ show rhs
+execBinOp lhs Minus rhs | unit lhs == unit rhs = return $ combineValues (-) lhs rhs
+                        | otherwise  = throwError $ Error RuntimeError $ "Cannot subtract units " ++ show lhs ++ " and " ++ show rhs
+execBinOp lhs Mult  rhs = do
+    let u = mergeUnits (unit lhs) (unit rhs)
+    return $ combineValues (*) lhs rhs { unit = u }
+execBinOp lhs Div   rhs = do
+    let u = subtractUnits (unit lhs) (unit rhs)
+    return $ combineValues (/) lhs rhs { unit = u }
+execBinOp lhs Pow   rhs = case rhs of
+    Value _ [UnitExp Multiplier 1] -> return $ Value (value lhs ** value rhs) ((\u -> u {
+        power = power u * (round (value rhs) :: Int)
+      }) <$> unit lhs)
+    _                              -> throwError $ Error RuntimeError "Exponentiation of units is not supported"
+execBinOp _   op    _   = throwError $ Error ImplementationError $ "Unknown binary operator " ++ show op
 
-evalVarBinds :: Bindings Expr -> Expr -> SimpleAstFold Double
-evalVarBinds bs expr = runInNewScope $ do
+execUnaryOp :: Op -> Value [UnitExp] -> SimpleAstFold (Value [UnitExp])
+execUnaryOp op rhs = case op of
+    UnaryMinus -> return $ mapValue (0-) rhs
+    _          -> throwError $ Error ImplementationError $ "Unknown unary operator " ++ show op
+
+execConversion :: Value [UnitExp] -> [UnitExp] -> SimpleAstFold (Value [UnitExp])
+execConversion _ _ = throwError $ Error ImplementationError "Conversion is handled elsewhere"
+
+execVarBinds :: Bindings Expr -> Expr -> SimpleAstFold (Value [UnitExp])
+execVarBinds bs expr = runInNewScope $ do
     bindVars $ fmap Expr <$> bs
-    evaluate' expr
+    execute' expr
 
-evalVar :: String -> SimpleAstFold Double
-evalVar n = getVarBinding n >>= \case
+execVar :: String -> SimpleAstFold (Value [UnitExp])
+execVar n = getVarBinding n >>= \case
     (Result v) -> return v
     (Expr e)   -> do
-        result <- evaluate' e
+        result <- execute' e
         bindVar n $ Result result
         return result
+
+mergeUnits :: [UnitExp] -> [UnitExp] -> [UnitExp]
+mergeUnits [] ys = ys
+mergeUnits xs [] = xs
+mergeUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = UnitExp (dimUnit x) (power x + power y) : mergeUnits xs ys
+                         | otherwise              = x : mergeUnits xs (y:ys)
+
+subtractUnits :: [UnitExp] -> [UnitExp] -> [UnitExp]
+subtractUnits [] ys = (\(UnitExp u e) -> UnitExp u $ e * (-1)) <$> ys
+subtractUnits xs [] = xs
+subtractUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = UnitExp (dimUnit x) (power x - power y) : subtractUnits xs ys
+                            | otherwise              = x : subtractUnits xs (y:ys)

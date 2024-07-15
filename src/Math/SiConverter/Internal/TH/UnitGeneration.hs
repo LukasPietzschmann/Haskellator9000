@@ -29,7 +29,7 @@ data Value u = Value { value :: Double
                      }
 
 instance Show u => Show (Value u) where
-      show (Value v u) = (++) (show v) (show u)
+    show (Value v u) = (++) (show v) (show u)
 
 unitADT :: Name
 unitADT = mkName "Unit"

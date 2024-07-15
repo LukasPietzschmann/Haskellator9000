@@ -4,15 +4,15 @@ module Math.SiConverter (calculate) where
 
 import Control.Monad ((>=>))
 
-import Math.SiConverter.Internal.AstProcessingSteps.DetermineDimension
 import Math.SiConverter.Internal.AstProcessingSteps.Evaluate
 import Math.SiConverter.Internal.AstProcessingSteps.Normalize
 import Math.SiConverter.Internal.Expr
 import Math.SiConverter.Internal.Lexer
 import Math.SiConverter.Internal.Parser
+import Math.SiConverter.Internal.Units
 import Math.SiConverter.Internal.Utils.Error
 
-type EvalValue = Value Dimension
+type EvalValue = Value [UnitExp]
 
 getAst :: String -> Either Error Expr
 getAst = scan >=> parse >=> normalize
@@ -27,11 +27,7 @@ calculate input = do
 evaluateWithConv :: Expr -> Either Error EvalValue
 evaluateWithConv = ev where
     ev (Conversion expr target) = do
-        r <- evaluate expr
-        d <- determineDimension expr
-        let baseV = convertDimensionToBase $ Value r d
+        r <- execute expr
+        let baseV = convertDimensionToBase r
         return $ convertDimensionTo baseV target
-    ev expr                     = do
-        r <- evaluate expr
-        d <- determineDimension expr
-        return $ Value r d
+    ev expr                     = execute expr

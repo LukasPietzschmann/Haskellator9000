@@ -4,10 +4,12 @@
 module Math.SiConverter.Internal.Units (
       Unit (..)
     , UnitExp (..)
+    , combineValues
     , convertTo
     , convertToBase
     , isMultiplier
     , kilogram
+    , mapValue
     , meter
     , multiplier
     , second
@@ -15,7 +17,7 @@ module Math.SiConverter.Internal.Units (
     ) where
 
 import Math.SiConverter.Internal.TH.UnitGeneration (Quantity (..), UnitDef (..),
-           generateUnits)
+           Value (..), generateUnits)
 
 $(generateUnits
   [ Quantity (UnitDef "Multiplier" "" 1) [], -- Unitless unit
@@ -58,3 +60,10 @@ $(generateUnits
     --, UnitDef "Yoctogram" "yg" 1e-27
     ]
   ])
+
+mapValue :: (Double -> Double) -> Value u -> Value u
+mapValue f (Value v u) = Value (f v) u
+
+combineValues :: Eq u => (Double -> Double -> Double) -> Value u -> Value u -> Value u
+combineValues f (Value v1 u1) (Value v2 u2) | u1 == u2  = Value (v1 `f` v2) u1
+                                            | otherwise = error "Cannot map values with different units"

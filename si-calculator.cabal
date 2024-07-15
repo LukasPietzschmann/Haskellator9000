@@ -20,7 +20,6 @@ extra-source-files:
 library
   exposed-modules:
       Math.SiConverter
-      Math.SiConverter.Internal.AstProcessingSteps.DetermineDimension
       Math.SiConverter.Internal.AstProcessingSteps.Evaluate
       Math.SiConverter.Internal.AstProcessingSteps.Normalize
       Math.SiConverter.Internal.DerivedUnits
