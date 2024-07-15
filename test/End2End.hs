@@ -113,7 +113,7 @@ variables = testGroup "Variables" [
     testCase "Multi assignment"
         $ calc "M = 800, v=100 -> M * v"           @?= "80000.0",
     testCase "Multi assignment with units"
-        $ calc "M = 800kg, v=100km/h -> 0.5*M*v^2" @?= "308641.97530864197kg*m^2*s^-2",
+        $ calc "M = 800kg, v=100km/h -> 0.5*M*v^2" @?= "308641.9753086419kg*m^2*s^-2",
     testCase "Nested assignment"
         $ calc "M = 60 -> M * (v = 3 -> v)"        @?= "180.0",
     testCase "Nested assignment with units"
