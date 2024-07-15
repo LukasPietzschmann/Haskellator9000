@@ -18,6 +18,8 @@ module Math.SiConverter.Internal.Units (
     , (=~=)
     ) where
 
+import Data.List (intercalate)
+
 import Math.SiConverter.Internal.TH.UnitGeneration (Quantity (..), UnitDef (..),
            Value (..), generateUnits)
 
@@ -74,6 +76,9 @@ class SetEq a where
     (=~=) :: a -> a -> Bool
 
 type Dimension = [UnitExp]
+
+instance {-# OVERLAPPING #-} Show Dimension where
+    show xs = intercalate "*" (show <$> xs)
 
 instance SetEq Dimension where
     (=~=) a b = all (`elem` b) a && all (`elem` a) b

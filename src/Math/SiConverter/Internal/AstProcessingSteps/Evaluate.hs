@@ -12,14 +12,16 @@ import Math.SiConverter.Internal.Expr (Bindings, Expr (..), SimpleAstFold, Thunk
            runInNewScope)
 import Math.SiConverter.Internal.Operators (Op (..))
 import Math.SiConverter.Internal.Units (Dimension, Unit (..), UnitExp (..),
-           combineValues, mapValue)
+           combineValues, isMultiplier, mapValue)
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
 
 evaluate :: Expr -> Either Error Double
 evaluate expr = execute expr <&> value
 
 execute :: Expr -> Either Error (Value Dimension)
-execute = runAstFold . execute'
+execute expr = do
+    r <- runAstFold $ execute' expr
+    return $ r { unit = filterUnwanted $ unit r }
 
 execute' :: Expr -> SimpleAstFold (Value Dimension)
 execute' = partiallyFoldExprM execVal execBinOp execUnaryOp execConversion execVarBinds execVar
@@ -77,3 +79,12 @@ subtractUnits [] ys = (\(UnitExp u e) -> UnitExp u $ e * (-1)) <$> ys
 subtractUnits xs [] = xs
 subtractUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = UnitExp (dimUnit x) (power x - power y) : subtractUnits xs ys
                             | otherwise              = x : subtractUnits xs (y:ys)
+
+filterUnwanted :: Dimension -> Dimension
+filterUnwanted = filterZeroPower . filterMultiplier
+
+filterZeroPower :: Dimension -> Dimension
+filterZeroPower = filter ((/=0) . power)
+
+filterMultiplier :: Dimension -> Dimension
+filterMultiplier = filter (not . isMultiplier . dimUnit)
