@@ -29,5 +29,7 @@ evaluateWithConv = ev where
     ev (Conversion expr target) = do
         r <- execute expr
         let baseV = convertDimensionToBase r
-        return $ convertDimensionTo baseV target
+        case tryConvertDimensionTo baseV target of
+            Just v  -> return v
+            Nothing -> Left $ Error RuntimeError $ "Cannot convert " ++ show baseV ++ " to " ++ show target
     ev expr                     = execute expr
