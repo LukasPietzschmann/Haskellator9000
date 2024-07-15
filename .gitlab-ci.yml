@@ -1,6 +1,3 @@
-# TODO Optional: Add HLint and Stan execution
-# TODO Optional: Export Haddock documentation as build artefact (GitLab pages seem to be disabled)
-
 image: haskell:9.4.8
 
 variables:

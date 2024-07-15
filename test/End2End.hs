@@ -35,11 +35,11 @@ arithmetic = testGroup "Arithmetic" [
         $ calc "2 * (3 + 4) / 7" @?= "2.0",
     testCase "Arithmetic expression"
         $ calc "2 * (3 + 4) / 7" @?= "2.0",
-    testCase "Power!"                                         -- TODO See issue #32
+    testCase "Power!"
         $ calc "2^3"             @?= "8.0",
     testCase "Fractional Power!"
         $ calc "2^3.5"           @?= "11.313708498984761",
-    testCase "Arithmetic expression with implicit multiplier" -- TODO See issue #30
+    testCase "Arithmetic expression with implicit multiplier"
         $ calc "2(3 + 4)/7"      @?= "2.0"
     ]
 
@@ -47,7 +47,7 @@ units :: TestTree
 units = testGroup "Units" [
     testCase "Simple unit calculation"
         $ calc "(30km) / (2km/h)" @?= "54000.0s",
-    testCase "Simple unit calculation without parenthesis"    -- TODO See issue #31
+    testCase "Simple unit calculation without parenthesis"
         $ calc "30km / 2km/h"     @?= "54000.0s"
     ]
 
