@@ -155,15 +155,10 @@ parseDimension :: Parser Dimension
 parseDimension = parseUnitExp >>= dim'
     where dim' parsedLhs = do {
         op <- parseFactorOp;
+        parsedRhs <- parseUnitExp;
         case op of
-            Mult -> do
-                parsedRhs <- parseUnitExp
-                let newDim = mergeUnits parsedLhs parsedRhs
-                dim' newDim
-            Div -> do
-                parsedRhs <- parseUnitExp
-                let newDim = subtractUnits parsedLhs parsedRhs
-                dim' newDim
+            Mult -> dim' $ mergeUnits parsedLhs parsedRhs
+            Div  -> dim' $ subtractUnits parsedLhs parsedRhs
             _ -> fail "Invalid factor operator"
     } <|> return parsedLhs
 
