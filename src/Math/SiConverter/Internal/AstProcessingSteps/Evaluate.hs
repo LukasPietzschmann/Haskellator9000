@@ -46,7 +46,7 @@ execBinOp lhs Div   rhs = do
     let u = subtractUnits (unit lhs) (unit rhs)
     return $ Value (value lhs / value rhs) u
 execBinOp lhs Pow   rhs = case rhs of
-    Value _ [UnitExp Multiplier 1] -> return $ Value (value lhs ** value rhs) ((\u -> u {
+    Value _ [UnitExp Multiplier _] -> return $ Value (value lhs ** value rhs) ((\u -> u {
         power = power u * (round (value rhs) :: Int)
       }) <$> unit lhs)
     _                              -> throwError $ Error RuntimeError "Exponentiation of units is not supported"
