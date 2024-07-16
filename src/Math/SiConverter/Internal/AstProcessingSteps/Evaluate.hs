@@ -17,7 +17,7 @@ import Math.SiConverter.Internal.Expr (Bindings, Expr (..), SimpleAstFold, Thunk
            runInNewScope)
 import Math.SiConverter.Internal.Operators (Op (..))
 import Math.SiConverter.Internal.Units (Dimension, Unit (..), UnitExp (..),
-           combineValues, isMultiplier, mapValue)
+           combineValues, isMultiplier, mapValue, (=~=))
 import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
 
 evaluate :: Expr -> Either Error Double
@@ -35,10 +35,10 @@ execVal :: Value Dimension -> SimpleAstFold (Value Dimension)
 execVal = return
 
 execBinOp :: Value Dimension -> Op -> Value Dimension -> SimpleAstFold (Value Dimension)
-execBinOp lhs Plus  rhs | unit lhs == unit rhs = return $ combineValues (+) lhs rhs
-                        | otherwise  = throwError $ Error RuntimeError $ "Cannot add units " ++ show lhs ++ " and " ++ show rhs
-execBinOp lhs Minus rhs | unit lhs == unit rhs = return $ combineValues (-) lhs rhs
-                        | otherwise  = throwError $ Error RuntimeError $ "Cannot subtract units " ++ show lhs ++ " and " ++ show rhs
+execBinOp lhs Plus  rhs | unit lhs =~= unit rhs = return $ combineValues (+) lhs rhs
+                        | otherwise = throwError $ Error RuntimeError $ "Cannot add units " ++ show lhs ++ " and " ++ show rhs
+execBinOp lhs Minus rhs | unit lhs =~= unit rhs = return $ combineValues (-) lhs rhs
+                        | otherwise = throwError $ Error RuntimeError $ "Cannot subtract units " ++ show lhs ++ " and " ++ show rhs
 execBinOp lhs Mult  rhs = do
     let u = mergeUnits (unit lhs) (unit rhs)
     return $ Value (value lhs * value rhs) u
@@ -74,16 +74,28 @@ execVar n = getVarBinding n >>= \case
         return result
 
 mergeUnits :: Dimension -> Dimension -> Dimension
-mergeUnits [] ys = ys
-mergeUnits xs [] = xs
-mergeUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = UnitExp (dimUnit x) (power x + power y) : mergeUnits xs ys
-                         | otherwise              = x : mergeUnits xs (y:ys)
+mergeUnits lhs rhs = [x{power = power x + power y} | (x, y) <- pairs] ++ lr ++ rr
+    where (pairs, (lr, rr)) = findPairs lhs rhs
 
 subtractUnits :: Dimension -> Dimension -> Dimension
-subtractUnits [] ys = (\(UnitExp u e) -> UnitExp u $ e * (-1)) <$> ys
-subtractUnits xs [] = xs
-subtractUnits (x:xs) (y:ys) | dimUnit x == dimUnit y = UnitExp (dimUnit x) (power x - power y) : subtractUnits xs ys
-                            | otherwise              = x : subtractUnits xs (y:ys)
+subtractUnits lhs rhs = [x{power = power x - power y} | (x, y) <- pairs] ++ lr ++ fmap flipPower rr
+    where (pairs, (lr, rr)) = findPairs lhs rhs
+          flipPower (UnitExp d e) = UnitExp d (-e)
+
+-- | Finds pairs of 'UniExp's with the same 'Unit' in two 'Dimension's. Returns the pairs
+--   and the remaining 'Dimension's split into dimensions from the left and right hand side.
+findPairs :: Dimension -> Dimension -> ([(UnitExp, UnitExp)], (Dimension, Dimension))
+findPairs [] ys = ([], ([], ys))
+findPairs (x:xs) ys = let (pairs, (lr', rr')) = findPairs xs rr in (pair ++ pairs, (lr ++ lr', rr'))
+    where (pair, (lr, rr)) = findPair x ys
+
+-- | Finds a single pair of 'UnitExp's with the same 'Unit' in a 'Dimension'. Returns the pair
+--   and the remaining 'Dimension' split into dimensions from the left and right hand side.
+findPair :: UnitExp -> Dimension -> ([(UnitExp, UnitExp)], (Dimension, Dimension))
+findPair x [] = ([], ([x], []))
+findPair x (y:ys) | dimUnit x == dimUnit y = ([(x, y)], ([], ys))
+                  | otherwise              = let (pair, (lr, rr)) = findPair x ys
+                                              in (pair, (lr, y:rr))
 
 filterUnwanted :: Dimension -> Dimension
 filterUnwanted = filterZeroPower . filterMultiplier
