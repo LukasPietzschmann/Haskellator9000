@@ -18,6 +18,7 @@ module Math.Haskellator.Internal.Expr (
     , Expr (..)
     , SimpleAstFold
     , Thunk (..)
+    , Value (..)
     , bindVar
     , bindVars
     , foldExpr
