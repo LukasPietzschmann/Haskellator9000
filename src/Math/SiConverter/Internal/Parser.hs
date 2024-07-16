@@ -13,7 +13,7 @@
 -- Right (9001.0 * 29.12)
 --
 -- >>> parse [Number 2.0,Identifier "km",OpenBracket,Identifier "m",CloseBracket]
--- Right 2.0km [m]
+-- Right 2.0 km[m]
 --
 -- >>> parse [Identifier "a",Equal,Number 3.0,Comma,Identifier "b",Equal,Number 2.0,Arrow,Identifier "a",Operator "+",Identifier "b"]
 -- Right (a = 3.0, b = 2.0 -> (a + b))
