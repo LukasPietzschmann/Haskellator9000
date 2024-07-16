@@ -51,7 +51,7 @@ convertUnit :: UnitExp                     -- ^ Source unit
             -> AstValue                    -- ^ Value to convert
             -> Maybe (AstValue, Dimension) -- ^ Converted value and the remaining target dimension or 'Nothing'
 convertUnit _ [] _ = Nothing
-convertUnit s (t:ts) val@(Value v u) = case convertTo (Value 1 $ dimUnit s) (dimUnit t) (power s) of
+convertUnit s (t:ts) val@(Value v u) = case convertTo (Value 1 s) t of
     Just (Value v' u') -> Just (Value (v * v') (u':u), ts)
     Nothing            -> do
         (v', rest) <- convertUnit s ts val

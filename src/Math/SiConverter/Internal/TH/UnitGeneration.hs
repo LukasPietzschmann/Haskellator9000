@@ -95,14 +95,14 @@ generateUnits unitGroups = do
       fromStringClauses  = (mkFromStringClause <$> allUnits) -- RightCases
         ++ [Clause [VarP $ mkName "x"] (NormalB $ AppE (ConE 'Left) (VarE $ mkName "x")) []] -- Left case
       convertBaseClauses = concatMap (\(Quantity b us) -> mkConvertBaseClaus b <$> b:us) unitGroups
-      convertToClauses   = concatMap (\(Quantity b us) -> mkConvertToClaus b <$> b:us) unitGroups ++ [clause [wildP, wildP, wildP] (normalB $ conE 'Nothing) []]
+      convertToClauses   = concatMap (\(Quantity b us) -> mkConvertToClaus b <$> b:us) unitGroups ++ [clause [wildP, wildP] (normalB $ conE 'Nothing) []]
 
       dataDec            = DataD [] unitADT [] Nothing unitConstructors [DerivClause Nothing [ConT ''Lift, ConT ''Eq, ConT ''Bounded, ConT ''Enum]]
       showInstance       = InstanceD Nothing [] (AppT (ConT ''Show) (ConT unitADT)) [FunD 'show showClauses]
       fromStringFunction = FunD unitFromStringFun fromStringClauses
 
   fromStringSig   <- sigD unitFromStringFun [t|String -> Either String $(conT unitADT)|]
-  convertToSig    <- sigD convertToFun [t|Value $(conT unitADT) -> $(conT unitADT) -> Int -> Maybe (Value $(conT unitExpADT))|]
+  convertToSig    <- sigD convertToFun [t|Value $(conT unitExpADT) -> $(conT unitExpADT) -> Maybe (Value $(conT unitExpADT))|]
   convertToFunc   <- funD convertToFun convertToClauses
   convertBaseSig  <- sigD convertToBaseFun [t|Value $(conT unitExpADT) -> Value $(conT unitExpADT)|]
   convertBaseFunc <- funD convertToBaseFun convertBaseClauses
@@ -158,11 +158,14 @@ mkConvertBaseClaus (UnitDef baseUnit _ _) (UnitDef u _ f) = do
 
 mkConvertToClaus :: UnitDef -> UnitDef -> Q Clause
 mkConvertToClaus (UnitDef baseUnit _ _) (UnitDef u _ f) = do
-    let patVal  = ConP 'Value [] [VarP (mkName "v"), ConP (mkName baseUnit) [] []]
-        patUnit = ConP (mkName u) [] []
-        patExp  = VarP $ mkName "e"
-    body <- normalB [|Just $ Value (v / ($(litE $ RationalL $ toRational f) ** fromIntegral e)) (UnitExp $(conE $ mkName u) e)|]
-    return $ Clause [patVal, patUnit, patExp] body []
+    let patVal  = ConP 'Value [] [VarP (mkName "v"), ConP unitExpADT [] [ConP (mkName baseUnit) [] [], VarP (mkName "es")]]
+        patUnit = ConP unitExpADT [] [ConP (mkName u) [] [], VarP $ mkName "et"]
+    checkExpG <- normalG [|es == et|]
+    elseG     <- normalG [|otherwise|]
+    thenExp   <- [|Just $ Value (v / ($(litE $ RationalL $ toRational f) ** fromIntegral es)) (UnitExp $(conE $ mkName u) es)|]
+    elseExp   <- [|Nothing|]
+    let body = GuardedB [(checkExpG, thenExp), (elseG, elseExp)]
+    return $ Clause [patVal, patUnit] body []
 
 mkConstructor :: UnitDef -> Con
 mkConstructor (UnitDef n _ _) = NormalC (mkName n) []
