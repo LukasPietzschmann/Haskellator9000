@@ -34,7 +34,7 @@ import Data.Bifunctor (first)
 
 import GHC.Base (Alternative (empty))
 
-import Math.SiConverter.Internal.AstProcessingSteps.Evaluate (evaluate, mergeUnits,
+import Math.SiConverter.Internal.AstProcessingSteps.Evaluate (execute, mergeUnits,
            subtractUnits)
 import Math.SiConverter.Internal.DerivedUnits (derivedUnitFromString)
 import Math.SiConverter.Internal.Expr
@@ -169,8 +169,9 @@ parseUnitExp = do
     either (\x -> fail $ "Invalid unit " ++ x) (\dim -> do {
         requireOperator "^";
         expr <- parsePrimary;
-        -- TODO Rounding is awkward
-        either (const $ fail "Could not evaluate a units power") (\p -> let e = round p :: Int in return ((\(UnitExp u e') -> UnitExp u $ e' * e) <$> dim)) (evaluate expr)
+        case execute expr of
+            Right (Value v []) -> let e = round v :: Int in return ((\(UnitExp u e') -> UnitExp u $ e' * e) <$> dim)
+            _                  -> fail "Exponentiation of units is not supported"
     } <|> return dim) $ parseUnitSymbol i
 
 parseUnitSymbol :: String -> Either String Dimension
