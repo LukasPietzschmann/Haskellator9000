@@ -78,7 +78,22 @@ class SetEq a where
 type Dimension = [UnitExp]
 
 instance {-# OVERLAPPING #-} Show Dimension where
-    show xs = intercalate "*" (show <$> xs)
+    show xs = write $ divide xs ([],[])
+              where
+                write (pos,[])  = factors pos
+                write ([],[UnitExp u e]) = "1/" ++ show (UnitExp u (abs e))
+                write ([],neg)  = "1/(" ++ factors (makePos neg) ++ ")"
+                write (pos,[UnitExp u e]) = factors pos ++ "/" ++ show (UnitExp u (abs e))
+                write (pos,neg) = factors pos ++ "/(" ++ factors (makePos neg) ++ ")"
+
+                factors list    = intercalate "*" (show <$> list)
+                makePos ((UnitExp u e):us)  = UnitExp u (abs e) : makePos us
+                makePos []                  = []
+
+-- | Divides a list of dimensions into its positive and negative exponents
+divide::Dimension -> (Dimension,Dimension) -> (Dimension, Dimension)
+divide (uExp@(UnitExp _ e):xs) (pos,neg) = if e<0 then divide xs (pos,neg ++ [uExp]) else divide xs (pos ++ [uExp], neg)
+divide [] (pos,neg) = (pos,neg)
 
 instance SetEq Dimension where
     (=~=) a b = all (`elem` b) a && all (`elem` a) b
