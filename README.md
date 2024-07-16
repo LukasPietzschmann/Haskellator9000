@@ -1,14 +1,10 @@
 #  Haskellator9000
 
-## Features
-### Required
+Haskellator9000 is a simple calculator written in (you guessed it) Haskell. Its main
+feature is the support for multiple SI base and derived units. For a complete list of
+supported units and features, see below.
 
-- Operations
-    - [x] Addition, Subtraction
-    - [x] Multiplication, Division
-    - [x] Power
-    - [x] Unary negation
-    - [x] Explicit unit conversion
+## Supported Units
 - SI base units
     - [x] Time (ns, µs, ms, s, min, h, d)
     - [x] Length (nm, µm, mm, cm, m, km)
@@ -24,18 +20,9 @@
     - [x] Energy (J, kJ, MJ)
     - [x] Power (W, mW, kW, MW, GW, TW)
 
-### Optional
-
-- Doctests, unit tests and property tests
-- Extensive CI pipeline ([here](https://gitlab.uni-ulm.de/sp/fp-2/ss24/team1/-/pipelines))
-- Deployed documentation ([here](https://haskellator.pietzschmann.org))
-- Rich REPL with persisted history and <CTRL>-R search
+## Features
+- Rich REPL with persisted history and CTRL-R search
+- Explicit unit conversion (e.g. `2km [m]`)
 - Implicit multiplication (e.g. `2m(3m+4m)` instead of `2m*(3m+4m)`)
-- Support for variable bindings (e.g. `a = 1+2 -> a + 3`)
-    - Of course, they are evaluated lazily
-    - And one can bind multiple variables in one scope (e.g. `a = 1, b = 2 -> a + b`)
-
-## Usage
-
-Check out the [documentation](https://haskellator.pietzschmann.org) for more
-information.
+- Support for variable bindings (e.g. `a = 1+2, b = 3 -> a + b`)
+    - Of course, they are evaluated lazily :wink:
