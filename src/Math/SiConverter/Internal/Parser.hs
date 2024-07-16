@@ -44,16 +44,17 @@ import Math.SiConverter.Internal.Units (Dimension, UnitExp (..), multiplier,
            unitFromString)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (ParseError))
+import Control.Monad.Identity (Identity, runIdentity)
 
 newtype ParserT m a = ParserT { runParserT :: Tokens -> m (Either String (a, Tokens)) }
 
 -- | Parser monad. The state encodes weather or not we're coming from a factor. This is
 -- only used when parsing things like "2m*s" where there's no explicit value for the seconds.
 -- And since "2m + s" is invalid, we can use this to differentiate between the two.
-type Parser = ParserT (State Bool)
+type Parser = ParserT Identity
 
 runParser :: Parser a -> Tokens -> Either String (a, Tokens)
-runParser p ts = evalState (runParserT p ts) False
+runParser p ts = runIdentity $ runParserT p ts
 
 
 instance Functor m => Functor (ParserT m) where
@@ -194,7 +195,6 @@ parseUnaryOp = do
 parseTermOp :: Parser Op
 parseTermOp = do
     op <- parseOperator
-    lift $ put False
     case op of
       "+" -> return Plus
       "-" -> return Minus
@@ -203,7 +203,6 @@ parseTermOp = do
 parseFactorOp :: Parser Op
 parseFactorOp = do
     op <- parseOperator
-    lift $ put True
     case op of
         "*" -> return Mult
         "/" -> return Div
