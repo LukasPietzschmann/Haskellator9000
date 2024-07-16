@@ -6,6 +6,8 @@ import Evaluation
 
 import Parser
 
+import Units
+
 import Test.Tasty (TestTree, defaultMain, testGroup)
 
 main :: IO ()
@@ -15,5 +17,6 @@ tests :: TestTree
 tests = testGroup "Tests" [
         parserTests,
         evaluationTests,
-        end2endTests
+        end2endTests,
+        printUnitWithFractions
     ]

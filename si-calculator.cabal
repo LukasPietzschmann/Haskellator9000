@@ -75,6 +75,7 @@ test-suite si-calculator-test
       End2End
       Evaluation
       Parser
+      Units
       Paths_si_calculator
   autogen-modules:
       Paths_si_calculator
