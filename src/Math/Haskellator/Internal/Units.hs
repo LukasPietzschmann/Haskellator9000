@@ -1,10 +1,11 @@
 {-# LANGUAGE FlexibleInstances, TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
-module Math.SiConverter.Internal.Units (
+module Math.Haskellator.Internal.Units (
       Dimension
     , Unit (..)
     , UnitExp (..)
+    , Value (..)
     , combineValues
     , convertTo
     , convertToBase
@@ -20,8 +21,7 @@ module Math.SiConverter.Internal.Units (
 
 import Data.List (intercalate)
 
-import Math.SiConverter.Internal.TH.UnitGeneration (Quantity (..), UnitDef (..),
-           Value (..), generateUnits)
+import Math.Haskellator.Internal.TH.UnitGeneration
 
 $(generateUnits
   [ Quantity (UnitDef "Multiplier" "" 1) [], -- Unitless unit
@@ -87,8 +87,8 @@ instance {-# OVERLAPPING #-} Show Dimension where
                 write (pos,neg) = factors pos ++ "/(" ++ factors (makePos neg) ++ ")"
 
                 factors list    = intercalate "*" (show <$> list)
-                makePos ((UnitExp u e):us)  = UnitExp u (abs e) : makePos us
-                makePos []                  = []
+                makePos ((UnitExp u e):us) = UnitExp u (abs e) : makePos us
+                makePos []                 = []
 
 -- | Divides a list of dimensions into its positive and negative exponents
 divide::Dimension -> (Dimension,Dimension) -> (Dimension, Dimension)

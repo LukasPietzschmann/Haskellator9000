@@ -1,16 +1,16 @@
-module Math.SiConverter.Internal.AstProcessingSteps.Normalize (
+module Math.Haskellator.Internal.AstProcessingSteps.Normalize (
       convertDimensionTo
     , convertDimensionToBase
     , normalize
     , tryConvertDimensionTo
     ) where
 
-import Data.Maybe (fromJust)
+import Data.Maybe
 
-import Math.SiConverter.Internal.Expr (AstValue, Expr (..), Value (..), foldExpr)
-import Math.SiConverter.Internal.Units (Dimension, UnitExp, convertTo, convertToBase)
-import Math.SiConverter.Internal.Utils.Composition ((.:))
-import Math.SiConverter.Internal.Utils.Error (Error)
+import Math.Haskellator.Internal.Expr
+import Math.Haskellator.Internal.Units
+import Math.Haskellator.Internal.Utils.Composition
+import Math.Haskellator.Internal.Utils.Error
 
 -- | Normalize all values inside the tree to their base units
 normalize :: Expr              -- ^ the 'Expr' tree to normalize

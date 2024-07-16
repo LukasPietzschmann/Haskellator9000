@@ -1,24 +1,21 @@
 {-# LANGUAGE LambdaCase #-}
 
 -- | Evaluate the expression tree
-module Math.SiConverter.Internal.AstProcessingSteps.Evaluate (
+module Math.Haskellator.Internal.AstProcessingSteps.Evaluate (
       evaluate
     , execute
     , mergeUnits
     , subtractUnits
     ) where
 
-import Control.Monad.Except (throwError)
+import Control.Monad.Except
 
-import Data.Functor ((<&>))
+import Data.Functor
 
-import Math.SiConverter.Internal.Expr (Bindings, Expr (..), SimpleAstFold, Thunk (..),
-           Value (..), bindVar, bindVars, getVarBinding, partiallyFoldExprM, runAstFold,
-           runInNewScope)
-import Math.SiConverter.Internal.Operators (Op (..))
-import Math.SiConverter.Internal.Units (Dimension, Unit (..), UnitExp (..),
-           combineValues, isMultiplier, mapValue, (=~=))
-import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
+import Math.Haskellator.Internal.Expr
+import Math.Haskellator.Internal.Operators
+import Math.Haskellator.Internal.Units
+import Math.Haskellator.Internal.Utils.Error
 
 evaluate :: Expr -> Either Error Double
 evaluate expr = execute expr <&> value

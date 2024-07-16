@@ -1,6 +1,6 @@
 module End2End (end2endTests) where
 
-import Math.SiConverter
+import Math.Haskellator
 
 import Test.Tasty
 import Test.Tasty.HUnit

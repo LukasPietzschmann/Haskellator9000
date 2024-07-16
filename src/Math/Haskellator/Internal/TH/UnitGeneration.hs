@@ -2,14 +2,14 @@
 
 -- | Generate the unit types and function to work with them
 
-module Math.SiConverter.Internal.TH.UnitGeneration (
+module Math.Haskellator.Internal.TH.UnitGeneration (
       Quantity (..)
     , UnitDef (..)
     , Value (..)
     , generateUnits
     ) where
 
-import Data.Char (toLower)
+import Data.Char
 
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax

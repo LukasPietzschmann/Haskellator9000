@@ -1,16 +1,16 @@
 -- | Calculator module for evaluating mathematical expressions containing SI units
 
-module Math.SiConverter (calculate) where
+module Math.Haskellator (EvalValue, calculate) where
 
-import Control.Monad ((>=>))
+import Control.Monad
 
-import Math.SiConverter.Internal.AstProcessingSteps.Evaluate
-import Math.SiConverter.Internal.AstProcessingSteps.Normalize
-import Math.SiConverter.Internal.Expr
-import Math.SiConverter.Internal.Lexer
-import Math.SiConverter.Internal.Parser
-import Math.SiConverter.Internal.Units
-import Math.SiConverter.Internal.Utils.Error
+import Math.Haskellator.Internal.AstProcessingSteps.Evaluate
+import Math.Haskellator.Internal.AstProcessingSteps.Normalize
+import Math.Haskellator.Internal.Expr
+import Math.Haskellator.Internal.Lexer
+import Math.Haskellator.Internal.Parser
+import Math.Haskellator.Internal.Units
+import Math.Haskellator.Internal.Utils.Error
 
 type EvalValue = Value Dimension
 

@@ -23,13 +23,11 @@
 -- >>> scan "a = 3, b = 2 -> a + b"
 -- Right [Identifier "a",Equal,Number 3.0,Comma,Identifier "b",Equal,Number 2.0,Arrow,Identifier "a",Operator "+",Identifier "b"]
 --
-module Math.SiConverter.Internal.Lexer (Token (..), Tokens, scan) where
+module Math.Haskellator.Internal.Lexer (Token (..), Tokens, scan) where
 
-import Data.Char (isDigit)
+import Data.Char
 
-import GHC.Unicode (isAlpha)
-
-import Math.SiConverter.Internal.Utils.Error
+import Math.Haskellator.Internal.Utils.Error
 
 data Token = Number Double -- ^ A number (integers are also represented as floats)
            | Operator String -- ^ An operator

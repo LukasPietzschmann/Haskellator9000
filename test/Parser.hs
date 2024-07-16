@@ -1,21 +1,21 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Parser (parserTests) where
-import Control.Monad (liftM3, (>=>))
 
-import Data.Either (fromRight)
+import Control.Monad
 
-import Math.SiConverter.Internal.Expr (Expr (BinOp, UnaryOp, Val), Value (Value))
-import Math.SiConverter.Internal.Lexer (scan)
-import Math.SiConverter.Internal.Operators (Op (Minus, Mult, Plus, Pow))
-import Math.SiConverter.Internal.Parser (parse)
-import Math.SiConverter.Internal.Units (Unit (..), UnitExp (..), multiplier)
-import Math.SiConverter.Internal.Utils.Error (Error)
+import Data.Either
+
+import Math.Haskellator.Internal.Expr
+import Math.Haskellator.Internal.Lexer
+import Math.Haskellator.Internal.Operators
+import Math.Haskellator.Internal.Parser
+import Math.Haskellator.Internal.Units
+import Math.Haskellator.Internal.Utils.Error
 
 import Test.Tasty
-import Test.Tasty.HUnit (testCase, (@?=))
-import Test.Tasty.QuickCheck (Arbitrary (arbitrary), Gen, arbitraryBoundedEnum, choose,
-           frequency, suchThat, testProperty)
+import Test.Tasty.HUnit
+import Test.Tasty.QuickCheck
 
 parserTests :: TestTree
 parserTests = testGroup "ParserTests" [expressionParsing, parserProperties]

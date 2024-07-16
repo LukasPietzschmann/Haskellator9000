@@ -1,14 +1,14 @@
 {-# LANGUAGE TemplateHaskellQuotes, TupleSections #-}
 
-module Math.SiConverter.Internal.TH.DerivedUnitGeneration (
+module Math.Haskellator.Internal.TH.DerivedUnitGeneration (
       DQuantity (..)
     , generateDerivedUnits
     ) where
 
 import Language.Haskell.TH
 
-import Math.SiConverter.Internal.TH.UnitGeneration (UnitDef (..))
-import Math.SiConverter.Internal.Units (Dimension)
+import Math.Haskellator.Internal.TH.UnitGeneration
+import Math.Haskellator.Internal.Units
 
 data DQuantity = DQuantity UnitDef Dimension [UnitDef]
 

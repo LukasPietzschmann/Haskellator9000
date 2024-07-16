@@ -1,4 +1,4 @@
-module Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..)) where
+module Math.Haskellator.Internal.Utils.Error (Error (Error), Kind (..)) where
 
 data Error = Error Kind String
   deriving (Eq)

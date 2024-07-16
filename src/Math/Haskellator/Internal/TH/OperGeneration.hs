@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
-module Math.SiConverter.Internal.TH.OperGeneration (
+module Math.Haskellator.Internal.TH.OperGeneration (
       OperatorDef (..)
     , generateOperators
     ) where

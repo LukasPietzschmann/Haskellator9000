@@ -1,8 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Math.SiConverter.Internal.Operators(Op (..)) where
+module Math.Haskellator.Internal.Operators where
 
-import Math.SiConverter.Internal.TH.OperGeneration (OperatorDef (..), generateOperators)
+import Math.Haskellator.Internal.TH.OperGeneration
 
 $(generateOperators [
     OperDef "Plus" "+",

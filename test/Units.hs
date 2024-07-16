@@ -1,7 +1,9 @@
-module Units(printUnitWithFractions) where
-import Test.Tasty.HUnit (testCase, (@?=))
+module Units (printUnitWithFractions) where
+
+import Math.Haskellator.Internal.Units
+
 import Test.Tasty
-import Math.SiConverter.Internal.Units ( meter, second, kilogram )
+import Test.Tasty.HUnit
 
 printUnitWithFractions::TestTree
 printUnitWithFractions = testGroup "Prints unit with fraction" [

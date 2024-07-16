@@ -11,25 +11,35 @@
 -- >>> show $ BinOp (BinOp (Val $ Value 1.0 $ meter 1) Plus (Val $ Value 2.0 $ meter 1)) Mult (Val $ Value 3.0 $ multiplier 1)
 -- "((1.0 m + 2.0 m) * 3.0)"
 
-module Math.SiConverter.Internal.Expr (
-      module Math.SiConverter.Internal.Expr
-    , module Math.SiConverter.Internal.TH.UnitGeneration
+module Math.Haskellator.Internal.Expr (
+      AstFold
+    , AstValue
+    , Bindings
+    , Expr (..)
+    , SimpleAstFold
+    , Thunk (..)
+    , bindVar
+    , bindVars
+    , foldExpr
+    , getVarBinding
+    , partiallyFoldExprM
+    , runAstFold
+    , runInNewScope
     ) where
 
-import Control.Applicative ((<|>))
-import Control.Monad.Except (ExceptT, MonadError (throwError), runExceptT)
-import Control.Monad.State (State, evalState, get, modify)
+import Control.Applicative
+import Control.Monad.Except
+import Control.Monad.State
 
 import Data.List (intercalate)
 import Data.Map (Map, insert, (!?))
 
-import Math.SiConverter.Internal.Operators
-import Math.SiConverter.Internal.TH.UnitGeneration (Quantity (..), UnitDef (..),
-           Value (..), generateUnits)
-import Math.SiConverter.Internal.Units
-import Math.SiConverter.Internal.Utils.Composition ((.:))
-import Math.SiConverter.Internal.Utils.Error (Error (Error), Kind (..))
-import Math.SiConverter.Internal.Utils.Stack (Stack, mapTop, pop, push)
+import Math.Haskellator.Internal.Operators
+import Math.Haskellator.Internal.TH.UnitGeneration
+import Math.Haskellator.Internal.Units
+import Math.Haskellator.Internal.Utils.Composition
+import Math.Haskellator.Internal.Utils.Error
+import Math.Haskellator.Internal.Utils.Stack
 
 type AstValue = Value Dimension
 

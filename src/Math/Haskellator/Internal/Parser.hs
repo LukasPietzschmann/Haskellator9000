@@ -24,27 +24,23 @@
 -- >>> parse [Number 2.0,OpenParen,Number 3,Operator "+",Number 4,CloseParen,Operator "/", Number 7.0]
 -- Right ((2.0 * (3.0 + 4.0)) / 7.0)
 --
-module Math.SiConverter.Internal.Parser (parse) where
+module Math.Haskellator.Internal.Parser (parse) where
 
-import Control.Applicative ((<|>))
-import Control.Monad (liftM2, unless, void)
+import Control.Applicative
+import Control.Monad
+import Control.Monad.Identity
 import Control.Monad.State
 
-import Data.Bifunctor (first)
+import Data.Bifunctor
 
-import GHC.Base (Alternative (empty))
-
-import Math.SiConverter.Internal.AstProcessingSteps.Evaluate (execute, mergeUnits,
-           subtractUnits)
-import Math.SiConverter.Internal.DerivedUnits (derivedUnitFromString)
-import Math.SiConverter.Internal.Expr
-import Math.SiConverter.Internal.Lexer (Token (..), Tokens)
-import Math.SiConverter.Internal.Operators (Op (..))
-import Math.SiConverter.Internal.Units (Dimension, UnitExp (..), multiplier,
-           unitFromString)
-import Math.SiConverter.Internal.Utils.Composition ((.:))
-import Math.SiConverter.Internal.Utils.Error (Error (..), Kind (ParseError))
-import Control.Monad.Identity (Identity, runIdentity)
+import Math.Haskellator.Internal.AstProcessingSteps.Evaluate
+import Math.Haskellator.Internal.DerivedUnits
+import Math.Haskellator.Internal.Expr
+import Math.Haskellator.Internal.Lexer
+import Math.Haskellator.Internal.Operators
+import Math.Haskellator.Internal.Units
+import Math.Haskellator.Internal.Utils.Composition
+import Math.Haskellator.Internal.Utils.Error
 
 newtype ParserT m a = ParserT { runParserT :: Tokens -> m (Either String (a, Tokens)) }
 
@@ -160,7 +156,7 @@ parseDimension = parseUnitExp >>= dim'
         case op of
             Mult -> dim' $ mergeUnits parsedLhs parsedRhs
             Div  -> dim' $ subtractUnits parsedLhs parsedRhs
-            _ -> fail "Invalid factor operator"
+            _    -> fail "Invalid factor operator"
     } <|> return parsedLhs
 
 

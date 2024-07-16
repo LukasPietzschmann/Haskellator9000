@@ -1,4 +1,4 @@
-module Math.SiConverter.Internal.Utils.Stack (
+module Math.Haskellator.Internal.Utils.Stack (
       Stack
     , isEmpty
     , mapTop

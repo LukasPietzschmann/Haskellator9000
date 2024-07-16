@@ -3,7 +3,7 @@ module Main (main) where
 import Control.Monad
 import Control.Monad.IO.Class
 
-import Math.SiConverter
+import Math.Haskellator
 
 import System.Console.Haskeline
 import System.Directory

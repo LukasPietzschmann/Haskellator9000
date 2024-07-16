@@ -1,4 +1,4 @@
-name:                si-calculator
+name:                haskellator
 version:             0.1.0.0
 license:             BSD-3-Clause
 author:              "Lukas Pietzschmann, Thomas Schöller"
@@ -8,14 +8,10 @@ copyright:           "2024 Lukas Pietzschmann, Thomas Schöller"
 extra-source-files:
 - README.md
 
-# Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Web
+synopsis:           SI-Units supporting calculator
+category:           Math
 
-# To avoid duplicated efforts in documentation and dealing with the
-# complications of embedding Haddock markup inside cabal files, it is
-# common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/si-calculator#readme>
+description: See README on GitHub <https://github.com/LukasPietzschmann/Haskellator9000>
 
 dependencies:
 - base >= 4.7 && < 5
@@ -43,7 +39,7 @@ library:
   - containers
 
 executables:
-  si-calculator-exe:
+  haskellator-exe:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -51,12 +47,12 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - si-calculator
+    - haskellator
     - haskeline
     - directory
 
 tests:
-  si-calculator-test:
+  haskellator-test:
     main:                Main.hs
     source-dirs:         test
     ghc-options:

@@ -4,9 +4,11 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 
-name:           si-calculator
+name:           haskellator
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/si-calculator#readme>
+synopsis:       SI-Units supporting calculator
+description:    See README on GitHub <https://github.com/LukasPietzschmann/Haskellator9000>
+category:       Math
 author:         Lukas Pietzschmann, Thomas Schöller
 maintainer:     Lukas Pietzschmann, Thomas Schöller
 copyright:      2024 Lukas Pietzschmann, Thomas Schöller
@@ -18,25 +20,25 @@ extra-source-files:
 
 library
   exposed-modules:
-      Math.SiConverter
-      Math.SiConverter.Internal.AstProcessingSteps.Evaluate
-      Math.SiConverter.Internal.AstProcessingSteps.Normalize
-      Math.SiConverter.Internal.DerivedUnits
-      Math.SiConverter.Internal.Expr
-      Math.SiConverter.Internal.Lexer
-      Math.SiConverter.Internal.Operators
-      Math.SiConverter.Internal.Parser
-      Math.SiConverter.Internal.TH.DerivedUnitGeneration
-      Math.SiConverter.Internal.TH.OperGeneration
-      Math.SiConverter.Internal.TH.UnitGeneration
-      Math.SiConverter.Internal.Units
-      Math.SiConverter.Internal.Utils.Composition
-      Math.SiConverter.Internal.Utils.Error
-      Math.SiConverter.Internal.Utils.Stack
+      Math.Haskellator
+      Math.Haskellator.Internal.AstProcessingSteps.Evaluate
+      Math.Haskellator.Internal.AstProcessingSteps.Normalize
+      Math.Haskellator.Internal.DerivedUnits
+      Math.Haskellator.Internal.Expr
+      Math.Haskellator.Internal.Lexer
+      Math.Haskellator.Internal.Operators
+      Math.Haskellator.Internal.Parser
+      Math.Haskellator.Internal.TH.DerivedUnitGeneration
+      Math.Haskellator.Internal.TH.OperGeneration
+      Math.Haskellator.Internal.TH.UnitGeneration
+      Math.Haskellator.Internal.Units
+      Math.Haskellator.Internal.Utils.Composition
+      Math.Haskellator.Internal.Utils.Error
+      Math.Haskellator.Internal.Utils.Stack
   other-modules:
-      Paths_si_calculator
+      Paths_haskellator
   autogen-modules:
-      Paths_si_calculator
+      Paths_haskellator
   hs-source-dirs:
       src
   default-extensions:
@@ -49,12 +51,12 @@ library
     , template-haskell
   default-language: Haskell2010
 
-executable si-calculator-exe
+executable haskellator-exe
   main-is: Main.hs
   other-modules:
-      Paths_si_calculator
+      Paths_haskellator
   autogen-modules:
-      Paths_si_calculator
+      Paths_haskellator
   hs-source-dirs:
       app
   default-extensions:
@@ -64,10 +66,10 @@ executable si-calculator-exe
       base >=4.7 && <5
     , directory
     , haskeline
-    , si-calculator
+    , haskellator
   default-language: Haskell2010
 
-test-suite si-calculator-test
+test-suite haskellator-test
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
@@ -75,9 +77,9 @@ test-suite si-calculator-test
       Evaluation
       Parser
       Units
-      Paths_si_calculator
+      Paths_haskellator
   autogen-modules:
-      Paths_si_calculator
+      Paths_haskellator
   hs-source-dirs:
       test
   default-extensions:
