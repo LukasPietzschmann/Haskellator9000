@@ -1,8 +1,9 @@
 #  Haskellator9000
 
-Haskellator9000 is a simple calculator written in (you guessed it) Haskell. Its main
-feature is the support for multiple SI base and derived units. For a complete list of
-supported units and features, see below.
+Haskellator9000 is a calculator developed by [Thomas](https://github.com/MaxAtoms) and
+[Lukas](https://github.com/LukasPietzschmann), written in (you guessed it) Haskell. Its
+main feature is the support for multiple SI base and derived units. For a complete list
+of supported units and features, see below.
 
 ## Supported Units
 - SI base units
