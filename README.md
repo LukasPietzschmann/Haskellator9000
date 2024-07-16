@@ -15,14 +15,14 @@
     - [x] Mass (ng, µg, mg, g, kg, t)
 - SI derived units
     - [x] Area (m², dm², cm², mm², a, ha, km²)
-    - [x] Volume (m³, dm³, cm³, mm³, l, ml, cl, dl, km³)
+    - [x] Volume (m³, dm³, cm³, mm³, km³)
     - [x] Velocity (combination of length and time)
     - [x] Acceleration (combination of length and time²)
     - [x] Force (N, m/s², kN)
     - [x] Pressure (Pa, hPa)
     - [x] Frequency (Hz, kHz, MHz, GHz)
-    - [ ] Energy (J, kJ, MJ, Wh, KWh, MWh, GWh, TWh)
-    - [ ] Power (W, mW, kW, MW, GW, TW)
+    - [x] Energy (J, kJ, MJ)
+    - [x] Power (W, mW, kW, MW, GW, TW)
 
 ### Optional
 
