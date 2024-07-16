@@ -8,8 +8,7 @@ module Math.SiConverter.Internal.AstProcessingSteps.Normalize (
 import Data.Maybe (fromJust)
 
 import Math.SiConverter.Internal.Expr (AstValue, Expr (..), Value (..), foldExpr)
-import Math.SiConverter.Internal.Units (Dimension, UnitExp, convertTo, convertToBase,
-           dimUnit, power)
+import Math.SiConverter.Internal.Units (Dimension, UnitExp, convertTo, convertToBase)
 import Math.SiConverter.Internal.Utils.Composition ((.:))
 import Math.SiConverter.Internal.Utils.Error (Error)
 
