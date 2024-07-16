@@ -68,12 +68,12 @@ physics = testGroup "Some classics from physics class" [
     testCase "Constant acceleration: v = u + at"
         $ calc "0m/s + (3m/s^2*5s)"   @?= "15.0 m/s",
     testCase "Gravitational potential energy: U = mgh"
-        $ calc "10kg * 9.8m/s^2 * 5m" @?= "490.0 kg*m^2/s^2",
+        $ calc "10kg * 9.8m/s^2 * 5m" @?= "490.0 m^2*kg/s^2",
     -- TODO Need to be sanity checked once exponentiation works again
     testCase "Kinetic Energy: KE=1/2mv^2"
         $ calc "1/2*800kg*(10m/s)^2"  @?= "40000.0 kg*m^2/s^2",
     testCase "Work done: W = Fd"
-        $ calc "50kg*m*s^(-2) * 10m"    @?= "500.0 kg*m^2/s^2"
+        $ calc "50kg*m*s^(-2) * 10m"    @?= "500.0 m^2*kg/s^2"
     ]
 
 physicsDerived :: TestTree
@@ -83,9 +83,9 @@ physicsDerived = testGroup "Physics equations using derived units" [
     testCase "Power as energy over time: P = E / t"
         $ calc "E = 1000J, t=50s -> E / t"     @?= "20.0 kg*m^2/s^3",
     testCase "Mechanical power: P = F / v"
-        $ calc "F = 50N, v=3m/s -> F*v"        @?= "150.0 kg*m^2/s^3",
+        $ calc "F = 50N, v=3m/s -> F*v"        @?= "150.0 m^2*kg/s^3",
     testCase "Work done: W = Fd"
-        $ calc "F = 50N, d = 10m -> F*d"       @?= "500.0 kg*m^2/s^2"
+        $ calc "F = 50N, d = 10m -> F*d"       @?= "500.0 m^2*kg/s^2"
     ]
 
 nonSiUnits :: TestTree
@@ -129,7 +129,7 @@ variables = testGroup "Variables" [
     testCase "Nested assignment with units"
         $ calc "M = 60kg -> M * (a = 3m/s^2 -> a)" @?= "180.0 kg*m/s^2",
     testCase "Assignment with expression"
-        $ calc "F = 1t * 2m/s^2, d = 10m -> F * d" @?= "20000.0 kg*m^2/s^2"
+        $ calc "F = 1t * 2m/s^2, d = 10m -> F * d" @?= "20000.0 m^2*kg/s^2"
     ]
 
 calc::String->String
