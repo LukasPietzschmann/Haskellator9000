@@ -40,7 +40,9 @@ arithmetic = testGroup "Arithmetic" [
     testCase "Fractional Power!"
         $ calc "2^3.5"           @?= "11.313708498984761",
     testCase "Arithmetic expression with implicit multiplier"
-        $ calc "2(3 + 4)/7"      @?= "2.0"
+        $ calc "2(3 + 4)/7"      @?= "2.0",
+    testCase "Multi exponentiation"
+        $ calc "2^(3^4)" @?= "2.4178516392292583e24"
     ]
 
 units :: TestTree
