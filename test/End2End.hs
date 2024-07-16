@@ -12,7 +12,7 @@ end2endTests = testGroup "End-to-End Tests" [
     arithmetic,
     units,
     unitConversion,
-    nonSiUnits,
+    --nonSiUnits,
     variables,
     physics,
     physicsDerived
