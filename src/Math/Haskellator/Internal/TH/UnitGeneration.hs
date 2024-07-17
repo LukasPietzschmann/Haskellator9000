@@ -129,6 +129,7 @@ genUnitExp = [d|
     show (UnitExp u i) = show u ++ "^" ++ show i
 
   instance Eq UnitExp where
+    (UnitExp $(return $ ConP (mkName "Multiplier") [] []) _) == (UnitExp $(return $ ConP (mkName "Multiplier") [] []) _) = True
     (UnitExp u1 i1) == (UnitExp u2 i2) = u1 == u2 && i1 == i2
   |]
 

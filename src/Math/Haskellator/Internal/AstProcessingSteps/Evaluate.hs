@@ -38,9 +38,9 @@ execVal = return
 
 execBinOp :: Value Dimension -> Op -> Value Dimension -> SimpleAstFold (Value Dimension)
 execBinOp lhs Plus  rhs | unit lhs =~= unit rhs = return $ combineValues (+) lhs rhs
-                        | otherwise = throwError $ Error RuntimeError $ "Cannot add units " ++ show lhs ++ " and " ++ show rhs
+                        | otherwise = throwError $ Error RuntimeError $ "Cannot add units " ++ show (unit lhs) ++ " and " ++ show (unit rhs)
 execBinOp lhs Minus rhs | unit lhs =~= unit rhs = return $ combineValues (-) lhs rhs
-                        | otherwise = throwError $ Error RuntimeError $ "Cannot subtract units " ++ show lhs ++ " and " ++ show rhs
+                        | otherwise = throwError $ Error RuntimeError $ "Cannot subtract units " ++ show (unit lhs) ++ " and " ++ show (unit rhs)
 execBinOp lhs Mult  rhs = do
     let u = mergeUnits (unit lhs) (unit rhs)
     return $ Value (value lhs * value rhs) u
