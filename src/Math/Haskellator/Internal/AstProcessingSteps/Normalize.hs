@@ -20,6 +20,7 @@ normalize :: Expr              -- ^ the 'Expr' tree to normalize
 normalize = Right . foldExpr (Val . filterMultiplier . convertDimensionToBase) BinOp UnaryOp Conversion VarBindings Var
 
 -- | Converts a value to its base dimension
+--
 -- >>> convertDimensionToBase $ Value 1 [UnitExp Kilometer 2, UnitExp Hour 1]
 -- 3.6e9 m^2*s
 convertDimensionToBase :: AstValue -> AstValue
@@ -28,6 +29,7 @@ convertDimensionToBase (Value v u) = foldr doIt (Value v []) u
                                   in Value (v' * v'') (u'':u')
 
 -- | Converts a value to a given dimension. Throws if the conversion is not possible.
+--
 -- >>> convertDimensionTo (Value 3600000000 [UnitExp Meter 2, UnitExp Second 1]) [UnitExp Kilometer 2, UnitExp Hour 1]
 -- 1.0 h*km^2
 convertDimensionTo :: AstValue -> Dimension -> AstValue

@@ -76,6 +76,7 @@ execVar n = getVarBinding n >>= \case
         return result
 
 -- | Combine the Units of two Dimensions, by adding the powers of matching units.
+--
 -- >>> mergeUnits [UnitExp Meter 2, UnitExp Second 1, UnitExp Kilogram 1] [UnitExp Meter 1, UnitExp Second (-2)]
 -- m^3*kg/s
 mergeUnits :: Dimension -> Dimension -> Dimension
@@ -83,6 +84,7 @@ mergeUnits lhs rhs = [x{power = power x + power y} | (x, y) <- pairs] ++ lr ++ r
     where (pairs, (lr, rr)) = findPairs lhs rhs
 
 -- | Combine the Units of two Dimensions, by subtracting the powers of matching units.
+--
 -- >>> subtractUnits [UnitExp Meter 2, UnitExp Second 1, UnitExp Kilogram 1] [UnitExp Meter 1, UnitExp Second (-2)]
 -- m*s^3*kg
 subtractUnits :: Dimension -> Dimension -> Dimension
