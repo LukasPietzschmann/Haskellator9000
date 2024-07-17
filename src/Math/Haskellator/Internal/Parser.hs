@@ -35,6 +35,7 @@ import Control.Monad.State
 import Data.Bifunctor
 
 import Math.Haskellator.Internal.AstProcessingSteps.Evaluate
+import Math.Haskellator.Internal.AstProcessingSteps.Normalize
 import Math.Haskellator.Internal.DerivedUnits
 import Math.Haskellator.Internal.Expr
 import Math.Haskellator.Internal.Lexer
@@ -164,7 +165,7 @@ parseUnitExp = do
     either (\x -> fail $ "Invalid unit " ++ x) (\dim -> do {
         requireOperator "^";
         expr <- parsePrimary;
-        case execute expr of
+        case normalize expr >>= execute of
             Right (Value v []) -> let e = round v :: Int in return ((\(UnitExp u e') -> UnitExp u $ e' * e) <$> dim)
             _                  -> fail "Exponentiation of units is not supported"
     } <|> return dim) $ parseUnitSymbol i

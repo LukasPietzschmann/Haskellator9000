@@ -65,7 +65,7 @@ genInt = do
 instance Arbitrary Unit where
     -- Multiplier needs to be excluded here to prevent ambiguous cases in our grammar
     -- e.g. 2^2 could be either a multiplier with exponent two or a power operation on two multipliers with exponent 1
-    arbitrary = arbitraryBoundedEnum `suchThat` (/= Multiplier)
+    arbitrary = arbitraryBoundedEnum `suchThat` (not . isMultiplier)
 
 instance Arbitrary Expr where
   arbitrary = let randomValue = do {

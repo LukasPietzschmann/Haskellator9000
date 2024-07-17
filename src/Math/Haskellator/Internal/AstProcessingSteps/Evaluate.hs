@@ -28,7 +28,7 @@ execute :: Expr                           -- ^ the expression tree to evaluate
         -> Either Error (Value Dimension) -- ^ the result or an error
 execute expr = do
     r <- runAstFold $ execute' expr
-    return $ r { unit = filterUnwanted $ unit r }
+    return $ r { unit = filterZeroPower $ unit r }
 
 execute' :: Expr -> SimpleAstFold (Value Dimension)
 execute' = partiallyFoldExprM execVal execBinOp execUnaryOp execConversion execVarBinds execVar
@@ -48,10 +48,10 @@ execBinOp lhs Div   rhs = do
     let u = subtractUnits (unit lhs) (unit rhs)
     return $ Value (value lhs / value rhs) u
 execBinOp lhs Pow   rhs = case rhs of
-    Value _ [UnitExp Multiplier _] -> return $ Value (value lhs ** value rhs) ((\u -> u {
+    Value _ [] -> return $ Value (value lhs ** value rhs) ((\u -> u {
         power = power u * (round (value rhs) :: Int)
       }) <$> unit lhs)
-    _                              -> throwError $ Error RuntimeError "Exponentiation of units is not supported"
+    _          -> throwError $ Error RuntimeError "Exponentiation of units is not supported"
 execBinOp _   op    _   = throwError $ Error ImplementationError $ "Unknown binary operator " ++ show op
 
 execUnaryOp :: Op -> Value Dimension -> SimpleAstFold (Value Dimension)
@@ -105,11 +105,5 @@ findPair x (y:ys) | dimUnit x == dimUnit y = ([(x, y)], ([], ys))
                   | otherwise              = let (pair, (lr, rr)) = findPair x ys
                                               in (pair, (lr, y:rr))
 
-filterUnwanted :: Dimension -> Dimension
-filterUnwanted = filterZeroPower . filterMultiplier
-
 filterZeroPower :: Dimension -> Dimension
 filterZeroPower = filter ((/=0) . power)
-
-filterMultiplier :: Dimension -> Dimension
-filterMultiplier = filter (not . isMultiplier . dimUnit)

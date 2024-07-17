@@ -17,7 +17,7 @@ import Math.Haskellator.Internal.Utils.Error
 -- | Normalize all values inside the tree to their base units
 normalize :: Expr              -- ^ the 'Expr' tree to normalize
           -> Either Error Expr -- ^ the normalized 'Expr' tree
-normalize = Right . foldExpr (Val . convertDimensionToBase) BinOp UnaryOp Conversion VarBindings Var
+normalize = Right . foldExpr (Val . filterMultiplier . convertDimensionToBase) BinOp UnaryOp Conversion VarBindings Var
 
 -- | Converts a value to its base dimension
 -- >>> convertDimensionToBase $ Value 1 [UnitExp Kilometer 2, UnitExp Hour 1]
@@ -59,3 +59,6 @@ convertUnit s (t:ts) val@(Value v u) = case convertTo (Value 1 s) t of
     Nothing            -> do
         (v', rest) <- convertUnit s ts val
         return (v', t:rest)
+
+filterMultiplier :: AstValue -> AstValue
+filterMultiplier (Value v u) = Value v $ filter (not . isMultiplier . dimUnit) u

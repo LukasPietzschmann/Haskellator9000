@@ -40,8 +40,8 @@ normalization = testGroup "Normalization" [
       @?= Right (BinOp (Val $ Value 1 $ meter 42) Div (Val $ Value 1 $ second 33))
   ]
 
-evalString :: String -> Either Error Double
-evalString = scan >=> parse >=> evaluate
-
 normalizeString :: String -> Either Error Expr
 normalizeString = scan >=> parse >=> normalize
+
+evalString :: String -> Either Error Double
+evalString = normalizeString >=> evaluate
