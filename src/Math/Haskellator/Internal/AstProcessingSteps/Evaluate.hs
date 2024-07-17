@@ -37,9 +37,9 @@ execVal :: Value Dimension -> SimpleAstFold (Value Dimension)
 execVal = return
 
 execBinOp :: Value Dimension -> Op -> Value Dimension -> SimpleAstFold (Value Dimension)
-execBinOp lhs Plus  rhs | unit lhs =~= unit rhs = return $ combineValues (+) lhs rhs
+execBinOp lhs Plus  rhs | unit lhs == unit rhs = return $ combineValues (+) lhs rhs
                         | otherwise = throwError $ Error RuntimeError $ "Cannot add units " ++ show (unit lhs) ++ " and " ++ show (unit rhs)
-execBinOp lhs Minus rhs | unit lhs =~= unit rhs = return $ combineValues (-) lhs rhs
+execBinOp lhs Minus rhs | unit lhs == unit rhs = return $ combineValues (-) lhs rhs
                         | otherwise = throwError $ Error RuntimeError $ "Cannot subtract units " ++ show (unit lhs) ++ " and " ++ show (unit rhs)
 execBinOp lhs Mult  rhs = do
     let u = mergeUnits (unit lhs) (unit rhs)
@@ -107,3 +107,10 @@ findPair x (y:ys) | dimUnit x == dimUnit y = ([(x, y)], ([], ys))
 
 filterZeroPower :: Dimension -> Dimension
 filterZeroPower = filter ((/=0) . power)
+
+mapValue :: (Double -> Double) -> Value u -> Value u
+mapValue f (Value v u) = Value (f v) u
+
+combineValues :: Eq u => (Double -> Double -> Double) -> Value u -> Value u -> Value u
+combineValues f (Value v1 u1) (Value v2 u2) | u1 == u2  = Value (v1 `f` v2) u1
+                                            | otherwise = error "Cannot map values with different units"

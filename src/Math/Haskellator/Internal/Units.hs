@@ -68,18 +68,11 @@ instance Eq UnitExp where
     (UnitExp Multiplier _) == (UnitExp Multiplier _) = True
     (UnitExp u1 e1) == (UnitExp u2 e2)               = u1 == u2 && e1 == e2
 
-mapValue :: (Double -> Double) -> Value u -> Value u
-mapValue f (Value v u) = Value (f v) u
-
-combineValues :: SetEq u => (Double -> Double -> Double) -> Value u -> Value u -> Value u
-combineValues f (Value v1 u1) (Value v2 u2) | u1 =~= u2  = Value (v1 `f` v2) u1
-                                            | otherwise = error "Cannot map values with different units"
-
-class SetEq a where
-    (=~=) :: a -> a -> Bool
-
 -- | A dimension is a list of exponentiated units
 type Dimension = [UnitExp]
+
+instance {-# OVERLAPPING #-} Eq Dimension where
+    a == b = all (`elem` b) a && all (`elem` a) b
 
 instance {-# OVERLAPPING #-} Show Dimension where
     show xs = write $ divide xs ([],[])
@@ -98,6 +91,3 @@ instance {-# OVERLAPPING #-} Show Dimension where
 divide::Dimension -> (Dimension,Dimension) -> (Dimension, Dimension)
 divide (uExp@(UnitExp _ e):xs) (pos,neg) = if e<0 then divide xs (pos,neg ++ [uExp]) else divide xs (pos ++ [uExp], neg)
 divide [] (pos,neg) = (pos,neg)
-
-instance SetEq Dimension where
-    (=~=) a b = all (`elem` b) a && all (`elem` a) b
