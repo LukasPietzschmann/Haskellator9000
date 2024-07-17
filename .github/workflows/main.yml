@@ -1,8 +1,10 @@
 on: [push]
 name: Build and test
 jobs:
-  build:
+  ci:
     name: Build on ${{ matrix.os }}
+    env:
+      stack: stack --system-ghc
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -12,76 +14,41 @@ jobs:
       - name: Check out
         uses: actions/checkout@v2
 
-      - name: Cache GHC installation
-        uses: actions/cache@v4
-        id: ghcup
-        with:
-          path: |
-            ~/.ghcup/bin/*
-            ~/.ghcup/cache/*
-            ~/.ghcup/config.yaml
-            ~/.ghcup/ghc/*
-          key: CI-ghcup
-
       - name: Setup Haskell
         uses: haskell-actions/setup@v2
-        if: steps.ghcup.outputs.cache-hit != 'true'
         with:
           enable-stack: true
 
-      - name: Cache Stackage package index
-        id: pantry
+      - name: Cache
         uses: actions/cache@v4
-        with:
-          path: ~/.stack/pantry
-          key: CI-pantry-${{ env.STACK_LTS }}
-
-      - name: Recompute Stackage package index
-        if: steps.pantry.outputs.cache-hit != 'true'
-        run: stack update
-
-      - name: Cache Haskell dependencies
-        uses: actions/cache@v3
         with:
           path: |
-            ~/.stack/stack.sqlite3
-            ~/.stack/snapshots
-          key: CI-testdeps--${{ env.STACK_LTS }}--${{ hashFiles('stack.yaml.lock') }}
-          restore-keys: |
-            CI-testdeps--${{ env.STACK_LTS }}--
-            CI-testdeps--
-
-      - name: Cache Haskell project buildstate
-        uses: actions/cache@v4
-        with:
-          path: .stack-work
-          key: CI-builddir--${{ env.GHC_VERSION }}
+            ~/.stack
+            .stack-work
+          key: ${{ matrix.os }}-stack-${{ hashFiles('./stack.yaml.lock') }}
 
       - name: Build package dependencies
         run: |
-          stack build --no-run-tests --no-run-benchmarks --only-dependencies
+          $stack build --no-run-tests --no-run-benchmarks --only-dependencies
 
       - name: Build package
         run: |
-          stack build --no-run-tests --no-run-benchmarks
+          $stack build --no-run-tests --no-run-benchmarks
 
       - name: Build testing dependencies
         run: |
-          stack build --no-run-tests --no-run-benchmarks --test --bench
+          $stack build --no-run-tests --no-run-benchmarks --test --bench
 
       - name: Run tests
         run: |
-          stack build --test --no-run-benchmarks
+          $stack build --test --no-run-benchmarks
 
       - name: Build documentation
         run: |
-          stack haddock
+          $stack haddock
 
       - name: Check documentation
+        if: matrix.os != 'windows-latest'
         run: |
-          stack install doctest
+          $stack install doctest
           $(stack path --local-bin)${path.sep}doctest src/
-
-      - name: Deploy
-        run: |
-          stack path --local-install-root
