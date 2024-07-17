@@ -6,7 +6,7 @@ import Math.Haskellator.Internal.AstProcessingSteps.Normalize
 import Math.Haskellator.Internal.Expr
 import Math.Haskellator.Internal.Lexer
 import Math.Haskellator.Internal.Operators
-import Math.Haskellator.Internal.Parse
+import Math.Haskellator.Internal.Parser
 import Math.Haskellator.Internal.Units
 import Math.Haskellator.Internal.Utils.Error
 
