@@ -1,6 +1,6 @@
 -- | Calculator module for evaluating mathematical expressions containing SI units
 
-module Math.Haskellator (EvalValue, calculate) where
+module Math.Haskellator (calculate) where
 
 import Control.Monad
 
@@ -9,11 +9,7 @@ import Math.Haskellator.Internal.AstProcessingSteps.Normalize
 import Math.Haskellator.Internal.Expr
 import Math.Haskellator.Internal.Lexer
 import Math.Haskellator.Internal.Parser
-import Math.Haskellator.Internal.Units
 import Math.Haskellator.Internal.Utils.Error
-
--- | The specific 'Value' type returned by the evaluation
-type EvalValue = Value Dimension
 
 getAst :: String -> Either Error Expr
 getAst = scan >=> parse >=> normalize
