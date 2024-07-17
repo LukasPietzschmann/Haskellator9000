@@ -115,23 +115,8 @@ generateUnits unitGroups = do
   convertBaseFunc <- funD convertToBaseFun convertBaseClauses
   mkUnitFuns      <- generateMkUnitFuns unitGroups
   isUnitFuns      <- generateIsUnitFuns unitGroups
-  unitExpDec      <- genUnitExp
 
-  return $ [dataDec, showInstance] ++ [fromStringSig, fromStringFunction, convertBaseSig, convertBaseFunc, convertToSig, convertToFunc] ++ isUnitFuns ++ unitExpDec ++ mkUnitFuns
-
-genUnitExp :: Q [Dec]
-genUnitExp = [d|
-  data UnitExp = UnitExp { dimUnit :: $(conT unitADT), power :: Int }
-    deriving Lift
-
-  instance Show UnitExp where
-    show (UnitExp u 1) = show u
-    show (UnitExp u i) = show u ++ "^" ++ show i
-
-  instance Eq UnitExp where
-    (UnitExp $(return $ ConP (mkName "Multiplier") [] []) _) == (UnitExp $(return $ ConP (mkName "Multiplier") [] []) _) = True
-    (UnitExp u1 i1) == (UnitExp u2 i2) = u1 == u2 && i1 == i2
-  |]
+  return $ [dataDec, showInstance, fromStringSig, fromStringFunction, convertBaseSig, convertBaseFunc, convertToSig, convertToFunc] ++ isUnitFuns ++ mkUnitFuns
 
 generateIsUnitFuns :: [Quantity] -> Q [Dec]
 generateIsUnitFuns unitGroups = concat <$> mapM mkIsUnitFun (concatMap (\(Quantity b us) -> b:us) unitGroups)

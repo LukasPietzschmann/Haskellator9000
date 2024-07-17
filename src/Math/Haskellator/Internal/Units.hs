@@ -8,6 +8,8 @@ module Math.Haskellator.Internal.Units where
 
 import Data.List (intercalate)
 
+import Language.Haskell.TH.Syntax
+
 import Math.Haskellator.Internal.TH.UnitGeneration
 
 $(generateUnits
@@ -51,6 +53,20 @@ $(generateUnits
     --, UnitDef "Yoctogram" "yg" 1e-27
     ]
   ])
+
+-- | An exponentiated unit
+data UnitExp = UnitExp { dimUnit :: Unit
+                       , power   :: Int
+                       }
+  deriving (Lift)
+
+instance Show UnitExp where
+    show (UnitExp u 1) = show u
+    show (UnitExp u e) = show u ++ "^" ++ show e
+
+instance Eq UnitExp where
+    (UnitExp Multiplier _) == (UnitExp Multiplier _) = True
+    (UnitExp u1 e1) == (UnitExp u2 e2)               = u1 == u2 && e1 == e2
 
 mapValue :: (Double -> Double) -> Value u -> Value u
 mapValue f (Value v u) = Value (f v) u
