@@ -1,66 +1,66 @@
-name:                haskellator
-version:             0.1.0.0
-license:             BSD-3-Clause
-author:              "Lukas Pietzschmann, Thomas Schöller"
-maintainer:          "Lukas Pietzschmann, Thomas Schöller"
-copyright:           "2024 Lukas Pietzschmann, Thomas Schöller"
+name: haskellator
+version: 0.1.0.0
+license: BSD-3-Clause
+author: "Lukas Pietzschmann, Thomas Schöller"
+maintainer: "Lukas Pietzschmann, Thomas Schöller"
+copyright: "2024 Lukas Pietzschmann, Thomas Schöller"
 
 extra-source-files:
-- README.md
+  - README.md
 
-synopsis:           SI-Units supporting calculator
-category:           Math
+synopsis: SI-Units supporting calculator
+category: Math
 
 description: See README on GitHub <https://github.com/LukasPietzschmann/Haskellator9000>
 
 dependencies:
-- base >= 4.7 && < 5
+  - base >= 4.7 && < 5
 
 ghc-options:
-- -Wall
-- -Wcompat
-- -Widentities
-- -Wincomplete-record-updates
-- -Wincomplete-uni-patterns
-- -Wmissing-export-lists
-- -Wmissing-home-modules
-- -Wpartial-fields
-- -Wredundant-constraints
-- -ddump-splices
+  - -Wall
+  - -Wcompat
+  - -Widentities
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wmissing-export-lists
+  - -Wmissing-home-modules
+  - -Wpartial-fields
+  - -Wredundant-constraints
+  - -ddump-splices
 
 default-extensions:
-- DeriveLift
+  - DeriveLift
 
 library:
   source-dirs: src
   dependencies:
-  - template-haskell
-  - mtl
-  - containers
+    - template-haskell
+    - mtl
+    - containers
 
 executables:
   haskellator-exe:
-    main:                Main.hs
-    source-dirs:         app
+    main: Main.hs
+    source-dirs: app
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
     dependencies:
-    - haskellator
-    - haskeline
-    - directory
+      - haskellator
+      - haskeline
+      - directory
 
 tests:
   haskellator-test:
-    main:                Main.hs
-    source-dirs:         test
+    main: Main.hs
+    source-dirs: test
     ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
     dependencies:
-    - si-calculator
-    - tasty
-    - tasty-hunit
-    - tasty-quickcheck
+      - haskellator
+      - tasty
+      - tasty-hunit
+      - tasty-quickcheck
