@@ -9,79 +9,79 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-     - name: Check out
-       uses: actions/checkout@v2
-      
-     - name: Cache GHC installation
-       uses: actions/cache@v4
-       id: ghcup
-       with:
-         path: |
-           ~/.ghcup/bin/*
-           ~/.ghcup/cache/*
-           ~/.ghcup/config.yaml
-           ~/.ghcup/ghc/*
-         key: CI-ghcup
+      - name: Check out
+        uses: actions/checkout@v2
 
-     - name: Setup Haskell
-       uses: haskell/actions/setup@v2
-       if: steps.ghcup.outputs.cache-hit != 'true'
-       with:
-         enable-stack: true
+      - name: Cache GHC installation
+        uses: actions/cache@v4
+        id: ghcup
+        with:
+          path: |
+            ~/.ghcup/bin/*
+            ~/.ghcup/cache/*
+            ~/.ghcup/config.yaml
+            ~/.ghcup/ghc/*
+          key: CI-ghcup
 
-     - name: Cache Stackage package index
-       id: pantry
-       uses: actions/cache@v4
-       with:
-         path: ~/.stack/pantry
-         key: CI-pantry-${{ env.STACK_LTS }}
+      - name: Setup Haskell
+        uses: haskell-actions/setup@v2
+        if: steps.ghcup.outputs.cache-hit != 'true'
+        with:
+          enable-stack: true
 
-     - name: Recompute Stackage package index
-       if: steps.pantry.outputs.cache-hit != 'true'
-       run: stack update
+      - name: Cache Stackage package index
+        id: pantry
+        uses: actions/cache@v4
+        with:
+          path: ~/.stack/pantry
+          key: CI-pantry-${{ env.STACK_LTS }}
 
-     - name: Cache Haskell dependencies
-       uses: actions/cache@v3
-       with:
-         path: |
-           ~/.stack/stack.sqlite3
-           ~/.stack/snapshots
-         key: CI-testdeps--${{ env.STACK_LTS }}--${{ hashFiles('stack.yaml.lock') }}
-         restore-keys: |
-           CI-testdeps--${{ env.STACK_LTS }}--
-           CI-testdeps--
+      - name: Recompute Stackage package index
+        if: steps.pantry.outputs.cache-hit != 'true'
+        run: stack update
 
-     - name: Cache Haskell project buildstate
-       uses: actions/cache@v4
-       with:
-         path: .stack-work
-         key: CI-builddir--${{ env.GHC_VERSION }}
-     
-     - name: Build package dependencies
-       run: |
+      - name: Cache Haskell dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.stack/stack.sqlite3
+            ~/.stack/snapshots
+          key: CI-testdeps--${{ env.STACK_LTS }}--${{ hashFiles('stack.yaml.lock') }}
+          restore-keys: |
+            CI-testdeps--${{ env.STACK_LTS }}--
+            CI-testdeps--
+
+      - name: Cache Haskell project buildstate
+        uses: actions/cache@v4
+        with:
+          path: .stack-work
+          key: CI-builddir--${{ env.GHC_VERSION }}
+
+      - name: Build package dependencies
+        run: |
           stack build --no-run-tests --no-run-benchmarks --only-dependencies
-     
-     - name: Build package
-       run: |
+
+      - name: Build package
+        run: |
           stack build --no-run-tests --no-run-benchmarks
-     
-     - name: Build testing dependencies
-       run: |
+
+      - name: Build testing dependencies
+        run: |
           stack build --no-run-tests --no-run-benchmarks --test --bench
-     
-     - name: Run tests
-       run: |
+
+      - name: Run tests
+        run: |
           stack build --test --no-run-benchmarks
 
-     - name: Build documentation
-       run: |
-         stack haddock
+      - name: Build documentation
+        run: |
+          stack haddock
 
-     - name: Check documentation
-       run: |
-         stack install doctest
-         $(stack path --local-bin)/doctest src/
+      - name: Check documentation
+        run: |
+          stack install doctest
+          $(stack path --local-bin)${path.sep}doctest src/
 
-     - name: Deploy
-       run: |
-         stack path --local-install-root 
+      - name: Deploy
+        run: |
+          stack path --local-install-root
