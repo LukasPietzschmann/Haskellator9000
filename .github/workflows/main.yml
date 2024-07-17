@@ -3,8 +3,6 @@ name: Build and test
 jobs:
   ci:
     name: Build on ${{ matrix.os }}
-    env:
-      stack: stack --system-ghc
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -29,26 +27,26 @@ jobs:
 
       - name: Build package dependencies
         run: |
-          $stack build --no-run-tests --no-run-benchmarks --only-dependencies
+          stack --system-ghc build --no-run-tests --no-run-benchmarks --only-dependencies
 
       - name: Build package
         run: |
-          $stack build --no-run-tests --no-run-benchmarks
+          stack --system-ghc build --no-run-tests --no-run-benchmarks
 
       - name: Build testing dependencies
         run: |
-          $stack build --no-run-tests --no-run-benchmarks --test --bench
+          stack --system-ghc build --no-run-tests --no-run-benchmarks --test --bench
 
       - name: Run tests
         run: |
-          $stack build --test --no-run-benchmarks
+          stack --system-ghc build --test --no-run-benchmarks
 
       - name: Build documentation
         run: |
-          $stack haddock
+          stack --system-ghc haddock
 
       - name: Check documentation
         if: matrix.os != 'windows-latest'
         run: |
-          $stack install doctest
-          $(stack path --local-bin)${path.sep}doctest src/
+          stack --system-ghc install doctest
+          $(stack path --local-bin)/doctest src/
