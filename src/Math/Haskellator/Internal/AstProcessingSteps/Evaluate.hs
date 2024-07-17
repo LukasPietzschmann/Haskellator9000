@@ -1,6 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 
--- | Evaluate the expression tree
+-- | Evaluate the expression tree to a numeric value and a dimension.
+
 module Math.Haskellator.Internal.AstProcessingSteps.Evaluate (
       evaluate
     , execute
@@ -17,10 +18,14 @@ import Math.Haskellator.Internal.Operators
 import Math.Haskellator.Internal.Units
 import Math.Haskellator.Internal.Utils.Error
 
-evaluate :: Expr -> Either Error Double
+-- | Evaluate an expression tree to a numeric value
+evaluate :: Expr                -- ^ the expression tree to evaluate
+         -> Either Error Double -- ^ the numeric result or an error
 evaluate expr = execute expr <&> value
 
-execute :: Expr -> Either Error (Value Dimension)
+-- | Determine the result (value and dimension) of an expression tree
+execute :: Expr                           -- ^ the expression tree to evaluate
+        -> Either Error (Value Dimension) -- ^ the result or an error
 execute expr = do
     r <- runAstFold $ execute' expr
     return $ r { unit = filterUnwanted $ unit r }
@@ -70,10 +75,16 @@ execVar n = getVarBinding n >>= \case
         bindVar n $ Result result
         return result
 
+-- | Combine the Units of two Dimensions, by adding the powers of matching units.
+-- >>> mergeUnits [UnitExp Meter 2, UnitExp Second 1, UnitExp Kilogram 1] [UnitExp Meter 1, UnitExp Second (-2)]
+-- m^3*kg/s
 mergeUnits :: Dimension -> Dimension -> Dimension
 mergeUnits lhs rhs = [x{power = power x + power y} | (x, y) <- pairs] ++ lr ++ rr
     where (pairs, (lr, rr)) = findPairs lhs rhs
 
+-- | Combine the Units of two Dimensions, by subtracting the powers of matching units.
+-- >>> subtractUnits [UnitExp Meter 2, UnitExp Second 1, UnitExp Kilogram 1] [UnitExp Meter 1, UnitExp Second (-2)]
+-- m*s^3*kg
 subtractUnits :: Dimension -> Dimension -> Dimension
 subtractUnits lhs rhs = [x{power = power x - power y} | (x, y) <- pairs] ++ lr ++ fmap flipPower rr
     where (pairs, (lr, rr)) = findPairs lhs rhs

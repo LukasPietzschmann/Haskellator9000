@@ -18,8 +18,6 @@ end2endTests = testGroup "End-to-End Tests" [
     physicsDerived
     ]
 
--- | Test cases based on the project description
--- Decimal places are allowed (discussed in our meeting on 2024-07-09)
 testsFromSpec :: TestTree
 testsFromSpec = testGroup "Tests from the Project description" [
     testCase "36 km/h * 50s = 500m"       $ calc "36 km/h * 50s"   @?= "500.0 m",

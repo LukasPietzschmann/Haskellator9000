@@ -1,6 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -Wno-unused-top-binds #-}
-
 -- | Models an expression tree
 --
 -- Examples:
@@ -42,19 +39,22 @@ import Math.Haskellator.Internal.Utils.Composition
 import Math.Haskellator.Internal.Utils.Error
 import Math.Haskellator.Internal.Utils.Stack
 
+-- | The specific 'Value' type used in the expression tree
 type AstValue = Value Dimension
 
 -- | A list of variable bindings, mapping a name to an arbitrary value
 type Bindings a = [(String, a)]
 
-data Expr = Val AstValue
-          | BinOp Expr Op Expr
-          | UnaryOp Op Expr
-          | Conversion Expr Dimension
-          | VarBindings (Bindings Expr) Expr
+-- | The expression tree
+data Expr = Val AstValue -- ^ a literal value
+          | BinOp Expr Op Expr -- ^ a binary expression (like +, -, *, /, ^)
+          | UnaryOp Op Expr -- ^ a unary expression (like -)
+          | Conversion Expr Dimension -- ^ a conversion (1m [km]). If present, this node is the root of the tree.
+          | VarBindings (Bindings Expr) Expr -- ^ a variable binding expression
           | Var String
 
-data Thunk a = Expr Expr
+-- | A 'Value' wrapped in a 'Thunk' to allow for lazy evaluation
+data Thunk a = Expr Expr -- ^ The unevaluated expression
              | Result a
 
 -- | Folds an expression tree
@@ -76,13 +76,13 @@ foldExpr fv fb fu fc fvb fvn = doIt
     doIt (Var n)            = fvn n
 
 -- | Encapsulates the result 'b' of folding an expression tree and holds the current
--- state of variable bindings of type 'a'
+-- state of variable bindings to values of type 'a'
 type AstFold a b = ExceptT Error (State (Stack (Map String (Thunk a)))) b
 
 -- | Simplified version of 'AstFold' that returns the same type as it binds to variables
 type SimpleAstFold a = AstFold a a
 
--- | Retrieves the value bound to a variable name
+-- | Retrieves the 'Thunk' bound to a variable name
 getVarBinding :: String              -- ^ the variable name
               -> AstFold a (Thunk a) -- ^ the 'Thunk' bound to the variable
 getVarBinding n = do
@@ -93,17 +93,14 @@ getVarBinding n = do
         Nothing -> throwError $ Error RuntimeError $ "Variable '" ++ n ++ "' not in scope"
 
 -- | Binds a 'Thunk' to a variable name
-bindVar :: String       -- ^ the variable name
-        -> Thunk a      -- ^ the value to bind
-        -> AstFold a ()
+bindVar :: String -> Thunk a -> AstFold a ()
 bindVar = modify . mapTop .: insert
 
 -- | Binds multiple variable names
-bindVars :: Bindings (Thunk a) -- ^ the variable names and their values
-         -> AstFold a ()
+bindVars :: Bindings (Thunk a) -> AstFold a ()
 bindVars = mapM_ $ uncurry bindVar
 
--- | Evaluates an 'SimpleAstFold' inside a new scope
+-- | Evaluates a 'SimpleAstFold' inside a new (and empty) scope
 runInNewScope :: SimpleAstFold a -- ^ the computation to run
               -> SimpleAstFold a -- ^ the computation's result
 runInNewScope f = do
@@ -113,8 +110,8 @@ runInNewScope f = do
     return result
 
 -- | Runs an 'SimpleAstFold' computation
-runAstFold :: SimpleAstFold a      -- ^ the computation to run
-           -> Either Error a -- ^ the result of the computation
+runAstFold :: SimpleAstFold a -- ^ the computation to run
+           -> Either Error a  -- ^ the computation's result or an error
 runAstFold = flip evalState (push mempty mempty) . runExceptT
 
 -- | Like 'foldExpr', but does not fold into variable bindings and returns a monadic
@@ -135,7 +132,6 @@ partiallyFoldExprM fv fb fu fc fbv fvar = doIt
         doIt (UnaryOp op e) = do
             v <- doIt e
             fu op v
-
         doIt (Conversion e u) = doIt e >>= \v -> fc v u
         doIt (VarBindings bs expr) = fbv bs expr
         doIt (Var n) = fvar n

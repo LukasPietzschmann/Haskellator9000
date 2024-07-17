@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 
--- | Generate the unit types and function to work with them
+-- | Generate the unit type and function to work with them
 
 module Math.Haskellator.Internal.TH.UnitGeneration (
       Quantity (..)
@@ -20,10 +20,8 @@ data UnitDef = UnitDef String String Double
 -- | A quantity made of a base unit and other related units
 data Quantity = Quantity UnitDef [UnitDef]
 
--- | A derived quantity. Works in the same way as 'Quantity', but with an additional
--- dimension representing it.
--- data DQuantity = DQuantity UnitDef Dimension [UnitDef]
-
+-- | A simple representation of a value with a unit. The unit's type is parameterized,
+-- since the unit can be a simple 'Unit' or a 'Dimension'.
 data Value u = Value { value :: Double
                      , unit  :: u
                      }
@@ -71,6 +69,15 @@ convertToFun = mkName "convertTo"
 -- > convertToBase :: Value UnitExp -> Value UnitExp
 -- > convertToBase (Value v (Meter e)) = Value ((v * 1.0) ^ e) (Meter e)
 -- > convertToBase (Value v (KiloMeter e)) = Value ((v * 0.0001) ^ e) (Meter e)
+--
+--     * A function to convert a base unit to another unit
+--
+-- > convertTo :: Value UnitExp -> UnitExp -> Maybe (Value UnitExp)
+-- > convertTo (Value v (UnitExp Meter es)) (UnitExp Meter et) | es == et = (Just $ Value (v / (1.0 ** fromIntegral es)) (UnitExp Meter es))
+-- >                                                           | otherwise = Nothing
+-- > convertTo (Value v (UnitExp Meter es)) (UnitExp Kilometer et) | es == et = Just $ Value (v / (1000.0 ** fromIntegral es)) (UnitExp Kilometer et)
+-- >                                                               | otherwise = Nothing
+-- > convertTo _ _ = Nothing
 --
 --     * A function to check whether a given unit is a specific unit
 --

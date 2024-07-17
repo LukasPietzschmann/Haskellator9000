@@ -1,4 +1,7 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
+
+-- | Generate the operator type.
+
 module Math.Haskellator.Internal.TH.OperGeneration (
       OperatorDef (..)
     , generateOperators
@@ -10,9 +13,11 @@ operADT :: Name
 operADT = mkName "Op"
 
 -- | Definition of a operator
-data OperatorDef = OperDef String String
+data OperatorDef = OperDef -- ^ Operator definition
+                   String  -- ^ Operator name
+                   String  -- ^ Operator symbol
 
--- | Generate the operator types and function to work with them. Imagine the following call: @generateOperators [OperDef "Plus" "+", OperDef "Minus" "-"]@.
+-- | Generate the operator type. Imagine the following call: @generateOperators [OperDef "Plus" "+", OperDef "Minus" "-"]@.
 -- This function will then generate the following code:
 --
 --     * A data type with all the operators

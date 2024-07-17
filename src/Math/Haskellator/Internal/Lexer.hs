@@ -29,16 +29,16 @@ import Data.Char
 
 import Math.Haskellator.Internal.Utils.Error
 
-data Token = Number Double -- ^ A number (integers are also represented as floats)
-           | Operator String -- ^ An operator
-           | OpenParen -- ^ Open parenthesis "("
-           | CloseParen -- ^ Close parenthesis ")"
-           | OpenBracket -- ^ Open bracket "["
-           | CloseBracket -- ^ Close bracket "]"
+data Token = Number Double     -- ^ A number (integers are also represented as floats)
+           | Operator String   -- ^ An operator
+           | OpenParen         -- ^ Open parenthesis "("
+           | CloseParen        -- ^ Close parenthesis ")"
+           | OpenBracket       -- ^ Open bracket "["
+           | CloseBracket      -- ^ Close bracket "]"
            | Identifier String -- ^ Identifier (e.g. variable and function name) or unit
-           | Arrow -- ^ Arrow "->"
-           | Equal -- ^ Single equal sign "="
-           | Comma -- ^ Comma ","
+           | Arrow             -- ^ Arrow "->"
+           | Equal             -- ^ Single equal sign "="
+           | Comma             -- ^ Comma ","
   deriving (Eq, Show)
 
 -- | A simple alias for the 'Token' stream

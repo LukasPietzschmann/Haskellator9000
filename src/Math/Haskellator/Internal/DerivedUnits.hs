@@ -1,6 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -Wno-missing-export-lists #-}
 
-module Math.Haskellator.Internal.DerivedUnits (derivedUnitFromString) where
+-- | Everything related to derived units. See "Math.Haskellator.Internal.TH.DerivedUnitGeneration" for what is available here.
+
+module Math.Haskellator.Internal.DerivedUnits where
 
 import Math.Haskellator.Internal.TH.DerivedUnitGeneration
 import Math.Haskellator.Internal.TH.UnitGeneration

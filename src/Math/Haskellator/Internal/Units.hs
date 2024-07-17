@@ -1,23 +1,10 @@
 {-# LANGUAGE FlexibleInstances, TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
+{-# OPTIONS_GHC -Wno-missing-export-lists #-}
 
-module Math.Haskellator.Internal.Units (
-      Dimension
-    , Unit (..)
-    , UnitExp (..)
-    , Value (..)
-    , combineValues
-    , convertTo
-    , convertToBase
-    , isMultiplier
-    , kilogram
-    , mapValue
-    , meter
-    , multiplier
-    , second
-    , unitFromString
-    , (=~=)
-    ) where
+-- | Everything related to units. See "Math.Haskellator.Internal.TH.UnitGeneration" for what is available here.
+
+module Math.Haskellator.Internal.Units where
 
 import Data.List (intercalate)
 
@@ -75,6 +62,7 @@ combineValues f (Value v1 u1) (Value v2 u2) | u1 =~= u2  = Value (v1 `f` v2) u1
 class SetEq a where
     (=~=) :: a -> a -> Bool
 
+-- | A dimension is a list of exponentiated units
 type Dimension = [UnitExp]
 
 instance {-# OVERLAPPING #-} Show Dimension where
@@ -90,7 +78,7 @@ instance {-# OVERLAPPING #-} Show Dimension where
                 makePos ((UnitExp u e):us) = UnitExp u (abs e) : makePos us
                 makePos []                 = []
 
--- | Divides a list of dimensions into its positive and negative exponents
+-- | Splits a list of dimensions into units with positive and units negative exponents
 divide::Dimension -> (Dimension,Dimension) -> (Dimension, Dimension)
 divide (uExp@(UnitExp _ e):xs) (pos,neg) = if e<0 then divide xs (pos,neg ++ [uExp]) else divide xs (pos ++ [uExp], neg)
 divide [] (pos,neg) = (pos,neg)

@@ -12,12 +12,13 @@ import Math.Haskellator.Internal.Parser
 import Math.Haskellator.Internal.Units
 import Math.Haskellator.Internal.Utils.Error
 
+-- | The specific 'Value' type returned by the evaluation
 type EvalValue = Value Dimension
 
 getAst :: String -> Either Error Expr
 getAst = scan >=> parse >=> normalize
 
--- | Evaluate a result from a given expression
+-- | Determine the result of an expression
 calculate :: String                 -- ^ The expression to evaluate
           -> Either Error EvalValue -- ^ The result of the expression
 calculate input = do

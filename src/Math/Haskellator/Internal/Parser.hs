@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+
 -- | Parse a token stream to an expression tree
 --
 -- Examples:
@@ -23,7 +24,7 @@
 --
 -- >>> parse [Number 2.0,OpenParen,Number 3,Operator "+",Number 4,CloseParen,Operator "/", Number 7.0]
 -- Right ((2.0 * (3.0 + 4.0)) / 7.0)
---
+
 module Math.Haskellator.Internal.Parser (parse) where
 
 import Control.Applicative
@@ -44,9 +45,6 @@ import Math.Haskellator.Internal.Utils.Error
 
 newtype ParserT m a = ParserT { runParserT :: Tokens -> m (Either String (a, Tokens)) }
 
--- | Parser monad. The state encodes weather or not we're coming from a factor. This is
--- only used when parsing things like "2m*s" where there's no explicit value for the seconds.
--- And since "2m + s" is invalid, we can use this to differentiate between the two.
 type Parser = ParserT Identity
 
 runParser :: Parser a -> Tokens -> Either String (a, Tokens)
@@ -91,8 +89,8 @@ instance MonadIO m => MonadIO (ParserT m) where
     liftIO = lift . liftIO
 
 -- | Parse a token stream to an expression tree
-parse :: Tokens            -- ^ Token stream
-      -> Either Error Expr -- ^ Error message or parsed expression
+parse :: Tokens            -- ^ input token stream
+      -> Either Error Expr -- ^ the parsed expression tree or an error
 parse tokens = case runParser parseExpr tokens of
     Right (result, []) -> Right result
     Right (_, ts)      -> Left $ Error ParseError $ "Parser was unable to parse the full input. " ++ show ts ++ " remains in the token stream."

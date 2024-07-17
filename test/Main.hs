@@ -6,9 +6,9 @@ import Evaluation
 
 import Parser
 
-import Units
-
 import Test.Tasty (TestTree, defaultMain, testGroup)
+
+import Units
 
 main :: IO ()
 main = defaultMain tests
